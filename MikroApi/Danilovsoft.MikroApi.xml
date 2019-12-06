@@ -1,0 +1,1263 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>DanilovSoft.MikroApi</name>
+    </assembly>
+    <members>
+        <member name="M:DanilovSoft.MikroApi.CancellationTokenHelper.WrapAsync(System.Func{System.Threading.Tasks.Task})">
+            <exception cref="T:System.OperationCanceledException"/>
+            <exception cref="T:System.TimeoutException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.CancellationTokenHelper.WrapAsync(System.Threading.Tasks.Task)">
+            <exception cref="T:System.OperationCanceledException"/>
+            <exception cref="T:System.TimeoutException"/>
+        </member>
+        <member name="T:DanilovSoft.MikroApi.MikroTikAsyncCancelCommand">
+            <summary>
+            Команда отмены поддерживающая асинхронное ожидание подтверждения.
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.MikroTikAsyncCancelCommand.Tag">
+            <summary>
+            Тег операции которую нужно отменить.
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.MikroTikAsyncCancelCommand.SelfTag">
+            <summary>
+            Собственный тег
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikAsyncCancelCommand.WaitDoneAsync">
+            <summary>
+            Ожидает подтверждения отмены от сервера.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikAsyncQuitCommand.WaitAsync(System.Int32)">
+            <summary>
+            Возвращает <see langword="true"/> если был получен !fatal.
+            Не бросает исключения. Вместо этого возвращает <see langword="false"/>.
+            </summary>
+            <param name="millisecondsTimeout"></param>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.MikroTikCancelAllCommand._selfTag">
+            <summary>
+            Собственный тег.
+            </summary>
+        </member>
+        <member name="T:DanilovSoft.MikroApi.MikroTikCancelCommand">
+            <summary>
+            Команда "/cancel" служащая для отмены подписки.
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.MikroTikCancelCommand.Tag">
+            <summary>
+            Тег операции которую нужно отменить.
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.MikroTikCancelCommand.SelfTag">
+            <summary>
+            Собственный тег.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikCancelCommand.#ctor(System.String,System.String,DanilovSoft.MikroApi.MikroTikSocket)">
+            <summary>
+            
+            </summary>
+            <param name="tag">Тег операции которую нужно отменить.</param>
+            <param name="selfTag">Собственный тег команды.</param>
+            <param name="socket"></param>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikCancelCommand.Wait">
+            <summary>
+            Ожидает подтверждения отмены от сервера с тегом <see cref="F:DanilovSoft.MikroApi.MikroTikCancelCommand.SelfTag"/>.
+            </summary>
+        </member>
+        <member name="P:DanilovSoft.MikroApi.MikroTikCommand.IsCompleted">
+            <summary>
+            True если команда была успешно отправлена. Отправленные команды нельзя отправлять повторно.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikCommand.AddLine(System.String)">
+            <summary>
+            Добавляет строку в список без каких либо проверок и изменений.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikCommand.SetTag(System.String)">
+            <summary>
+            Устанавливает строку ".tag={tag}"
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikCommand.Query(System.String)">
+            <summary>
+            Добавляет уточнение вида "?query"
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikCommand.Query(System.String,System.String)">
+            <summary>
+            Добавляет уточнение вида "?query=value"
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikCommand.Query(System.String,System.String[])">
+            <summary>
+            Добавляет уточнение вида "?query=value1,value2,..."
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikCommand.Query(System.String,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Добавляет уточнение вида "?query=value1,value2,..."
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikCommand.Attribute(System.String)">
+            <summary>
+            Добавляет атрибут вида "=name="
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikCommand.Attribute(System.String,System.String)">
+            <summary>
+            Добавляет атрибут вида "=name=value"
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikCommand.Attribute(System.String,System.String[])">
+            <summary>
+            Добавляет атрибут вида "=name=value1,value2,..."
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikCommand.Attribute(System.String,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Добавляет атрибут вида "=name=value1,value2,..."
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikCommand.Proplist(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Добавляет атрибут вида "=.proplist=value1,value2,..."
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikCommand.Proplist(System.String[])">
+            <summary>
+            Добавляет атрибут вида "=.proplist=value1,value2,..."
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikCommand.Completed">
+            <summary>
+            Запрещает использовать эту команду повторно.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikCommand.ThrowIfCompleted">
+            <summary>
+            Генерирует исключение если текущий экземпляр команды уже был однажды отправлен в сокет.
+            </summary>
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Query(System.String)">
+            <summary>
+            Добавляет уточнение вида "?query"
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Query(System.String,System.String)">
+            <summary>
+            Добавляет уточнение вида "?query=value"
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Query(System.String,System.String[])">
+            <summary>
+            Добавляет уточнение вида "?query=value1,value2,..."
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Attribute(System.String)">
+            <summary>
+            Добавляет атрибут вида "=name="
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Attribute(System.String,System.String)">
+            <summary>
+            Добавляет атрибут вида "=name=value"
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Attribute(System.String,System.String[])">
+            <summary>
+            Добавляет атрибут вида "=name=value1,value2,..."
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Attribute(System.String,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Добавляет атрибут вида "=name=value1,value2,..."
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Proplist(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Добавляет атрибут вида "=.proplist=value1,value2,..."
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Proplist(System.String[])">
+            <summary>
+            Добавляет атрибут вида "=.proplist=value1,value2,..."
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Send">
+            <summary>
+            Отправляет команду и возвращает ответ сервера.
+            </summary>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikTrapException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Listen">
+            <summary>
+            Отправляет команду помечая её тегом.
+            Команда будет выполняться пока не будет прервана с помощью Cancel.
+            </summary>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikTrapException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ListenAsync">
+            <summary>
+            Отправляет команду помечая её тегом.
+            Команда будет выполняться пока не будет прервана с помощью Cancel.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Scalar">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Scalar``1">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Scalar(System.String)">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Scalar``1(System.String)">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarArray">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarArray``1">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarList">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarList``1">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarOrDefault">
+            <summary>
+            Возвращает <see langword="null"/> если нет ни одной строки.
+            </summary>
+            <exception cref="T:System.InvalidOperationException"/>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarOrDefault``1">
+            <summary>
+            Возвращает <see langword="default"/> если нет ни одной строки.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <exception cref="T:System.InvalidOperationException"/>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarOrDefault(System.String)">
+            <summary>
+            Возвращает <see langword="null"/> если нет ни одной строки.
+            </summary>
+            <exception cref="T:System.InvalidOperationException"/>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarOrDefault``1(System.String)">
+            <summary>
+            Возвращает <see langword="default"/> если нет ни одной строки.
+            </summary>
+            <exception cref="T:System.InvalidOperationException"/>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Single">
+            <summary>
+            Когда результатом является одна строка.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Single``1(System.Func{DanilovSoft.MikroApi.MikroTikResponseFrame,``0})">
+            <summary>
+            Когда результатом является одна строка.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Single``1">
+            <summary>
+            Когда результатом является одна строка.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.SingleOrDefault">
+            <summary>
+            Когда результатом является одна строка.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.SingleOrDefault``1(System.Func{DanilovSoft.MikroApi.MikroTikResponseFrame,``0})">
+            <summary>
+            Когда результатом является одна строка.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.SingleOrDefault``1">
+            <summary>
+            Когда результатом является одна строка.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ToArray``1">
+            <summary>
+            Создает список объектов
+            члены которого должны использовать атрибут <see cref="T:DanilovSoft.MikroApi.MikroTikPropertyAttribute"/> для привязки данных.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ToArray``1(``0)">
+            <param name="anonymousObject">Анонимный объект тип которого используется для создания результата функции.</param>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ToList``1">
+            <summary>
+            Создает список объектов
+            члены которого должны использовать атрибут <see cref="T:DanilovSoft.MikroApi.MikroTikPropertyAttribute"/> для привязки данных.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ToList``1(``0)">
+            <summary>
+            
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="anonymousObject">Анонимный объект тип которого используется для создания результата функции.</param>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.DanilovSoft#MikroApi#IAsyncResponse#SendAsync">
+            <summary>
+            Отправляет команду и возвращает ответ сервера.
+            </summary>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikTrapException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikFatalException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikDisconnectException"/>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.MikroTikQuitCommand._criticalException">
+            <summary>
+            Исключение типа обрыв соединения.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikQuitCommand.Wait(System.Int32)">
+            <summary>
+            Возвращает <see langword="true"/> если был получен !fatal.
+            Не бросает исключения. Вместо этого возвращает <see langword="false"/>.
+            </summary>
+            <param name="millisecondsTimeout"></param>
+        </member>
+        <member name="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException">
+            <summary>
+            Представляет ошибку в результате успешной отмены операции.
+            </summary>
+        </member>
+        <member name="T:DanilovSoft.MikroApi.MikroTikFatalException">
+            <summary>
+            Сообщение сервера в результате закрытия соединения.
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.TrapCategory.MissingItemOrCommand">
+            <summary>
+            Missing item or command
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.TrapCategory.ArgumentValueFailure">
+            <summary>
+            Argument value failure
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.TrapCategory.ExecutionOfCommandInterrupted">
+            <summary>
+            Execution of command interrupted
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.TrapCategory.ScriptingRelatedFailure">
+            <summary>
+            Scripting related failure
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.TrapCategory.GeneralFailure">
+            <summary>
+            General failure
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.TrapCategory.ApiRelatedFailure">
+            <summary>
+            API related failure
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.TrapCategory.TtyRelatedFailure">
+            <summary>
+            TTY related failure
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.TrapCategory.ValueGeneratedWithReturnCommand">
+            <summary>
+            Value generated with :return command
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IMikroTikResponseListener.AddResult(DanilovSoft.MikroApi.MikroTikResponseFrame)">
+            <summary>
+            Добавляет результат в коллекцию. Вызывается если получен тегированный фрейм сообщения.
+            </summary>
+            <param name="messageFrame"></param>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IMikroTikResponseListener.AddTrap(DanilovSoft.MikroApi.MikroTikTrapException)">
+            <summary>
+            Добавляет исключение как результат в коллекцию. Вызывается если получено сообщение об ошибке.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IMikroTikResponseListener.AddFatal(System.Exception)">
+            <summary>
+            Добавляет исключение как результат в коллекцию.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IMikroTikResponseListener.AddCriticalException(System.Exception)">
+            <summary>
+            Добавляет исключение как результат в коллекцию. Вызывается если произошел обрыв сокета.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IMikroTikResponseListener.Done">
+            <summary>
+            Вызывается если от сервера получен "!done". Значит сервер прекратил отправку сообщений для этого подписчика. Подписчик удаляется из словаря.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.SendAsync">
+            <summary>
+            Отправляет команду и возвращает ответ сервера.
+            </summary>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikTrapException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikFatalException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikDisconnectException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.Scalar">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.Scalar``1">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.Scalar(System.String)">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.Scalar``1(System.String)">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.ScalarList">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.ScalarList``1">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.ScalarOrDefault">
+            <summary>
+            Возвращает <see langword="null"/> если нет ни одной строки.
+            </summary>
+            <exception cref="T:System.InvalidOperationException"/>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.ScalarOrDefault``1">
+            <summary>
+            Возвращает <see langword="default"/> если нет ни одной строки.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <exception cref="T:System.InvalidOperationException"/>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.ScalarOrDefault(System.String)">
+            <summary>
+            Возвращает <see langword="null"/> если нет ни одной строки.
+            </summary>
+            <exception cref="T:System.InvalidOperationException"/>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.ScalarOrDefault``1(System.String)">
+            <summary>
+            Возвращает <see langword="default"/> если нет ни одной строки.
+            </summary>
+            <exception cref="T:System.InvalidOperationException"/>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.Single">
+            <summary>
+            Когда результатом является одна строка.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.Single``1(System.Func{DanilovSoft.MikroApi.MikroTikResponseFrame,``0})">
+            <summary>
+            Когда результатом является одна строка.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.Single``1">
+            <summary>
+            Когда результатом является одна строка.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.SingleOrDefault">
+            <summary>
+            Когда результатом является одна строка.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.SingleOrDefault``1(System.Func{DanilovSoft.MikroApi.MikroTikResponseFrame,``0})">
+            <summary>
+            Когда результатом является одна строка.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.SingleOrDefault``1">
+            <summary>
+            Когда результатом является одна строка.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.ToArray``1">
+            <summary>
+            Создает список объектов
+            члены которого должны использовать атрибут <see cref="T:DanilovSoft.MikroApi.MikroTikPropertyAttribute"/> для привязки данных.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.ToArray``1(``0)">
+            <param name="anonymousObject">Анонимный объект тип которого используется для создания результата функции.</param>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.ToList``1">
+            <summary>
+            Создает список объектов
+            члены которого должны использовать атрибут <see cref="T:DanilovSoft.MikroApi.MikroTikPropertyAttribute"/> для привязки данных.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.ToList``1(``0)">
+            <summary>
+            
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="anonymousObject">Анонимный объект тип которого используется для создания результата функции.</param>
+            <returns></returns>
+        </member>
+        <member name="T:DanilovSoft.MikroApi.Threading.ListenerQueue`1">
+            <summary>
+            Принимает и отдаёт фреймы тегированных сообщений.
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="P:DanilovSoft.MikroApi.Threading.ListenerQueue`1.IsDone">
+            <summary>
+            <see langword="true"/> если был получен "!done" или "CriticalException".
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.Threading.ListenerQueue`1.Take">
+            <summary>
+            Ожидает получения ответа от сервера.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.Threading.ListenerQueue`1.Take(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Ожидает получения ответа от сервера.
+            </summary>
+            <exception cref="T:System.TimeoutException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.Threading.ListenerQueue`1.TakeAsync">
+            <summary>
+            Ожидает получения ответа от сервера.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.Threading.ListenerQueue`1.TakeAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Ожидает получения ответа от сервера.
+            </summary>
+            <exception cref="T:System.TimeoutException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.Threading.ListenerQueue`1.TryTake(`0@)">
+            <summary>
+            Возвращает объект из коллекции.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.Threading.ListenerQueue`1.InnerAdd(DanilovSoft.MikroApi.QueueResult{`0})">
+            <summary>
+            Добавляет результат в коллекцию.
+            Опосредованно вызывается потоком читающим из сокета.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.Threading.ListenerQueue`1.AddResult(`0)">
+            <summary>
+            Добавляет результат в коллекцию.
+            Вызывается потоком читающим из сокета.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.Threading.ListenerQueue`1.AddTrap(DanilovSoft.MikroApi.MikroTikTrapException)">
+            <summary>
+            Добавляет исключение как результат в коллекцию.
+            Вызывается потоком читающим из сокета.
+            </summary>
+            <param name="trapException">Результат.</param>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.Threading.ListenerQueue`1.AddFatal(System.Exception)">
+            <summary>
+            Добавляет исключение как результат в коллекцию.
+            Вызывается потоком читающим из сокета.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.Threading.ListenerQueue`1.AddCriticalException(System.Exception)">
+            <summary>
+            Потокобезопасно добавляет исключение как результат в коллекцию и запрещает добавлять новые результаты.
+            Вызывается потоком читающим из сокета или отправляющим в сокет.
+            </summary>
+        </member>
+        <member name="P:DanilovSoft.MikroApi.MikroTikConnection.Socket">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CreateUniqueTag">
+            <summary>
+            Потокобезопасно создает уникальный тег.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectSsl(System.String,System.Int32,System.String,System.String)">
+            <summary>
+            Для api-ssl.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectSsl(System.String,System.Int32,System.String,System.String,DanilovSoft.MikroApi.RouterOsVersion)">
+            <summary>
+            Для api-ssl.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectAsync(System.String,System.Int32,System.String,System.String)">
+            <exception cref="T:System.TimeoutException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectAsync(System.String,System.Int32,System.String,System.String,DanilovSoft.MikroApi.RouterOsVersion)">
+            <exception cref="T:System.TimeoutException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectAsync(System.String,System.Int32,System.String,System.String,DanilovSoft.MikroApi.RouterOsVersion,System.Threading.CancellationToken)">
+            <exception cref="T:System.TimeoutException"/>
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectSslAsync(System.String,System.Int32,System.String,System.String)">
+            <summary>
+            Для api-ssl.
+            </summary>
+            <exception cref="T:System.TimeoutException"/>
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectSslAsync(System.String,System.Int32,System.String,System.String,DanilovSoft.MikroApi.RouterOsVersion)">
+            <summary>
+            Для api-ssl.
+            </summary>
+            <exception cref="T:System.TimeoutException"/>
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectSslAsync(System.String,System.Int32,System.String,System.String,DanilovSoft.MikroApi.RouterOsVersion,System.Threading.CancellationToken)">
+            <summary>
+            Для api-ssl.
+            </summary>
+            <exception cref="T:System.TimeoutException"/>
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectAsync(System.String,System.Int32,System.Boolean,System.Threading.CancellationToken)">
+            <exception cref="T:System.TimeoutException"/>
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Login(System.String,System.String)">
+            <summary>
+            Использует MD5.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.LoginAsync(System.String,System.String)">
+            <summary>
+            Использует MD5.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Send(DanilovSoft.MikroApi.MikroTikCommand)">
+            <summary>
+            Отправляет команду и возвращает ответ сервера.
+            </summary>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikTrapException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.SendAsync(DanilovSoft.MikroApi.MikroTikCommand)">
+            <summary>
+            Отправляет команду и возвращает ответ сервера.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Listen(DanilovSoft.MikroApi.MikroTikCommand)">
+            <summary>
+            Отправляет команду помечая её тегом.
+            Команда будет выполняться пока не будет прервана с помощью Cancel.
+            </summary>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikTrapException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ListenAsync(DanilovSoft.MikroApi.MikroTikCommand)">
+            <summary>
+            Отправляет команду помечая её тегом.
+            Команда будет выполняться пока не будет прервана с помощью Cancel.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ThrowIfNotConnected">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ThrowIfLoggedIn">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CancelListeners">
+            <summary>
+            Отправляет запрос на отмену всех выполняющихся задач и ожидает подтверждения об упешной отмене.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CancelListenersAsync">
+            <summary>
+            Отправляет запрос на отмену всех выполняющихся задач и ожидает подтверждения об упешной отмене.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CancelListeners(System.Boolean)">
+            <summary>
+            Отправляет запрос на отмену всех выполняющихся задач.
+            </summary>
+            <param name="wait">True если нужно дождаться подтверждения об успешной отмене. Значение по умолчанию True</param>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CancelListenersAsync(System.Boolean)">
+            <summary>
+            Отправляет запрос на отмену всех выполняющихся задач.
+            </summary>
+            <param name="wait">True если нужно дождаться подтверждения об успешной отмене. Значение по умолчанию True</param>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Command(System.String)">
+            <summary>
+            Подготавливает команду для отправки.
+            </summary>
+            <param name="command">Начальный текст команды</param>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Quit(System.Int32)">
+            <summary>
+            Сообщает серверу что выполняется разъединение. Не бросает исключения.
+            </summary>
+            <param name="millisecondsTimeout">Позволяет подождать подтверждение от сервера что-бы лишний раз не происходило исключение в потоке читающем из сокета.</param>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.QuitAsync(System.Int32)">
+            <summary>
+            Сообщает серверу что выполняется разъединение. Не бросает исключения.
+            </summary>
+            <param name="millisecondsTimeout">Позволяет подождать подтверждение от сервера что-бы лишний раз не происходило исключение в потоке читающем из сокета.</param>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.EncodePassword(System.String,System.String)">
+            <summary>
+            Возвращает HEX строку длиной 34 символа.
+            </summary>
+            <param name="password">Пароль пользователя.</param>
+            <param name="hash">Хеш от микротика.</param>
+        </member>
+        <member name="T:DanilovSoft.MikroApi.MikroTikResponse">
+            <summary>
+            Результат выполнение команды микротиком.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.Scalar">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.Scalar``1">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.Scalar(System.String)">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.Scalar``1(System.String)">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.ScalarArray">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.ScalarArray``1">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.ScalarList">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.ScalarList``1">
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.ScalarOrDefault(System.String)">
+            <summary>
+            Возвращает <see langword="null"/> если нет ни одной строки.
+            </summary>
+            <exception cref="T:System.InvalidOperationException"/>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.ScalarOrDefault``1(System.String)">
+            <summary>
+            Возвращает <see langword="default"/> если нет ни одной строки.
+            </summary>
+            <exception cref="T:System.InvalidOperationException"/>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.ScalarOrDefault">
+            <summary>
+            Возвращает <see langword="null"/> если нет ни одной строки.
+            </summary>
+            <exception cref="T:System.InvalidOperationException"/>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.ScalarOrDefault``1">
+            <summary>
+            Возвращает <see langword="default"/> если нет ни одной строки.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <exception cref="T:System.InvalidOperationException"/>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.Single">
+            <summary>
+            Когда результатом является одна строка.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.Single``1(System.Func{DanilovSoft.MikroApi.MikroTikResponseFrame,``0})">
+            <summary>
+            Когда результатом является одна строка.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.Single``1">
+            <summary>
+            Когда результатом является одна строка.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.SingleOrDefault">
+            <summary>
+            Когда результатом является одна строка.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.SingleOrDefault``1(System.Func{DanilovSoft.MikroApi.MikroTikResponseFrame,``0})">
+            <summary>
+            Когда результатом является одна строка.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.SingleOrDefault``1">
+            <summary>
+            Когда результатом является одна строка.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.ToArray``1">
+            <summary>
+            Создает список объектов
+            члены которого должны использовать атрибут <see cref="T:DanilovSoft.MikroApi.MikroTikPropertyAttribute"/> для привязки данных.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.ToArray``1(``0)">
+            <param name="anonymousObject">Анонимный объект тип которого используется для создания результата функции.</param>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.ToList``1">
+            <summary>
+            Создает список объектов
+            члены которого должны использовать атрибут <see cref="T:DanilovSoft.MikroApi.MikroTikPropertyAttribute"/> для привязки данных.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponse.ToList``1(``0)">
+            <summary>
+            
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="anonymousObject">Анонимный объект тип которого используется для создания результата функции.</param>
+            <returns></returns>
+        </member>
+        <member name="T:DanilovSoft.MikroApi.MikroTikResponseFrame">
+            <summary>
+            Представляет коллекцию ключей и значений.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseFrame.Value``1(System.String)">
+            <summary>
+            Преобразует строковое значение в требуемый тип.
+            </summary>
+        </member>
+        <member name="T:DanilovSoft.MikroApi.MikroTikResponseListener">
+            <summary>
+            Принимает сообщения инициализированные командой /listen.
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.MikroTikResponseListener.Tag">
+            <summary>
+            Тег связанный с текущим подписчиком.
+            </summary>
+        </member>
+        <member name="P:DanilovSoft.MikroApi.MikroTikResponseListener.IsCanceled">
+            <summary>
+            <see langword="true"/> если в текущем экземпляре уже выполнялась отмена.
+            </summary>
+        </member>
+        <member name="P:DanilovSoft.MikroApi.MikroTikResponseListener.IsComplete">
+            <summary>
+            <see langword="true"/> если связанная операция была завершена.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.#ctor(System.String,DanilovSoft.MikroApi.MikroTikSocket)">
+            <summary>
+            Принимает сообщения инициализированные командой /listen.
+            </summary>
+            <param name="tag">Тег связанный с текущим подписчиком.</param>
+            <param name="socket"></param>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.Cancel">
+            <summary>
+            Отправляет запрос на отмену и дожидается подтверждения об упешной отмене.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.Cancel(System.Boolean)">
+            <summary>
+            Отправляет запрос на отмену и дожидается подтверждения об упешной отмене.
+            </summary>
+            <param name="wait">True если нужно дождаться подтверждения об успешной отмене. Значение по умолчанию True</param>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.CancelAsync">
+            <summary>
+            Отправляет запрос на отмену и дожидается подтверждения об упешной отмене.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.CancelAsync(System.Boolean)">
+            <summary>
+            Отправляет запрос на отмену.
+            </summary>
+            <param name="wait">True если нужно дождаться подтверждения об успешной отмене. Значение по умолчанию True</param>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.TryTake(DanilovSoft.MikroApi.MikroTikResponseFrame@)">
+            <summary>
+            
+            </summary>
+            <param name="cachedResult"></param>
+            <exception cref="T:System.ObjectDisposedException"/>
+            <exception cref="T:System.InvalidOperationException"/>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.SetCanceled">
+            <summary>
+            Устанавливает флаг <see cref="P:DanilovSoft.MikroApi.MikroTikResponseListener.IsCanceled"/>.
+            После этого текущий экземпляр больше отменять нельзя.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ThrowIfCanceled">
+            <summary>
+            Генерирует исключение если текущий Listener уже был отменён.
+            </summary>
+            <exception cref="T:System.InvalidOperationException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.DanilovSoft#MikroApi#IMikroTikResponseListener#AddResult(DanilovSoft.MikroApi.MikroTikResponseFrame)">
+            <summary>
+            Добавляет результат в коллекцию.
+            Вызывается потоком читающим из сокета.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.DanilovSoft#MikroApi#IMikroTikResponseListener#AddTrap(DanilovSoft.MikroApi.MikroTikTrapException)">
+            <summary>
+            Добавляет исключение как результат в коллекцию.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.DanilovSoft#MikroApi#IMikroTikResponseListener#AddCriticalException(System.Exception)">
+            <summary>
+            Добавляет исключение как результат в коллекцию.
+            Вызывается потоком читающим из сокета.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.DanilovSoft#MikroApi#IMikroTikResponseListener#AddFatal(System.Exception)">
+            <summary>
+            Добавляет исключение как результат в коллекцию.
+            Вызывается потоком читающим из сокета.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.DanilovSoft#MikroApi#IMikroTikResponseListener#Done">
+            <summary>
+            Получен "!done" — сервер прекратил отправку сообщений для этого подписчика. Подписчик удаляется из словаря.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.Listen">
+            <summary>
+            Ожидает очередной ответ от сервера.
+            </summary>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikDoneException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.Listen(System.Int32)">
+            <summary>
+            Ожидает очередной ответ от сервера.
+            </summary>
+            <exception cref="T:System.TimeoutException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikDoneException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.Listen(System.Threading.CancellationToken)">
+            <summary>
+            Ожидает очередной ответ от сервера.
+            </summary>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikDoneException"/>
+            <exception cref="T:System.OperationCanceledException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.Listen(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Ожидает очередной ответ от сервера.
+            </summary>
+            <exception cref="T:System.TimeoutException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikDoneException"/>
+            <exception cref="T:System.OperationCanceledException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenAsync">
+            <summary>
+            Ожидает очередной ответ от сервера.
+            </summary>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikTrapException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikDoneException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenAsync(System.Int32)">
+            <summary>
+            Ожидает очередной ответ от сервера.
+            </summary>
+            <exception cref="T:System.TimeoutException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikDoneException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikTrapException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenAsync(System.Threading.CancellationToken)">
+            <summary>
+            Ожидает очередной ответ от сервера.
+            </summary>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikTrapException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikDoneException"/>
+            <exception cref="T:System.OperationCanceledException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Ожидает очередной ответ от сервера.
+            </summary>
+            <exception cref="T:System.TimeoutException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikTrapException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikDoneException"/>
+            <exception cref="T:System.OperationCanceledException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.MikroTikSocket._mainQueue">
+            <summary>
+            Основная очередь. В неё помещаются ответы сервера которые не маркированы тегом.
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.MikroTikSocket._listeners">
+            <summary>
+            Потокобезопасный словарь подписчиков на ответы сервера с разными тегами.
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.MikroTikSocket._sendLooper">
+            <summary>
+            Очередь сообщений на отправку.
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.MikroTikSocket._framesToRead">
+            <summary>
+            Коллекцие тегов, фреймы которых нужно получить от сервера.
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.MikroTikSocket._reading">
+            <summary>
+            Доступ только через блокировку <see cref="F:DanilovSoft.MikroApi.MikroTikSocket._framesToRead"/>.
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.MikroTikSocket._socketException">
+            <summary>
+            Исключение произошедшее в результате чтения или записи в сокет.
+            Доступ только через блокировку <see cref="F:DanilovSoft.MikroApi.MikroTikSocket._framesToRead"/>.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikSocket.AddListener">
+            <summary>
+            Создает новый Listener с уникальным тегом, добавляет в словарь но не отправляет запрос.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikSocket.CreateUniqueTag">
+            <summary>
+            Потокобезопасно создает уникальный тег.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikSocket.AddTagToRead(System.String)">
+            <summary>
+            Потокобезопасно добавляет в очередь задание — получить фрейм с указанным тегом.
+            </summary>
+            <param name="tagToReceive">Тег сообщения которое нужно прочитать из сокета.</param>
+            <exception cref="T:System.IO.IOException">Обрыв соединения.</exception>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikSocket.TryTakeBeforeListen(DanilovSoft.MikroApi.MikroTikResponseListener,DanilovSoft.MikroApi.MikroTikResponseFrame@)">
+            <summary>
+            Возвращает фрейм из кэша или запускает чтение из сокета.
+            </summary>
+            <param name="listener"></param>
+            <param name="frame"></param>
+            <exception cref="T:System.Exception"/>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikSocket.ReadUntilHasTagsToReadAsync">
+            <summary>
+            Эта функция не генерирует исключения.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikSocket.Send(DanilovSoft.MikroApi.MikroTikCommand)">
+            <summary>
+            Синхронная отправка запроса в сокет без получения ответа. Не проверяет переиспользование команды.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikSocket.SendAsync(DanilovSoft.MikroApi.MikroTikCommand)">
+            <summary>
+            Асинхронная отправка запроса в сокет без получения ответа. Не проверяет переиспользование команды.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikSocket.Request(DanilovSoft.MikroApi.MikroTikCommand)">
+            <summary>
+            Синхронная отправка запроса и получение ответа.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikSocket.RequestAsync(DanilovSoft.MikroApi.MikroTikCommand)">
+            <summary>
+            Асинхронно отправляет запрос и получает ответ через основную очередь.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikSocket.SendAndGetResponseAsync(DanilovSoft.MikroApi.MikroTikCommand)">
+            <summary>
+            Асинхронная отправка запроса в сокет и получение результата.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikSocket.SendAndGetResponse(DanilovSoft.MikroApi.MikroTikCommand)">
+            <summary>
+            Синхронная отправка запроса в сокет и получение результата.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikSocket.EncodeLength(System.UInt32,System.Span{System.Byte})">
+            <summary>
+            
+            </summary>
+            <param name="len">Размер блока в байтах.</param>
+            <param name="buffer"></param>
+            <returns></returns>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikSocket.CancelListenerNoWaitAsync(System.String)">
+            <summary>
+            Отправляет в сокет запрос на отмену не дожидаясь результата.
+            </summary>
+            <param name="tag">Тег связанной операции которую следует отменить.</param>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikSocket.CreateCancelCommand(System.String)">
+            <summary>
+            Создает команду для отмены и добавляет в словарь.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikSocket.Quit(System.Int32)">
+            <summary>
+            Сообщает серверу что выполняется разъединение.
+            </summary>
+            <param name="millisecondsTimeout">Позволяет подождать подтверждение от сервера что-бы лишний раз не происходило исключение в потоке читающем из сокета.</param>
+            <exception cref="T:System.IO.IOException">Обрыв соединения.</exception>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikSocket.QuitAsync(System.Int32)">
+            <summary>
+            Сообщает серверу что выполняется разъединение.
+            </summary>
+            <param name="millisecondsTimeout">Позволяет подождать подтверждение от сервера что-бы лишний раз не происходило исключение в потоке читающем из сокета.</param>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikSocket.CreateAsyncCancelCommand(System.String)">
+            <summary>
+            Создает команду для отмены и добавляет в словарь.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikSocket.RemoveListener(System.String)">
+            <summary>
+            Удаляет подписчика из словаря. Потокобезопасно.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikSocket.SendCommandInLooper(System.Object)">
+            <summary>
+            Эта процедура должна вызываться только через отправляющую очередь <see cref="F:DanilovSoft.MikroApi.MikroTikSocket._sendLooper"/>.
+            Эту процедуру нужно вызывать через Send так как в ней не обрабатываются исключения
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikSocket.SendCommandInLooperAsync(System.Object)">
+            <summary>
+            Эта процедура должна вызываться только через отправляющую очередь <see cref="F:DanilovSoft.MikroApi.MikroTikSocket._sendLooper"/>.
+            Эту Процедура нужно вызывать через Send так как в ней не обрабатываются исключения.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikSocket.CloseSocket">
+            <summary>
+            Потокобезопасно закрывает сокет.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikTypeConverter.ConvertValue(System.String,System.Type)">
+            <summary>
+            Convert.ChangeType
+            </summary>
+            <param name="value"></param>
+            <param name="targetType"></param>
+            <returns></returns>
+        </member>
+        <member name="T:DanilovSoft.MikroApi.QueueResult`1">
+            <summary>
+            Агрегирует результат или исключение.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.QueueResult`1.GetResult">
+            <summary>
+            Результат или исключение.
+            </summary>
+        </member>
+        <member name="T:DanilovSoft.MikroApi.ResponseListeners">
+            <summary>
+            Словарь подписчиков на ответы сервера с разными тегами. Потокобезопасный.
+            </summary>
+        </member>
+        <member name="F:DanilovSoft.MikroApi.ResponseListeners._fatalException">
+            <summary>
+            Представляет собой исключение типа !fatal
+            или исключение типа обрыв соединения.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.ResponseListeners.AddQuit(DanilovSoft.MikroApi.IMikroTikResponseListener)">
+            <summary>
+            Добавляет подписчика в словарь с определенным тегом.
+            </summary>
+            <param name="listener">Подписчик</param>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.ResponseListeners.Add(System.String,DanilovSoft.MikroApi.IMikroTikResponseListener)">
+            <summary>
+            Добавляет подписчика в словарь.
+            </summary>
+            <exception cref="T:System.Exception"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.ResponseListeners.ThrowIfFatal">
+            <summary>
+            Бросает исключение если _fatalException не NULL
+            </summary>
+            <exception cref="T:System.Exception"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.ResponseListeners.AddCriticalException(System.Exception,System.Boolean)">
+            <summary>
+            Потокобезопасно добавляет исключение всем подписчикам и удаляет их из словаря.
+            Вызывается потоком читающим из сокета или отправляющим в сокет.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.ResponseListeners.Remove(System.String)">
+            <summary>
+            Удаляет подписчика из словаря. Потокобезопасно.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.SocketTimeout.Stop">
+            <summary>
+            Попытка остановить таймер.
+            </summary>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikConnectionClosedAbnormally"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.StreamExtensions.ReadBlock(System.IO.Stream,System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Считывает строго заданное количество данных.
+            </summary>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikDisconnectException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.StreamExtensions.ReadBlockAsync(System.IO.Stream,System.Memory{System.Byte})">
+            <summary>
+            Считывает строго заданное количество данных.
+            </summary>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikDisconnectException"/>
+        </member>
+    </members>
+</doc>
