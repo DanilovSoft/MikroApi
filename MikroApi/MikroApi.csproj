@@ -13,11 +13,6 @@
     <AssemblyOriginatorKeyFile>DanilovSoft.MikroApi.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>DanilovSoft.MikroApi.xml</DocumentationFile>
-    <NoWarn>1701;1702;1591;1573</NoWarn>
-  </PropertyGroup>
-
   <PropertyGroup>
     <DocumentationFile>DanilovSoft.MikroApi.xml</DocumentationFile>
     <NoWarn>1701;1702;1591;1573</NoWarn>
@@ -29,15 +24,5 @@
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
     <PackageReference Include="System.Threading.Channels" Version="4.7.0" />
   </ItemGroup>
-
-  <!--<ItemGroup Condition="'$(TargetFramework)' == 'net46'">
-    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-  </ItemGroup>-->
-
-  <!--<ItemGroup>
-    <Reference Include="System.Reflection.Emit.Lightweight">
-      <HintPath>..\..\..\..\..\..\Program Files\dotnet\sdk\NuGetFallbackFolder\microsoft.netcore.app\2.1.0\ref\netcoreapp2.1\System.Reflection.Emit.Lightweight.dll</HintPath>
-    </Reference>
-  </ItemGroup>-->
 
 </Project>
