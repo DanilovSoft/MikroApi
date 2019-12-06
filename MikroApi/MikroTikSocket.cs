@@ -382,7 +382,7 @@ namespace DanilovSoft.MikroApi
                         // Чтение строки.
                         await _stream.ReadBlockAsync(buf.Slice(0, count)).ConfigureAwait(false);
 
-#if NET46 || NET48 || NETSTANDARD2_0
+#if NETSTANDARD2_0
                         string word = _encoding.GetString(buf.Slice(0, count));
 
 #else
@@ -611,7 +611,7 @@ namespace DanilovSoft.MikroApi
 
                     offset += encodedLength;
 
-#if NET46 || NET48 || NETSTANDARD2_0
+#if NETSTANDARD2_0
                     // Записать в буффер строку.
                     _encoding.GetBytes(line, _sendBuffer.Slice(offset));
 #else
@@ -836,7 +836,7 @@ namespace DanilovSoft.MikroApi
             {
                 using (_sendTimeout.Start())
                 {
-#if NET46 || NET48 || NETSTANDARD2_0
+#if NETSTANDARD2_0
                     _stream.Write(buffer);
 #else
                     _stream.Write(buffer.Span);

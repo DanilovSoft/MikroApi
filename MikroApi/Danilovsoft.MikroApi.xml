@@ -962,14 +962,14 @@
             Получен "!done" — сервер прекратил отправку сообщений для этого подписчика. Подписчик удаляется из словаря.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.Listen">
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenNext">
             <summary>
             Ожидает очередной ответ от сервера.
             </summary>
             <exception cref="T:DanilovSoft.MikroApi.MikroTikDoneException"/>
             <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.Listen(System.Int32)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenNext(System.Int32)">
             <summary>
             Ожидает очередной ответ от сервера.
             </summary>
@@ -977,7 +977,7 @@
             <exception cref="T:DanilovSoft.MikroApi.MikroTikDoneException"/>
             <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.Listen(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenNext(System.Threading.CancellationToken)">
             <summary>
             Ожидает очередной ответ от сервера.
             </summary>
@@ -985,7 +985,7 @@
             <exception cref="T:System.OperationCanceledException"/>
             <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.Listen(System.Int32,System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenNext(System.Int32,System.Threading.CancellationToken)">
             <summary>
             Ожидает очередной ответ от сервера.
             </summary>
@@ -994,7 +994,7 @@
             <exception cref="T:System.OperationCanceledException"/>
             <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenAsync">
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenNextAsync">
             <summary>
             Ожидает очередной ответ от сервера.
             </summary>
@@ -1002,7 +1002,7 @@
             <exception cref="T:DanilovSoft.MikroApi.MikroTikDoneException"/>
             <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenAsync(System.Int32)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenNextAsync(System.Int32)">
             <summary>
             Ожидает очередной ответ от сервера.
             </summary>
@@ -1011,7 +1011,7 @@
             <exception cref="T:DanilovSoft.MikroApi.MikroTikTrapException"/>
             <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenAsync(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenNextAsync(System.Threading.CancellationToken)">
             <summary>
             Ожидает очередной ответ от сервера.
             </summary>
@@ -1020,7 +1020,7 @@
             <exception cref="T:System.OperationCanceledException"/>
             <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenAsync(System.Int32,System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenNextAsync(System.Int32,System.Threading.CancellationToken)">
             <summary>
             Ожидает очередной ответ от сервера.
             </summary>

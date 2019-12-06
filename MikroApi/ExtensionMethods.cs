@@ -10,7 +10,7 @@ namespace DanilovSoft.MikroApi
 {
     internal static class ExtensionMethods
     {
-#if NET46 || NET48 || NETSTANDARD2_0
+#if NETSTANDARD2_0
         private const string TryGetArrayFail = "MemoryMarshal.TryGetArray returned false.";
 
         public static void Write(this Stream stream, Memory<byte> memory)

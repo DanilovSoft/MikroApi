@@ -23,105 +23,97 @@ namespace ConsoleAppCore
 
             using (var con = new MikroTikConnection())
             {
-                con.Connect("10.0.0.1", 8728, "api", "api", RouterOsVersion.Post_v6_43);
+                con.Connect("10.0.0.1", 8728, "api_dbg", "api", RouterOsVersion.Post_v6_43);
 
-                var arp = con
-                    .Command("/ip arp print")
-                    .Send();
+                var ifaces = con.Command("/interface print")
+                    .Query("disabled", "false") // filter
+                    .Query("name", "sfp1")      // filter
+                    .Proplist("comment", "name", "mtu") // limit output to these columns alone
+                    .ToArray<InterfaceDto>();
 
-                // Отправляет запрос без получения результата.
-                var listener = con.Command("/ping")
-                    .Attribute("address", "SERV.LAN")
-                    .Attribute("interval", "1")
-                    .Attribute("count", "4")
-                    .Proplist("time")
-                    .Listen();
-
-                // сервер будет присылать результат каждую секунду.
-                while (!listener.IsComplete)
-                {
-                    MikroTikResponseFrame result;
-                    try
-                    {
-                        result = listener.Listen();
-                    }
-                    catch (MikroTikDoneException)
-                    {
-
-                        break;
-                    }
-
-                    Console.WriteLine(result);
-
-                    listener.Cancel(true);
-                }
-
-                var logListener = con.Command("/log listen")
-                    .Listen();
-
-                //var logs = con.Command("/log print")
-                //    .Send();
-
-                //var logs2 = logs.ToList<Log>();
-
-                //var dict = logs2.ToDictionary(x => x.Id, x => x);
-
-                //logs.ToList()
-
-                while (!logListener.IsComplete)
-                {
-                    try
-                    {
-                        logListener.Listen(1000);
-                    }
-                    catch (TimeoutException)
-                    {
-
-                    }
-
-                    var entry = logListener.Listen();
-                    Console.WriteLine(entry);
-                }
-
-                // Вытащить активные сессии юзера.
-                var activeSessionsResult = con.Command("/ip hotspot active print")
-                    .Proplist(".id")
-                    .Query("user", "2515")
-                    .Send();
-
-                string[] activeSessions = activeSessionsResult.ScalarArray(".id");
-                Thread.Sleep(-1);
-
-                MikroTikResponse resultPrint = con.Command("/interface print")
-                    .Query("name", "sfp1")
-                    //.Proplist("comment", "name")
-                    .Send();
-
-                resultPrint.Scalar("");
-                resultPrint.ScalarList();
-                resultPrint.ScalarOrDefault();
-
-                var sw = Stopwatch.StartNew();
-                for (int i = 0; i < 500_000; i++)
-                {
-                    resultPrint.ToArray(new { });
-                    resultPrint.ScalarList<int>();
-                    var row = resultPrint.ToList<Row>();
-
-                }
-                sw.Stop();
-                Trace.WriteLine(sw.Elapsed);
-                Console.WriteLine("OK");
-                Thread.Sleep(-1);
-
-                // Команда выполняется 20 сек.
-                var task = con.Command("/delay")
-                    .Attribute("delay-time", "20")
-                    .Send();
-
-                // Tell router we are done.
                 con.Quit(1000);
             }
+
+                //// Отправляет запрос без получения результата.
+                //var listener = con.Command("/ping")
+                //    .Attribute("address", "SERV.LAN")
+                //    .Attribute("interval", "1")
+                //    .Attribute("count", "4")
+                //    .Proplist("time")
+                //    .Listen();
+
+                //// сервер будет присылать результат каждую секунду.
+                //while (!listener.IsComplete)
+                //{
+                //    MikroTikResponseFrame result;
+                //    try
+                //    {
+                //        result = listener.ListenNext();
+                //    }
+                //    catch (MikroTikDoneException)
+                //    {
+
+                //        break;
+                //    }
+
+                //    Console.WriteLine(result);
+
+                //    listener.Cancel(true);
+                //}
+
+                //var logListener = con.Command("/log listen")
+                //    .Listen();
+                
+                //while (!logListener.IsComplete)
+                //{
+                //    try
+                //    {
+                //        logListener.ListenNext();
+                //    }
+                //    catch (TimeoutException)
+                //    {
+
+                //    }
+
+                //    var entry = logListener.ListenNext();
+                //    Console.WriteLine(entry);
+                //}
+
+                //// Вытащить активные сессии юзера.
+                //var activeSessionsResult = con.Command("/ip hotspot active print")
+                //    .Proplist(".id")
+                //    .Query("user", "2515")
+                //    .Send();
+
+                //string[] activeSessions = activeSessionsResult.ScalarArray(".id");
+                //Thread.Sleep(-1);
+
+                
+
+                //resultPrint.Scalar("");
+                //resultPrint.ScalarList();
+                //resultPrint.ScalarOrDefault();
+
+                //var sw = Stopwatch.StartNew();
+                //for (int i = 0; i < 500_000; i++)
+                //{
+                //    resultPrint.ToArray(new { });
+                //    resultPrint.ScalarList<int>();
+                //    var row = resultPrint.ToList<InterfaceDto>();
+
+                //}
+                //sw.Stop();
+                //Trace.WriteLine(sw.Elapsed);
+                //Console.WriteLine("OK");
+                //Thread.Sleep(-1);
+
+                // Команда выполняется 20 сек.
+                //var task = con.Command("/delay")
+                //    .Attribute("delay-time", "20")
+                //    .Send();
+
+                // Tell router we are done.
+                //con.Quit(1000);
         }
 
         class Log
@@ -149,7 +141,7 @@ namespace ConsoleAppCore
                 MikroTikResponseFrame result;
                 try
                 {
-                    result = listener.Listen();
+                    result = listener.ListenNext();
                     if (cancellationToken.IsCancellationRequested)
                     {
                         listener.Cancel();
@@ -179,7 +171,7 @@ namespace ConsoleAppCore
                 MikroTikResponseFrame result;
                 try
                 {
-                    result = listener.Listen();
+                    result = listener.ListenNext();
                 }
                 catch (MikroTikCommandInterruptedException)
                 {
@@ -197,12 +189,15 @@ namespace ConsoleAppCore
         }
     }
 
-    class Row
+    class InterfaceDto
     {
         [MikroTikProperty("name")]
         public string Name { get; set; }
 
         [MikroTikProperty("mtu")]
-        public string mtu { get; set; }
+        public string Mtu { get; set; }
+
+        [MikroTikProperty("comment")]
+        public string Comment { get; set; }
     }
 }
