@@ -43,7 +43,8 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>DanilovSoft.MikroApi.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -70,11 +71,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="DanilovSoft.MikroApi.pfx" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MikroApi\MikroApi.csproj">
+    <ProjectReference Include="..\..\MikroApi\MikroApi.csproj">
       <Project>{ccde7745-d555-4819-8760-2de329a2479d}</Project>
       <Name>MikroApi</Name>
     </ProjectReference>
