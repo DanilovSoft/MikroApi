@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MikroApi\MikroApi.csproj" />
+    <ProjectReference Include="..\..\MikroApi\MikroApi.csproj" />
   </ItemGroup>
 
 </Project>
