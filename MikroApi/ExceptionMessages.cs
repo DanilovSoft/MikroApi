@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-internal static class ExceptionMessages
+﻿internal static class ExceptionMessages
 {
     public const string OperationCanceledMessage = "Операция отменена пользователем";
     public const string ConnectTimeoutExceptionMessage = "Превышено время подключения";

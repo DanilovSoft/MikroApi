@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-
-namespace DanilovSoft.MikroApi
+﻿namespace DanilovSoft.MikroApi
 {
     internal class MikroTikCancelAllCommand : MikroTikCommand
     {
