@@ -18,35 +18,41 @@ namespace DanilovSoft.MikroApi
         private readonly Memory<byte> _sendBuffer;
         private readonly MikroTikConnection _connection;
         private readonly TcpClient _tcpClient;
+
         /// <summary>
         /// Основная очередь. В неё помещаются ответы сервера которые не маркированы тегом.
         /// </summary>
-        private readonly ListenerQueue<MikroTikResponse> _mainQueue = new ListenerQueue<MikroTikResponse>();
+        private readonly ListenerQueue<MikroTikResponse> _mainQueue = new();
+
         /// <summary>
         /// Потокобезопасный словарь подписчиков на ответы сервера с разными тегами.
         /// </summary>
-        internal readonly ResponseListeners _listeners = new ResponseListeners();
+        internal readonly ResponseListeners _listeners = new();
+
         /// <summary>
         /// Очередь сообщений на отправку.
         /// </summary>
-        private readonly LooperSlim _sendLooper = new LooperSlim();
+        private readonly LooperSlim _sendLooper = new();
         private readonly Stream _stream;
+
         /// <summary>
         /// Коллекцие тегов, фреймы которых нужно получить от сервера.
         /// </summary>
-        private readonly Dictionary<string, int> _framesToRead = new Dictionary<string, int>();
+        private readonly Dictionary<string, int> _framesToRead = new();
         private readonly SocketTimeout _receiveTimeout;
         private readonly SocketTimeout _sendTimeout;
+
         /// <summary>
         /// Доступ только через блокировку <see cref="_framesToRead"/>.
         /// </summary>
         private bool _reading;
         private bool _socketDisposed;
+
         /// <summary>
         /// Исключение произошедшее в результате чтения или записи в сокет.
         /// Доступ только через блокировку <see cref="_framesToRead"/>.
         /// </summary>
-        private Exception _socketException;
+        private Exception? _socketException;
 
         // ctor
         internal MikroTikSocket(MikroTikConnection connection, TcpClient tcpClient, Stream stream)
@@ -123,7 +129,9 @@ namespace DanilovSoft.MikroApi
                     }
                 }
                 else
+                {
                     throw _socketException;
+                }
             }
             return false;
         }
@@ -136,7 +144,9 @@ namespace DanilovSoft.MikroApi
                 return listener.Take(millisecondsTimeout, cancellationToken);
             }
             else
+            {
                 return frame;
+            }
         }
 
         internal ValueTask<MikroTikResponseFrame> ListenAsync(MikroTikResponseListener listener, int millisecondsTimeout, CancellationToken cancellationToken)
@@ -147,7 +157,9 @@ namespace DanilovSoft.MikroApi
                 return listener.TakeAsync(millisecondsTimeout, cancellationToken);
             }
             else
+            {
                 return new ValueTask<MikroTikResponseFrame>(frame);
+            }
         }
 
         /// <summary>
@@ -170,7 +182,7 @@ namespace DanilovSoft.MikroApi
                 // В кэше пусто, нужно ждать сообщение от сокета.
                 {
                     // Добавить читающему потоку задачу на получение еще одного фрейма с таким тегом.
-                    readerIsStopped = AddTagToRead(listener.Tag);
+                    readerIsStopped = AddTagToRead(listener._tag);
                 }
                 else
                 {
@@ -179,7 +191,9 @@ namespace DanilovSoft.MikroApi
             }
 
             if (readerIsStopped)
+            {
                 StartRead();
+            }
 
             return false;
         }
@@ -334,7 +348,9 @@ namespace DanilovSoft.MikroApi
                                 }
 
                                 if (frame.Count > 0)
+                                {
                                     fullResponse.Add(frame);
+                                }
 
                                 if (trap)
                                 {
@@ -391,7 +407,9 @@ namespace DanilovSoft.MikroApi
                         Debug.WriteLine(word);
 
                         if (word == "!re")
+                        {
                             continue;
+                        }
 
                         if (!done && word == "!done")
                         {
@@ -431,7 +449,9 @@ namespace DanilovSoft.MikroApi
                             }
                         }
                         else if (fatal)
+                        {
                             fatalMessage = word;
+                        }
                     }
                 }
                 finally
@@ -455,7 +475,7 @@ namespace DanilovSoft.MikroApi
             if (wait)
             {
                 var cancelCommand = new MikroTikCommand("/cancel");
-                
+
                 // Отправляем команду и ждем ответ.
                 return RequestAsync(cancelCommand);
             }
@@ -465,7 +485,7 @@ namespace DanilovSoft.MikroApi
                 // нужно сделать её тегированной и не добавлять в словарь.
 
                 string selfTag = CreateUniqueTag();
-                var cancelAllcommand = new MikroTikCancelAllCommand(selfTag, this);
+                var cancelAllcommand = new MikroTikCancelAllCommand(selfTag);
 
                 // Отправка команды без ожидания ответа.
                 return SendAsync(cancelAllcommand);
@@ -484,7 +504,7 @@ namespace DanilovSoft.MikroApi
             else
             {
                 string selfTag = CreateUniqueTag();
-                var cancelAllcommand = new MikroTikCancelAllCommand(selfTag, this);
+                var cancelAllcommand = new MikroTikCancelAllCommand(selfTag);
 
                 // Отправка команды без ожидания ответа.
                 Send(cancelAllcommand);
@@ -587,10 +607,10 @@ namespace DanilovSoft.MikroApi
 
             bool useSendBuffer = true;
 
-            for (int i = 0; i < command.Lines.Count; i++)
+            for (int i = 0; i < command._lines.Count; i++)
             {
                 // Строка.
-                string line = command.Lines[i];
+                string line = command._lines[i];
 
                 // Длина строки.
                 int lineBytesCount = _encoding.GetByteCount(line);
@@ -635,9 +655,9 @@ namespace DanilovSoft.MikroApi
             {
                 offset = 0;
                 byte[] buffer = new byte[totalLength];
-                for (int i = 0; i < command.Lines.Count; i++)
+                for (int i = 0; i < command._lines.Count; i++)
                 {
-                    string line = command.Lines[i];
+                    string line = command._lines[i];
                     int lineBytesCount = _encoding.GetByteCount(line);
                     offset += EncodeLength((uint)lineBytesCount, buffer);
                     offset += _encoding.GetBytes(line, 0, line.Length, buffer, offset);
@@ -646,19 +666,27 @@ namespace DanilovSoft.MikroApi
             }
         }
 
-        private int EncodeLengthCount(uint len)
+        private static int EncodeLengthCount(uint len)
         {
             if (len < 128)
+            {
                 return 1;
+            }
 
             if (len < 16384)
+            {
                 return 2;
+            }
 
             if (len < 0x200000)
+            {
                 return 3;
+            }
 
             if (len < 0x10000000)
+            {
                 return 4;
+            }
 
             return 5;
         }
@@ -669,7 +697,7 @@ namespace DanilovSoft.MikroApi
         /// <param name="len">Размер блока в байтах.</param>
         /// <param name="buffer"></param>
         /// <returns></returns>
-        private int EncodeLength(uint len, Span<byte> buffer)
+        private static int EncodeLength(uint len, Span<byte> buffer)
         {
             if (len < 128)
             {
@@ -747,7 +775,7 @@ namespace DanilovSoft.MikroApi
         {
             // Подписываемся на завершение отмены.
             var quitCommand = new MikroTikQuitCommand(this);
-            
+
             // Добавляем в словарь.
             _listeners.AddQuit(quitCommand);
 
@@ -819,7 +847,7 @@ namespace DanilovSoft.MikroApi
             _listeners.Remove(tag);
         }
 
-#region Inside SendLooper
+        #region Inside SendLooper
 
         /// <summary>
         /// Эта процедура должна вызываться только через отправляющую очередь <see cref="_sendLooper"/>.
@@ -861,7 +889,9 @@ namespace DanilovSoft.MikroApi
             try
             {
                 using (_sendTimeout.Start())
-                    await _stream.WriteAsync(buffer);
+                {
+                    await _stream.WriteAsync(buffer).ConfigureAwait(false);
+                }
             }
             catch (Exception ex)
             {
@@ -895,7 +925,7 @@ namespace DanilovSoft.MikroApi
             throw exception;
         }
 
-#endregion
+        #endregion
 
         private async ValueTask<int> GetSizeAsync(Memory<byte> buffer)
         {
@@ -909,7 +939,9 @@ namespace DanilovSoft.MikroApi
 
                 int v = 0;
                 for (int i = 0; i < 2; i++)
+                {
                     v = (v << 8) + buffer.Span[i];
+                }
 
                 return v ^ 0x8000;
             }
@@ -919,7 +951,9 @@ namespace DanilovSoft.MikroApi
 
                 int v = 0;
                 for (int i = 0; i < 3; i++)
+                {
                     v = (v << 8) + buffer.Span[i];
+                }
 
                 return v ^ 0xC00000;
             }
@@ -929,7 +963,9 @@ namespace DanilovSoft.MikroApi
 
                 int v = 0;
                 for (int i = 0; i < 4; i++)
+                {
                     v = (v << 8) + buffer.Span[i];
+                }
 
                 return (int)(v ^ 0xE0000000);
             }
@@ -939,7 +975,9 @@ namespace DanilovSoft.MikroApi
 
                 int v = 0;
                 for (int i = 0; i < 4; i++)
+                {
                     v = (v << 8) + buffer.Span[i];
+                }
 
                 return v;
             }
@@ -947,7 +985,9 @@ namespace DanilovSoft.MikroApi
             {
 #if DEBUG
                 if (Debugger.IsAttached)
+                {
                     Debugger.Break();
+                }
 
 #endif
                 // Не должно быть такого.
@@ -955,22 +995,26 @@ namespace DanilovSoft.MikroApi
             }
         }
 
-        private void OnReceiveTimeout(object _)
+        private void OnReceiveTimeout(object? _)
         {
             lock (_framesToRead)
             {
                 if (_socketException == null)
+                {
                     _socketException = new MikroTikDisconnectException("Сокет был закрыт в связи с таймаутом чтения.");
+                }
             }
             CloseSocket();
         }
 
-        private void OnSendTimeout(object _)
+        private void OnSendTimeout(object? _)
         {
             lock (_framesToRead)
             {
                 if (_socketException == null)
+                {
                     _socketException = new MikroTikDisconnectException("Сокет был закрыт в связи с таймаутом отправки.");
+                }
             }
             CloseSocket();
         }

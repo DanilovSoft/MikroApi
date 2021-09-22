@@ -18,9 +18,13 @@ namespace DanilovSoft.MikroApi
             while ((count -= n = stream.Read(buffer, offset, count)) > 0)
             {
                 if (n != 0)
+                {
                     offset += n;
+                }
                 else
+                {
                     throw new MikroTikDisconnectException();
+                }
             }
         }
 
@@ -35,9 +39,13 @@ namespace DanilovSoft.MikroApi
             {
                 int n = await stream.ReadAsync(buffer).ConfigureAwait(false);
                 if (n != 0)
+                {
                     buffer = buffer.Slice(n);
+                }
                 else
+                {
                     throw new MikroTikDisconnectException();
+                }
             }
         }
 

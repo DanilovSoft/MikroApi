@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace DanilovSoft.MikroApi
 {
@@ -13,17 +14,17 @@ namespace DanilovSoft.MikroApi
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string DebugDisplay => "{" + $"Count = {_dict.Count}" + "}";
-        private readonly Dictionary<string, IMikroTikResponseListener> _dict = new Dictionary<string, IMikroTikResponseListener>();
+        private readonly Dictionary<string, IMikroTikResponseListener> _dict = new();
         /// <summary>
         /// Представляет собой исключение типа !fatal
         /// или исключение типа обрыв соединения.
         /// </summary>
-        private Exception _fatalException;
+        private Exception? _fatalException;
 
         // ctor
         internal ResponseListeners()
         {
-            
+
         }
 
         /// <summary>
@@ -37,7 +38,9 @@ namespace DanilovSoft.MikroApi
                 ThrowIfFatal();
                 ThrowIfMaxCount();
                 if (_dict.ContainsKey(""))
+                {
                     throw new InvalidOperationException("Quit command already in process");
+                }
 
                 _dict.Add("", listener);
             }
@@ -61,7 +64,9 @@ namespace DanilovSoft.MikroApi
         private void ThrowIfMaxCount()
         {
             if (_dict.Count >= ushort.MaxValue)
+            {
                 throw new InvalidOperationException("Maximum listeners reached");
+            }
         }
 
         /// <summary>
@@ -71,7 +76,9 @@ namespace DanilovSoft.MikroApi
         private void ThrowIfFatal()
         {
             if (_fatalException != null)
+            {
                 throw _fatalException;
+            }
         }
 
         /// <summary>
@@ -114,13 +121,13 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         internal void Remove(string tag)
         {
-            lock(_dict)
+            lock (_dict)
             {
                 _dict.Remove(tag);
             }
         }
 
-        internal bool TryGetValue(string tag, out IMikroTikResponseListener listener)
+        internal bool TryGetValue(string tag, [MaybeNullWhen(false)] out IMikroTikResponseListener listener)
         {
             lock (_dict)
             {

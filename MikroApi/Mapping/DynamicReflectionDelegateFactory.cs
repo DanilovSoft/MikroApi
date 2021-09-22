@@ -7,7 +7,7 @@ namespace DanilovSoft.MikroApi.Mapping
 {
     internal class DynamicReflectionDelegateFactory
     {
-        public static readonly DynamicReflectionDelegateFactory Instance = new DynamicReflectionDelegateFactory();
+        public static readonly DynamicReflectionDelegateFactory Instance = new();
         private static readonly Type[] _objectArrayTypes = new[] { typeof(object[]) };
 
         private static DynamicMethod CreateDynamicMethod(string name, Type returnType, Type[] parameterTypes, Type owner)

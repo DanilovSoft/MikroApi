@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -12,7 +14,7 @@ namespace DanilovSoft.MikroApi.Threading
     /// </summary>
     /// <typeparam name="T"></typeparam>
     [DebuggerDisplay(@"\{{_channel}\}")]
-    internal sealed class ListenerQueue<T>
+    internal sealed class ListenerQueue<T> where T : notnull
     {
         private readonly Channel<QueueResult<T>> _channel;
         /// <summary>
@@ -45,7 +47,15 @@ namespace DanilovSoft.MikroApi.Threading
         /// <exception cref="TimeoutException"/>
         public T Take(int millisecondsTimeout, CancellationToken cancellationToken)
         {
-            return TakeAsync(millisecondsTimeout, cancellationToken).GetAwaiter().GetResult();
+            var task = TakeAsync(millisecondsTimeout, cancellationToken);
+            if (task.IsCompletedSuccessfully)
+            {
+                return task.Result;
+            }
+            else
+            {
+                return task.AsTask().GetAwaiter().GetResult();
+            }
         }
 
         /// <summary>
@@ -74,26 +84,28 @@ namespace DanilovSoft.MikroApi.Threading
                     }
                     catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested)
                     {
-                        throw new TimeoutException(string.Format(TimeoutMessage, millisecondsTimeout));
+                        throw new TimeoutException(string.Format(CultureInfo.InvariantCulture, TimeoutMessage, millisecondsTimeout));
                     }
                     catch (ChannelClosedException ex)
                     {
                         if (ex.InnerException != null)
+                        {
                             throw ex.InnerException;
+                        }
 
                         throw;
                     }
                 }
 
                 return item.GetResult();
-                
+
             } while (true);
         }
 
         /// <summary>
         /// Возвращает объект из коллекции.
         /// </summary>
-        public bool TryTake(out T value)
+        public bool TryTake([NotNullWhen(true)] out T? value)
         {
             if (_channel.Reader.TryRead(out QueueResult<T> queueResult))
             {

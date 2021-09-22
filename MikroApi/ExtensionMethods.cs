@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace DanilovSoft.MikroApi
 {
+#if NETSTANDARD2_0
     internal static class ExtensionMethods
     {
-#if NETSTANDARD2_0
         private const string TryGetArrayFail = "MemoryMarshal.TryGetArray returned false.";
 
         public static void Write(this Stream stream, Memory<byte> memory)
@@ -18,7 +18,9 @@ namespace DanilovSoft.MikroApi
                 stream.Write(segment.Array, segment.Offset, segment.Count);
             }
             else
+            {
                 throw new InvalidOperationException(TryGetArrayFail);
+            }
         }
 
         public static Task WriteAsync(this Stream stream, Memory<byte> memory)
@@ -28,7 +30,9 @@ namespace DanilovSoft.MikroApi
                 return stream.WriteAsync(segment.Array, segment.Offset, segment.Count);
             }
             else
+            {
                 throw new InvalidOperationException(TryGetArrayFail);
+            }
         }
 
         public static Task<int> ReadAsync(this Stream stream, ReadOnlyMemory<byte> memory)
@@ -38,7 +42,9 @@ namespace DanilovSoft.MikroApi
                 return stream.ReadAsync(segment.Array, segment.Offset, segment.Count);
             }
             else
+            {
                 throw new InvalidOperationException(TryGetArrayFail);
+            }
         }
 
         public static string GetString(this Encoding encoding, ReadOnlyMemory<byte> memory)
@@ -48,7 +54,9 @@ namespace DanilovSoft.MikroApi
                 return encoding.GetString(segment.Array, segment.Offset, segment.Count);
             }
             else
+            {
                 throw new InvalidOperationException(TryGetArrayFail);
+            }
         }
 
         public static void GetBytes(this Encoding encoding, string s, ReadOnlyMemory<byte> memory)
@@ -58,8 +66,10 @@ namespace DanilovSoft.MikroApi
                 encoding.GetBytes(s, 0, s.Length, segment.Array, segment.Offset);
             }
             else
+            {
                 throw new InvalidOperationException(TryGetArrayFail);
+            }
         }
-#endif
     }
+#endif
 }

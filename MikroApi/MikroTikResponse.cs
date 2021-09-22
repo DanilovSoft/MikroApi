@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace DanilovSoft.MikroApi
@@ -31,7 +32,7 @@ namespace DanilovSoft.MikroApi
 
         public int Count => _list.Count;
 
-        public bool IsReadOnly => false;
+        //public bool IsReadOnly => false;
 
         internal void Add(MikroTikResponseFrame item)
         {
@@ -105,7 +106,9 @@ namespace DanilovSoft.MikroApi
                 else
                 {
                     if (dict.Count > 1)
+                    {
                         throw new InvalidOperationException(MoreThanOneColumn);
+                    }
                     else
                     {
                         // Пустого словаря вероятно не может быть. МТ пропускает пустые словари.
@@ -116,9 +119,13 @@ namespace DanilovSoft.MikroApi
             else
             {
                 if (Count == 0)
+                {
                     throw new InvalidOperationException(CollectionIsEmpty);
+                }
                 else
+                {
                     throw new InvalidOperationException(MoreThanOneRow);
+                }
             }
         }
 
@@ -140,9 +147,13 @@ namespace DanilovSoft.MikroApi
             else
             {
                 if (Count == 0)
+                {
                     throw new InvalidOperationException(CollectionIsEmpty);
+                }
                 else
+                {
                     throw new InvalidOperationException(MoreThanOneRow);
+                }
             }
         }
 
@@ -170,7 +181,9 @@ namespace DanilovSoft.MikroApi
                 return array;
             }
             else
+            {
                 return Array.Empty<string>();
+            }
         }
 
         public T[] ScalarArray<T>(string columnName)
@@ -187,7 +200,9 @@ namespace DanilovSoft.MikroApi
                 return array;
             }
             else
+            {
                 return Array.Empty<T>();
+            }
         }
 
         /// <exception cref="InvalidOperationException"/>
@@ -218,13 +233,19 @@ namespace DanilovSoft.MikroApi
                 else
                 {
                     if (dict.Count > 0)
+                    {
                         throw new InvalidOperationException(MoreThanOneColumn);
+                    }
                     else
+                    {
                         throw new InvalidOperationException(CollectionIsEmpty);
+                    }
                 }
             }
             else
+            {
                 return Array.Empty<string>();
+            }
         }
 
         /// <exception cref="InvalidOperationException"/>
@@ -255,13 +276,19 @@ namespace DanilovSoft.MikroApi
                 else
                 {
                     if (dict.Count > 0)
+                    {
                         throw new InvalidOperationException(MoreThanOneColumn);
+                    }
                     else
+                    {
                         throw new InvalidOperationException(CollectionIsEmpty);
+                    }
                 }
             }
             else
+            {
                 return Array.Empty<T>();
+            }
         }
 
         #endregion
@@ -296,13 +323,19 @@ namespace DanilovSoft.MikroApi
                 else
                 {
                     if (dict.Count > 0)
+                    {
                         throw new InvalidOperationException(MoreThanOneColumn);
+                    }
                     else
+                    {
                         throw new InvalidOperationException(CollectionIsEmpty);
+                    }
                 }
             }
             else
+            {
                 return new List<string>();
+            }
         }
 
         /// <exception cref="InvalidOperationException"/>
@@ -334,13 +367,19 @@ namespace DanilovSoft.MikroApi
                 else
                 {
                     if (dict.Count > 0)
+                    {
                         throw new InvalidOperationException(MoreThanOneColumn);
+                    }
                     else
+                    {
                         throw new InvalidOperationException(CollectionIsEmpty);
+                    }
                 }
             }
             else
+            {
                 return new List<T>();
+            }
         }
 
         public List<string> ScalarList(string columnName)
@@ -356,7 +395,9 @@ namespace DanilovSoft.MikroApi
                 return list;
             }
             else
+            {
                 return new List<string>();
+            }
         }
 
         public List<T> ScalarList<T>(string columnName)
@@ -373,7 +414,9 @@ namespace DanilovSoft.MikroApi
                 return list;
             }
             else
+            {
                 return new List<T>();
+            }
         }
 
         #endregion
@@ -385,7 +428,7 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         /// <exception cref="InvalidOperationException"/>
         /// <returns></returns>
-        public string ScalarOrDefault(string columnName)
+        public string? ScalarOrDefault(string columnName)
         {
             // Должна быть только одна строка.
             if (Count == 1)
@@ -395,9 +438,13 @@ namespace DanilovSoft.MikroApi
             else
             {
                 if (Count == 0)
+                {
                     return null;
+                }
                 else
+                {
                     throw new InvalidOperationException(MoreThanOneRow);
+                }
             }
         }
 
@@ -405,17 +452,18 @@ namespace DanilovSoft.MikroApi
         /// Возвращает <see langword="default"/> если нет ни одной строки.
         /// </summary>
         /// <exception cref="InvalidOperationException"/>
-        /// <returns></returns>
-        public T ScalarOrDefault<T>(string columnName)
+        public T? ScalarOrDefault<T>(string columnName)
         {
-            string rawValue = ScalarOrDefault(columnName);
+            var rawValue = ScalarOrDefault(columnName);
 
-            if(rawValue != null)
+            if (rawValue != null)
             {
                 return MikroTikTypeConverter.ConvertValue<T>(rawValue);
             }
             else
+            {
                 return default;
+            }
         }
 
         /// <summary>
@@ -423,7 +471,7 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         /// <exception cref="InvalidOperationException"/>
         /// <returns></returns>
-        public string ScalarOrDefault()
+        public string? ScalarOrDefault()
         {
             // Должна быть только одна строка.
             if (Count == 1)
@@ -442,7 +490,9 @@ namespace DanilovSoft.MikroApi
                 else
                 {
                     if (dict.Count > 1)
+                    {
                         throw new InvalidOperationException(MoreThanOneColumn);
+                    }
                     else
                     {
                         // Пустого словаря вероятно не может быть. МТ пропускает пустые словари.
@@ -453,9 +503,13 @@ namespace DanilovSoft.MikroApi
             else
             {
                 if (Count == 0)
+                {
                     return null;
+                }
                 else
+                {
                     throw new InvalidOperationException(MoreThanOneRow);
+                }
             }
         }
 
@@ -465,13 +519,15 @@ namespace DanilovSoft.MikroApi
         /// <typeparam name="T"></typeparam>
         /// <exception cref="InvalidOperationException"/>
         /// <returns></returns>
-        public T ScalarOrDefault<T>()
+        public T? ScalarOrDefault<T>()
         {
-            string rawValue = ScalarOrDefault();
+            var rawValue = ScalarOrDefault();
 
-            if(rawValue != null)
+            if (rawValue != null)
+            {
                 return MikroTikTypeConverter.ConvertValue<T>(rawValue);
-            
+            }
+
             return default;
         }
 
@@ -493,9 +549,13 @@ namespace DanilovSoft.MikroApi
             else
             {
                 if (Count == 0)
+                {
                     throw new InvalidOperationException(CollectionIsEmpty);
+                }
                 else
+                {
                     throw new InvalidOperationException(MoreThanOneRow);
+                }
             }
         }
 
@@ -504,6 +564,10 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         public T Single<T>(Func<MikroTikResponseFrame, T> selector)
         {
+            if (selector is null)
+            {
+                throw new ArgumentNullException(nameof(selector));
+            }
             // Должна быть только одна строка.
             if (Count == 1)
             {
@@ -513,9 +577,13 @@ namespace DanilovSoft.MikroApi
             else
             {
                 if (Count == 0)
+                {
                     throw new InvalidOperationException(CollectionIsEmpty);
+                }
                 else
+                {
                     throw new InvalidOperationException(MoreThanOneRow);
+                }
             }
         }
 
@@ -534,9 +602,13 @@ namespace DanilovSoft.MikroApi
             else
             {
                 if (Count == 0)
+                {
                     throw new InvalidOperationException(CollectionIsEmpty);
+                }
                 else
+                {
                     throw new InvalidOperationException(MoreThanOneRow);
+                }
             }
         }
 
@@ -547,28 +619,36 @@ namespace DanilovSoft.MikroApi
         /// <summary>
         /// Когда результатом является одна строка.
         /// </summary>
-        public MikroTikResponseFrame SingleOrDefault()
+        public MikroTikResponseFrame? SingleOrDefault()
         {
             // Должна быть только одна строка.
             if (Count == 1)
             {
-                MikroTikResponseFrame dict = this[0];
+                var dict = this[0];
                 return dict;
             }
             else
             {
                 if (Count == 0)
+                {
                     return null;
+                }
                 else
+                {
                     throw new InvalidOperationException(MoreThanOneRow);
+                }
             }
         }
 
         /// <summary>
         /// Когда результатом является одна строка.
         /// </summary>
-        public T SingleOrDefault<T>(Func<MikroTikResponseFrame, T> selector)
+        public T? SingleOrDefault<T>(Func<MikroTikResponseFrame, T> selector)
         {
+            if (selector is null)
+            {
+                throw new ArgumentNullException(nameof(selector));
+            }
             // Должна быть только одна строка.
             if (Count == 1)
             {
@@ -578,16 +658,20 @@ namespace DanilovSoft.MikroApi
             else
             {
                 if (Count == 0)
+                {
                     return default;
+                }
                 else
+                {
                     throw new InvalidOperationException(MoreThanOneRow);
+                }
             }
         }
 
         /// <summary>
         /// Когда результатом является одна строка.
         /// </summary>
-        public T SingleOrDefault<T>()
+        public T? SingleOrDefault<T>()
         {
             // Должна быть только одна строка.
             if (Count == 1)
@@ -599,9 +683,13 @@ namespace DanilovSoft.MikroApi
             else
             {
                 if (Count == 0)
+                {
                     return default;
+                }
                 else
+                {
                     throw new InvalidOperationException(MoreThanOneRow);
+                }
             }
         }
 
@@ -620,7 +708,7 @@ namespace DanilovSoft.MikroApi
             if (Count > 0)
             {
                 var array = new T[Count];
-                ObjectMapper mapper = DynamicActivator.GetMapper<T>();
+                var mapper = DynamicActivator.GetMapper<T>();
                 for (int i = 0; i < Count; i++)
                 {
                     array[i] = (T)mapper.ReadObject(this[i]);
@@ -632,6 +720,11 @@ namespace DanilovSoft.MikroApi
 
         public T[] ToArray<T>(Func<MikroTikResponseFrame, T> selector)
         {
+            if (selector is null)
+            {
+                throw new ArgumentNullException(nameof(selector));
+            }
+
             if (Count > 0)
             {
                 var array = new T[Count];
@@ -644,7 +737,9 @@ namespace DanilovSoft.MikroApi
             return Array.Empty<T>();
         }
 
+
         /// <param name="anonymousObject">Анонимный объект тип которого используется для создания результата функции.</param>
+        [SuppressMessage("Usage", "CA1801:Проверьте неиспользуемые параметры", Justification = "<Ожидание>")]
         public T[] ToArray<T>(T anonymousObject)
         {
             if (Count > 0)
@@ -686,6 +781,11 @@ namespace DanilovSoft.MikroApi
 
         public List<T> ToList<T>(Func<MikroTikResponseFrame, T> selector)
         {
+            if (selector is null)
+            {
+                throw new ArgumentNullException(nameof(selector));
+            }
+
             var list = new List<T>(Count);
             for (int i = 0; i < Count; i++)
             {
@@ -695,12 +795,14 @@ namespace DanilovSoft.MikroApi
             return list;
         }
 
+
         /// <summary>
         /// 
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="anonymousObject">Анонимный объект тип которого используется для создания результата функции.</param>
         /// <returns></returns>
+        [SuppressMessage("Usage", "CA1801:Проверьте неиспользуемые параметры", Justification = "<Ожидание>")]
         public List<T> ToList<T>(T anonymousObject)
         {
             var list = new List<T>(Count);
@@ -720,14 +822,18 @@ namespace DanilovSoft.MikroApi
         public override string ToString()
         {
             if (Count == 1)
+            {
                 return this[0].ToString();
+            }
 
             var sb = new StringBuilder();
             int n = 0;
             foreach (var item in this)
             {
                 if (n > 0)
+                {
                     sb.AppendLine();
+                }
 
                 n++;
                 sb.Append(item.ToString());

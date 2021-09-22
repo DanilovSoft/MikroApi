@@ -7,7 +7,7 @@ namespace DanilovSoft.MikroApi.Mapping
 {
     internal class ObjectMapper
     {
-        private readonly static StreamingContext _defaultStreamingContext = new StreamingContext();
+        private readonly static StreamingContext _defaultStreamingContext = new();
         private readonly Dictionary<string, MikroTikProperty> _properties;
         private readonly ContractActivator _activator;
 
@@ -26,7 +26,9 @@ namespace DanilovSoft.MikroApi.Mapping
                 PropertyInfo propertyInfo = props[i];
                 var attrib = propertyInfo.GetCustomAttribute<MikroTikPropertyAttribute>();
                 if (attrib != null)
+                {
                     dict.Add(attrib.Name, new MikroTikProperty(propertyInfo));
+                }
             }
             return dict;
         }
@@ -44,7 +46,7 @@ namespace DanilovSoft.MikroApi.Mapping
                     string key = keyValue.Key;
                     string value = keyValue.Value;
 
-                    if(_properties.TryGetValue(key, out MikroTikProperty mikroTikProperty))
+                    if (_properties.TryGetValue(key, out MikroTikProperty mikroTikProperty))
                     {
                         object compatibleValue = MikroTikTypeConverter.ConvertValue(value, mikroTikProperty.MemberType);
                         mikroTikProperty.SetValueHandler(obj, compatibleValue);

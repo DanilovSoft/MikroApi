@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,19 +6,16 @@ namespace DanilovSoft.MikroApi
 {
     /*
     >>> /quit
-
     <<< !fatal
     <<< session terminated on request
-
      */
-
     internal class MikroTikAsyncQuitCommand : MikroTikCommand, IMikroTikResponseListener
     {
-        private readonly TaskCompletionSource<bool> _tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource<bool> _tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
         // Это свойство требуется интерфейсом но не участвует в синхронизации потоков.
-        private readonly object _syncObj = new object();
+        private readonly object _syncObj = new();
         object IMikroTikResponseListener.SyncObj => _syncObj;
-        private volatile Exception _criticalException;
+        private volatile Exception? _criticalException;
 
         // ctor
         internal MikroTikAsyncQuitCommand() : base("/quit")
@@ -37,15 +33,17 @@ namespace DanilovSoft.MikroApi
             using (var cts = new CancellationTokenSource(millisecondsTimeout))
             {
                 bool success;
-                using (cts.Token.Register(s => ((TaskCompletionSource<bool>)s).TrySetResult(false), _tcs, false))
+                using (cts.Token.Register(static s => ((TaskCompletionSource<bool>)s!).TrySetResult(false), _tcs, false))
+                {
                     success = await _tcs.Task.ConfigureAwait(false);
+                }
 
                 if (success)
                 {
-                    Exception ex = _criticalException;
+                    var ex = _criticalException;
                     if (ex != null)
                     {
-                        Debug.WriteLine(string.Format(MikroTikQuitCommand.ExceptionDebugMessage, ex.Message));
+                        //Debug.WriteLine(string.Format(MikroTikQuitCommand.ExceptionDebugMessage, ex.Message));
                         return false;
                     }
                 }

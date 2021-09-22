@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace DanilovSoft.MikroApi
@@ -14,7 +15,7 @@ namespace DanilovSoft.MikroApi
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string DebugDisplay => $"Count = {_dict.Count}";
-        private readonly Dictionary<string, string> _dict = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> _dict = new();
 
         public IEnumerable<string> Keys => _dict.Keys;
 
@@ -32,12 +33,14 @@ namespace DanilovSoft.MikroApi
             return (T)MikroTikTypeConverter.ConvertValue(_dict[key], typeof(T));
         }
 
-        public string this[string key, bool nullIfNotExist]
+        public string? this[string key, bool nullIfNotExist]
         {
             get
             {
                 if (TryGetValue(key, out string value))
+                {
                     return value;
+                }
 
                 return null;
             }
@@ -50,7 +53,9 @@ namespace DanilovSoft.MikroApi
             foreach (var item in this)
             {
                 if (n > 0)
+                {
                     sb.AppendLine();
+                }
 
                 n++;
                 sb.AppendFormat("\"{0}\"=\"{1}\"", item.Key, item.Value);
@@ -68,7 +73,7 @@ namespace DanilovSoft.MikroApi
             return _dict.ContainsKey(key);
         }
 
-        public bool TryGetValue(string key, out string value)
+        public bool TryGetValue(string key, [MaybeNullWhen(false)] out string value)
         {
             return _dict.TryGetValue(key, out value);
         }

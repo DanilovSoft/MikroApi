@@ -39,11 +39,6 @@
             </summary>
             <param name="millisecondsTimeout"></param>
         </member>
-        <member name="F:DanilovSoft.MikroApi.MikroTikCancelAllCommand._selfTag">
-            <summary>
-            Собственный тег.
-            </summary>
-        </member>
         <member name="T:DanilovSoft.MikroApi.MikroTikCancelCommand">
             <summary>
             Команда "/cancel" служащая для отмены подписки.

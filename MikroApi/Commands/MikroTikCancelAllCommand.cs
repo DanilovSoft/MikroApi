@@ -2,17 +2,8 @@
 {
     internal class MikroTikCancelAllCommand : MikroTikCommand
     {
-        /// <summary>
-        /// Собственный тег.
-        /// </summary>
-        private readonly string _selfTag;
-        private readonly MikroTikSocket _socket;
-
-        internal MikroTikCancelAllCommand(string selfTag, MikroTikSocket socket) : base("/cancel")
+        internal MikroTikCancelAllCommand(string selfTag) : base("/cancel")
         {
-            _selfTag = selfTag;
-            _socket = socket;
-
             SetTag(selfTag);
         }
     }

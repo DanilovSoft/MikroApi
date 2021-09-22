@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace DanilovSoft.MikroApi
 {
@@ -7,10 +8,7 @@ namespace DanilovSoft.MikroApi
         /// <summary>
         /// Convert.ChangeType
         /// </summary>
-        /// <param name="value"></param>
-        /// <param name="targetType"></param>
-        /// <returns></returns>
-        public static object ConvertValue(string value, Type targetType)
+        public static object? ConvertValue(string value, Type targetType)
         {
             if (targetType.IsAssignableFrom(typeof(string)))
             {
@@ -19,14 +17,14 @@ namespace DanilovSoft.MikroApi
             else
             {
                 targetType = Nullable.GetUnderlyingType(targetType) ?? targetType;
-                return Convert.ChangeType(value, targetType);
+                return Convert.ChangeType(value, targetType, CultureInfo.InvariantCulture);
             }
         }
 
-        public static T ConvertValue<T>(string value)
+        public static T? ConvertValue<T>(string value)
         {
             Type propType = typeof(T);
-            return (T)ConvertValue(value, propType);
+            return (T?)ConvertValue(value, propType);
         }
     }
 }

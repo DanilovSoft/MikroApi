@@ -18,15 +18,15 @@ namespace DanilovSoft.MikroApi
             {
                 if (_tagIndex == -1)
                 {
-                    return $"\"{Lines[0]}\"";
+                    return $"\"{_lines[0]}\"";
                 }
                 else
                 {
-                    return $"\"{Lines[0]}\", {Lines[_tagIndex]}";
+                    return $"\"{_lines[0]}\", {_lines[_tagIndex]}";
                 }
             }
         }
-        internal readonly List<string> Lines = new List<string>();
+        internal readonly List<string> _lines = new();
         private int _tagIndex = -1;
         /// <summary>
         /// True если команда была успешно отправлена. Отправленные команды нельзя отправлять повторно.
@@ -37,7 +37,9 @@ namespace DanilovSoft.MikroApi
         public MikroTikCommand(string command)
         {
             if (command == null)
+            {
                 throw new ArgumentNullException(nameof(command));
+            }
 
             string formatted = string.Join("/", command.Split(' '));
             AddLine(formatted);
@@ -48,7 +50,7 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         internal void AddLine(string text)
         {
-            Lines.Add(text);
+            _lines.Add(text);
         }
 
         internal void AddQuery(string queryText)
@@ -58,8 +60,10 @@ namespace DanilovSoft.MikroApi
 
         internal void AddAttribute(string attributeText)
         {
-            if (attributeText.StartsWith("=.tag="))
+            if (attributeText.StartsWith("=.tag=", StringComparison.Ordinal))
+            {
                 throw new InvalidOperationException("Нельзя самостоятельно устанавливать тег");
+            }
 
             AddLine(attributeText);
         }
@@ -69,14 +73,14 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         internal MikroTikCommand SetTag(string tag)
         {
-            if(_tagIndex == -1)
+            if (_tagIndex == -1)
             {
-                _tagIndex = Lines.Count;
-                Lines.Add($".tag={tag}");
+                _tagIndex = _lines.Count;
+                _lines.Add($".tag={tag}");
             }
             else
             {
-                Lines[_tagIndex] = $".tag={tag}";
+                _lines[_tagIndex] = $".tag={tag}";
             }
             return this;
         }
@@ -89,7 +93,9 @@ namespace DanilovSoft.MikroApi
         public MikroTikCommand Query(string query)
         {
             if (query == null)
+            {
                 throw new ArgumentNullException(nameof(query));
+            }
 
             AddQuery($"?{query}");
             return this;
@@ -101,7 +107,9 @@ namespace DanilovSoft.MikroApi
         public MikroTikCommand Query(string query, string value)
         {
             if (query == null)
+            {
                 throw new ArgumentNullException(nameof(query));
+            }
 
             AddQuery($"?{query}={value}");
             return this;
@@ -113,7 +121,9 @@ namespace DanilovSoft.MikroApi
         public MikroTikCommand Query(string query, params string[] values)
         {
             if (query == null)
+            {
                 throw new ArgumentNullException(nameof(query));
+            }
 
             string joined = string.Join(",", values);
             AddQuery($"?{query}={joined}");
@@ -126,7 +136,9 @@ namespace DanilovSoft.MikroApi
         public MikroTikCommand Query(string query, IEnumerable<string> values)
         {
             if (query == null)
+            {
                 throw new ArgumentNullException(nameof(query));
+            }
 
             string joined = string.Join(",", values);
             AddQuery($"?{query}={joined}");
@@ -143,7 +155,9 @@ namespace DanilovSoft.MikroApi
         public MikroTikCommand Attribute(string name)
         {
             if (name == null)
+            {
                 throw new ArgumentNullException(nameof(name));
+            }
 
             AddAttribute($"={name}=");
             return this;
@@ -155,7 +169,9 @@ namespace DanilovSoft.MikroApi
         public MikroTikCommand Attribute(string name, string value)
         {
             if (name == null)
+            {
                 throw new ArgumentNullException(nameof(name));
+            }
 
             AddAttribute($"={name}={value}");
             return this;
@@ -167,7 +183,9 @@ namespace DanilovSoft.MikroApi
         public MikroTikCommand Attribute(string name, params string[] values)
         {
             if (name == null)
+            {
                 throw new ArgumentNullException(nameof(name));
+            }
 
             string joined = string.Join(",", values);
             AddAttribute($"={name}={joined}");
@@ -180,7 +198,9 @@ namespace DanilovSoft.MikroApi
         public MikroTikCommand Attribute(string name, IEnumerable<string> values)
         {
             if (name == null)
+            {
                 throw new ArgumentNullException(nameof(name));
+            }
 
             string joined = string.Join(",", values);
             AddAttribute($"={name}={joined}");
@@ -227,15 +247,17 @@ namespace DanilovSoft.MikroApi
         internal void ThrowIfCompleted()
         {
             if (IsCompleted)
+            {
                 throw new InvalidOperationException("This command is already sent");
+            }
         }
 
         public override string ToString()
         {
             var sb = new StringBuilder();
-            for (int i = 0; i < Lines.Count; i++)
+            for (int i = 0; i < _lines.Count; i++)
             {
-                sb.AppendLine(Lines[i]);
+                sb.AppendLine(_lines[i]);
             }
             return sb.ToString();
         }
@@ -250,7 +272,7 @@ namespace DanilovSoft.MikroApi
             }
 
             [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-            public string[] Items => _self.Lines.Skip(1).ToArray();
+            public string[] Items => _self._lines.Skip(1).ToArray();
         }
     }
 }

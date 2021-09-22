@@ -7,13 +7,12 @@ namespace DanilovSoft.MikroApi
 {
     internal class CancellationTokenHelper
     {
-        private readonly object _sync = new object();
+        private readonly object _sync = new();
         private readonly IDisposable _disposable;
         private readonly CancellationToken _cancellationToken;
         private readonly TimeSpan _timeout;
         private volatile bool _isDisposed;
-        public bool IsDisposed => _isDisposed;
-        private int _atomicDisposed = 0;
+        private int _atomicDisposed;
 
         public CancellationTokenHelper(IDisposable disposable, TimeSpan timeout, CancellationToken cancellationToken)
         {
@@ -21,6 +20,8 @@ namespace DanilovSoft.MikroApi
             _timeout = timeout;
             _cancellationToken = cancellationToken;
         }
+
+        public bool IsDisposed => _isDisposed;
 
         /// <exception cref="OperationCanceledException"/>
         /// <exception cref="TimeoutException"/>
@@ -71,8 +72,10 @@ namespace DanilovSoft.MikroApi
                 /* Блокировка позволяет дождаться завершения _disposable.Dispose() */
                 lock (_sync)
                 {
-                    if(_cancellationToken.IsCancellationRequested) /* Пользователь отменил операцию */
+                    if (_cancellationToken.IsCancellationRequested) /* Пользователь отменил операцию */
+                    {
                         throw new OperationCanceledException(OperationCanceledMessage, _cancellationToken);
+                    }
 
                     /* Превышен таймаут */
                     throw new TimeoutException(ConnectTimeoutExceptionMessage);

@@ -19,7 +19,7 @@ namespace DanilovSoft.MikroApi
 
         /// <exception cref="InvalidOperationException"/>
         Task<string> Scalar();
-        
+
         /// <exception cref="InvalidOperationException"/>
         Task<T> Scalar<T>();
 

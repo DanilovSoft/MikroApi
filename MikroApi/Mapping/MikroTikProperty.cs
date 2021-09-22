@@ -12,7 +12,7 @@ namespace DanilovSoft.MikroApi.Mapping
 
         public MikroTikProperty(MemberInfo memberInfo)
         {
-            if(memberInfo is PropertyInfo propertyInfo)
+            if (memberInfo is PropertyInfo propertyInfo)
             {
                 MemberType = propertyInfo.PropertyType;
             }

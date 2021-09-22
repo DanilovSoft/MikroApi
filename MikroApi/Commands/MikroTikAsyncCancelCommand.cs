@@ -9,7 +9,7 @@ namespace DanilovSoft.MikroApi
     internal class MikroTikAsyncCancelCommand : MikroTikCommand, IMikroTikResponseListener
     {
         // Это свойство требуется интерфейсом но не участвует в синхронизации потоков.
-        private readonly object _syncObj = new object();
+        private readonly object _syncObj = new();
         /// <summary>
         /// Тег операции которую нужно отменить.
         /// </summary>
@@ -18,9 +18,8 @@ namespace DanilovSoft.MikroApi
         /// Собственный тег
         /// </summary>
         public readonly string SelfTag;
-        private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource<object?> _tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly MikroTikSocket _socket;
-        object IMikroTikResponseListener.SyncObj => _syncObj;
 
         // ctor
         internal MikroTikAsyncCancelCommand(string tag, string selfTag, MikroTikSocket socket) : base("/cancel")
@@ -31,6 +30,8 @@ namespace DanilovSoft.MikroApi
 
             Attribute("tag", tag).SetTag(selfTag);
         }
+
+        object IMikroTikResponseListener.SyncObj => _syncObj;
 
         /// <summary>
         /// Ожидает подтверждения отмены от сервера.
@@ -70,10 +71,17 @@ namespace DanilovSoft.MikroApi
         }
 
         #region Не используемые члены интерфейса
+
         // Не может произойти.
-        void IMikroTikResponseListener.AddResult(MikroTikResponseFrame message) { }
+        void IMikroTikResponseListener.AddResult(MikroTikResponseFrame message)
+        {
+        }
+
         // Не может произойти.
-        void IMikroTikResponseListener.AddTrap(MikroTikTrapException trapException) { }
+        void IMikroTikResponseListener.AddTrap(MikroTikTrapException trapException)
+        {
+        }
+
         #endregion
     }
 }

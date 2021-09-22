@@ -40,10 +40,10 @@ namespace DanilovSoft.MikroApi.Mapping
             //    // берем только свойства по умолчанию.
             //    var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
-                // порядок полей такой же как у конструктора.
-                //AnonimousProperties = properties
-                //    .Select((x, Index) => new { PropertyInfo = x, Index })
-                //    .ToDictionary(x => x.PropertyInfo.Name, x => new AnonimousProperty(x.Index, x.PropertyInfo.PropertyType));
+            // порядок полей такой же как у конструктора.
+            //AnonimousProperties = properties
+            //    .Select((x, Index) => new { PropertyInfo = x, Index })
+            //    .ToDictionary(x => x.PropertyInfo.Name, x => new AnonimousProperty(x.Index, x.PropertyInfo.PropertyType));
             //}
         }
 

@@ -16,7 +16,7 @@ namespace DanilovSoft.MikroApi
     {
         public const string ExceptionDebugMessage = "Got exception on MikroTik '/quit' command: {0}";
         // Это свойство требуется интерфейсом но не участвует в синхронизации потоков.
-        private readonly object _syncObj = new object();
+        private readonly object _syncObj = new();
         object IMikroTikResponseListener.SyncObj => _syncObj;
         /// <summary>
         /// Исключение типа обрыв соединения.
@@ -84,4 +84,3 @@ namespace DanilovSoft.MikroApi
         #endregion
     }
 }
- 

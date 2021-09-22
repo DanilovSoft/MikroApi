@@ -13,12 +13,12 @@ namespace DanilovSoft.MikroApi
     [DebuggerDisplay(@"\{{_queue}\}")]
     public sealed class MikroTikResponseListener : IMikroTikResponseListener
     {
-        private readonly ListenerQueue<MikroTikResponseFrame> _queue = new ListenerQueue<MikroTikResponseFrame>();
+        private readonly ListenerQueue<MikroTikResponseFrame> _queue = new();
         private readonly MikroTikSocket _socket;
         /// <summary>
         /// Тег связанный с текущим подписчиком.
         /// </summary>
-        internal readonly string Tag;
+        internal readonly string _tag;
         /// <summary>
         /// <see langword="true"/> если в текущем экземпляре уже выполнялась отмена.
         /// </summary>
@@ -39,7 +39,7 @@ namespace DanilovSoft.MikroApi
         internal MikroTikResponseListener(string tag, MikroTikSocket socket)
         {
             _socket = socket;
-            Tag = tag;
+            _tag = tag;
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace DanilovSoft.MikroApi
 
             // В любом случае нужен собственный тег что-бы результат не попал в основную очередь когда wait = false
             string selfTag = _socket.CreateUniqueTag();
-            var cancelCommand = new MikroTikCancelCommand(Tag, selfTag, _socket);
+            var cancelCommand = new MikroTikCancelCommand(_tag, selfTag, _socket);
 
             if (wait)
             {
@@ -118,7 +118,7 @@ namespace DanilovSoft.MikroApi
             if (wait)
             {
                 // Подписываемся на завершение отмены.
-                MikroTikAsyncCancelCommand cancelCommand = _socket.CreateAsyncCancelCommand(Tag);
+                MikroTikAsyncCancelCommand cancelCommand = _socket.CreateAsyncCancelCommand(_tag);
 
                 // Добавляем задание для потока читающего из сокета.
                 bool readerIsStopped = _socket.AddTagToRead(cancelCommand.SelfTag);
@@ -141,7 +141,7 @@ namespace DanilovSoft.MikroApi
             else
             {
                 // Отправляем тегированный запрос на отмену без ожидания результата.
-                await _socket.CancelListenerNoWaitAsync(Tag).ConfigureAwait(false);
+                await _socket.CancelListenerNoWaitAsync(_tag).ConfigureAwait(false);
 
                 // Этот Listener больше нельзя отменять
                 SetCanceled();
@@ -155,9 +155,9 @@ namespace DanilovSoft.MikroApi
         /// <exception cref="ObjectDisposedException"/>
         /// <exception cref="InvalidOperationException"/>
         /// <returns></returns>
-        internal bool TryTake(out MikroTikResponseFrame cachedResult) => _queue.TryTake(out cachedResult);
+        internal bool TryTake(out MikroTikResponseFrame? cachedResult) => _queue.TryTake(out cachedResult);
 
-        internal MikroTikResponseFrame Take(int millisecondsTimeout, CancellationToken cancellationToken) => 
+        internal MikroTikResponseFrame Take(int millisecondsTimeout, CancellationToken cancellationToken) =>
             _queue.Take(millisecondsTimeout, cancellationToken);
 
         internal ValueTask<MikroTikResponseFrame> TakeAsync(int millisecondsTimeout, CancellationToken cancellationToken)
@@ -183,7 +183,9 @@ namespace DanilovSoft.MikroApi
         private void ThrowIfCanceled()
         {
             if (IsCanceled)
+            {
                 throw new InvalidOperationException("This listener is already canceled");
+            }
         }
 
         #region Реализация интерфейса
@@ -234,7 +236,7 @@ namespace DanilovSoft.MikroApi
             _queue.Done();
 
             // Удалить текущий listener из словаря.
-            _socket.RemoveListener(Tag);
+            _socket.RemoveListener(_tag);
         }
 
         #endregion

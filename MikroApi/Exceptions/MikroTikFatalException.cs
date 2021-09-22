@@ -13,7 +13,7 @@ namespace DanilovSoft.MikroApi
 
         }
 
-		public MikroTikFatalException(string message) : base(message)
+        public MikroTikFatalException(string message) : base(message)
         {
 
         }
@@ -22,5 +22,5 @@ namespace DanilovSoft.MikroApi
         {
 
         }
-	}
+    }
 }

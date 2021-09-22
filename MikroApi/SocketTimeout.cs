@@ -5,18 +5,18 @@ namespace DanilovSoft.MikroApi
 {
     internal sealed class SocketTimeout : IDisposable
     {
-        private readonly Timer _timer;
+        private readonly Timer _watchdogTimer;
         private readonly TimerCallback _timerCallback;
         private readonly Slot _slot;
         private readonly int _millisecondsTimeout;
-        private int _state = 0;
+        private int _state;
         private bool _disposed;
 
         public SocketTimeout(TimerCallback timerCallback, int millisecondsTimeout)
         {
             _slot = new Slot(this);
             _millisecondsTimeout = millisecondsTimeout;
-            _timer = new Timer(OnTimer);
+            _watchdogTimer = new Timer(OnTimer);
             _timerCallback = timerCallback;
         }
 
@@ -26,12 +26,12 @@ namespace DanilovSoft.MikroApi
             // Запланировать таймер если он остановлен.
             Interlocked.CompareExchange(ref _state, 1, 0);
 
-            lock (_timer)
+            lock (_watchdogTimer)
             {
                 if (!_disposed)
                 {
                     // Запланировать сработать один раз.
-                    _timer.Change(_millisecondsTimeout, -1);
+                    _watchdogTimer.Change(_millisecondsTimeout, -1);
                 }
             }
 
@@ -50,13 +50,13 @@ namespace DanilovSoft.MikroApi
 
             if (state != 2)
             {
-                lock (_timer)
+                lock (_watchdogTimer)
                 {
                     // Stop мог сработать из-за вызова Dispose пользователем на верхнем уровне.
                     if (!_disposed)
                     {
                         // Остановить таймер.
-                        _timer.Change(-1, -1);
+                        _watchdogTimer.Change(-1, -1);
                     }
                 }
             }
@@ -67,7 +67,7 @@ namespace DanilovSoft.MikroApi
             }
         }
 
-        private void OnTimer(object timerState)
+        private void OnTimer(object? timerState)
         {
             // Установить состояние 'Сработал' если состояние было 'Запланирован'
             int state = Interlocked.CompareExchange(ref _state, 2, 1);
@@ -83,11 +83,11 @@ namespace DanilovSoft.MikroApi
 
         public void Dispose()
         {
-            lock (_timer)
+            lock (_watchdogTimer)
             {
                 if (!_disposed)
                 {
-                    _timer.Dispose();
+                    _watchdogTimer.Dispose();
                     _disposed = true;
                 }
             }

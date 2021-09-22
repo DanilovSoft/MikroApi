@@ -28,7 +28,7 @@ namespace DanilovSoft.MikroApi
     internal class MikroTikCancelCommand : MikroTikCommand, IMikroTikResponseListener
     {
         // Это свойство требуется интерфейсом но не участвует в синхронизации потоков.
-        private readonly object _syncObj = new object();
+        private readonly object _syncObj = new();
         object IMikroTikResponseListener.SyncObj => _syncObj;
         /// <summary>
         /// Тег операции которую нужно отменить.
@@ -39,7 +39,7 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         public readonly string SelfTag;
         private readonly MikroTikSocket _socket;
-        private volatile Exception _exception;
+        private volatile Exception? _exception;
 
         /// <summary>
         /// 
@@ -65,17 +65,19 @@ namespace DanilovSoft.MikroApi
             Monitor.Wait(this);
 
             // Исключение устанавливается до выхода из блокировки другим потоком.
-            Exception ex = _exception;
+            var ex = _exception;
 
             if (ex != null)
+            {
                 throw ex;
+            }
         }
 
         // Эту функцию вызывает поток читающий сокет.
         void IMikroTikResponseListener.Done()
         {
             // Нужно обязательно сменить поток.
-            ThreadPool.UnsafeQueueUserWorkItem(state => 
+            ThreadPool.UnsafeQueueUserWorkItem(state =>
             {
                 lock (state)
                 {

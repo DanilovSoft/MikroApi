@@ -20,21 +20,25 @@ namespace DanilovSoft.MikroApi
         public MikroTikTrapException(MikroTikResponseFrame frame) : base(message: GetMessage(frame))
         {
             if (frame.TryGetValue("category", out string v))
+            {
                 Category = (TrapCategory)int.Parse(v);
+            }
         }
 
         private static string GetMessage(MikroTikResponseFrame frame)
         {
             if (!frame.TryGetValue("message", out string message))
+            {
                 message = null;
+            }
 
             return message;
         }
 
         public MikroTikTrapException(TrapCategory? category, string message) : base(message)
-		{
-			Category = category;
-		}
+        {
+            Category = category;
+        }
 
         public MikroTikTrapException(string message, Exception innerException) : base(message, innerException)
         {

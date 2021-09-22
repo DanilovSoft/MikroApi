@@ -3,7 +3,7 @@
 namespace DanilovSoft.MikroApi
 {
     [Serializable]
-	public class MikroTikDisconnectException : Exception
+    public class MikroTikDisconnectException : Exception
     {
         public MikroTikDisconnectException()
         {

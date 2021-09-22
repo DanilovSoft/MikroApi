@@ -5,8 +5,8 @@ namespace DanilovSoft.MikroApi.Mapping
 {
     internal class DynamicActivator
     {
-        private static readonly ConcurrentDictionary<Type, ObjectMapper> _dict = new ConcurrentDictionary<Type, ObjectMapper>();
-        private static readonly ConcurrentDictionary<Type, AnonymousObjectMapper> _anonDict = new ConcurrentDictionary<Type, AnonymousObjectMapper>();
+        private static readonly ConcurrentDictionary<Type, ObjectMapper> _dict = new();
+        private static readonly ConcurrentDictionary<Type, AnonymousObjectMapper> _anonDict = new();
 
         public static ObjectMapper GetMapper<T>()
         {

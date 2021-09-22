@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace DanilovSoft.MikroApi
@@ -6,25 +7,26 @@ namespace DanilovSoft.MikroApi
     /// <summary>
     /// Агрегирует результат или исключение.
     /// </summary>
-    internal struct QueueResult<T>
+    internal struct QueueResult<T> where T : notnull
     {
-        internal readonly Exception Exception;
-        private readonly T _resultValue;
-        internal bool Error => (Exception != null);
+        internal readonly Exception? _exception;
+        private readonly T? _resultValue;
 
         // ctor
         internal QueueResult(T result)
         {
             _resultValue = result;
-            Exception = null;
+            _exception = null;
         }
 
         // ctor
         internal QueueResult(Exception exception)
         {
-            Exception = exception;
+            _exception = exception;
             _resultValue = default;
         }
+
+        internal bool Error => _exception != null;
 
         /// <summary>
         /// Результат или исключение.
@@ -32,9 +34,12 @@ namespace DanilovSoft.MikroApi
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal T GetResult()
         {
-            if (Exception != null)
-                throw Exception;
+            if (_exception != null)
+            {
+                throw _exception;
+            }
 
+            Debug.Assert(_resultValue != null);
             return _resultValue;
         }
     }

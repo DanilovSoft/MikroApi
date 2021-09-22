@@ -16,7 +16,7 @@ namespace ConsoleAppCore
 
             using (var con = new MikroTikConnection())
             {
-                con.Connect("10.0.0.1", 8728, "api_dbg", "api", RouterOsVersion.Post_v6_43);
+                con.Connect("10.0.0.1", 8728, "api_dbg", "api", RouterOsVersion.PostVersion643);
 
                 var ifaces = con.Command("/interface print")
                     .Query("disabled", "false") // filter
@@ -27,86 +27,86 @@ namespace ConsoleAppCore
                 con.Quit(1000);
             }
 
-                //// Отправляет запрос без получения результата.
-                //var listener = con.Command("/ping")
-                //    .Attribute("address", "SERV.LAN")
-                //    .Attribute("interval", "1")
-                //    .Attribute("count", "4")
-                //    .Proplist("time")
-                //    .Listen();
+            //// Отправляет запрос без получения результата.
+            //var listener = con.Command("/ping")
+            //    .Attribute("address", "SERV.LAN")
+            //    .Attribute("interval", "1")
+            //    .Attribute("count", "4")
+            //    .Proplist("time")
+            //    .Listen();
 
-                //// сервер будет присылать результат каждую секунду.
-                //while (!listener.IsComplete)
-                //{
-                //    MikroTikResponseFrame result;
-                //    try
-                //    {
-                //        result = listener.ListenNext();
-                //    }
-                //    catch (MikroTikDoneException)
-                //    {
+            //// сервер будет присылать результат каждую секунду.
+            //while (!listener.IsComplete)
+            //{
+            //    MikroTikResponseFrame result;
+            //    try
+            //    {
+            //        result = listener.ListenNext();
+            //    }
+            //    catch (MikroTikDoneException)
+            //    {
 
-                //        break;
-                //    }
+            //        break;
+            //    }
 
-                //    Console.WriteLine(result);
+            //    Console.WriteLine(result);
 
-                //    listener.Cancel(true);
-                //}
+            //    listener.Cancel(true);
+            //}
 
-                //var logListener = con.Command("/log listen")
-                //    .Listen();
-                
-                //while (!logListener.IsComplete)
-                //{
-                //    try
-                //    {
-                //        logListener.ListenNext();
-                //    }
-                //    catch (TimeoutException)
-                //    {
+            //var logListener = con.Command("/log listen")
+            //    .Listen();
 
-                //    }
+            //while (!logListener.IsComplete)
+            //{
+            //    try
+            //    {
+            //        logListener.ListenNext();
+            //    }
+            //    catch (TimeoutException)
+            //    {
 
-                //    var entry = logListener.ListenNext();
-                //    Console.WriteLine(entry);
-                //}
+            //    }
 
-                //// Вытащить активные сессии юзера.
-                //var activeSessionsResult = con.Command("/ip hotspot active print")
-                //    .Proplist(".id")
-                //    .Query("user", "2515")
-                //    .Send();
+            //    var entry = logListener.ListenNext();
+            //    Console.WriteLine(entry);
+            //}
 
-                //string[] activeSessions = activeSessionsResult.ScalarArray(".id");
-                //Thread.Sleep(-1);
+            //// Вытащить активные сессии юзера.
+            //var activeSessionsResult = con.Command("/ip hotspot active print")
+            //    .Proplist(".id")
+            //    .Query("user", "2515")
+            //    .Send();
 
-                
+            //string[] activeSessions = activeSessionsResult.ScalarArray(".id");
+            //Thread.Sleep(-1);
 
-                //resultPrint.Scalar("");
-                //resultPrint.ScalarList();
-                //resultPrint.ScalarOrDefault();
 
-                //var sw = Stopwatch.StartNew();
-                //for (int i = 0; i < 500_000; i++)
-                //{
-                //    resultPrint.ToArray(new { });
-                //    resultPrint.ScalarList<int>();
-                //    var row = resultPrint.ToList<InterfaceDto>();
 
-                //}
-                //sw.Stop();
-                //Trace.WriteLine(sw.Elapsed);
-                //Console.WriteLine("OK");
-                //Thread.Sleep(-1);
+            //resultPrint.Scalar("");
+            //resultPrint.ScalarList();
+            //resultPrint.ScalarOrDefault();
 
-                // Команда выполняется 20 сек.
-                //var task = con.Command("/delay")
-                //    .Attribute("delay-time", "20")
-                //    .Send();
+            //var sw = Stopwatch.StartNew();
+            //for (int i = 0; i < 500_000; i++)
+            //{
+            //    resultPrint.ToArray(new { });
+            //    resultPrint.ScalarList<int>();
+            //    var row = resultPrint.ToList<InterfaceDto>();
 
-                // Tell router we are done.
-                //con.Quit(1000);
+            //}
+            //sw.Stop();
+            //Trace.WriteLine(sw.Elapsed);
+            //Console.WriteLine("OK");
+            //Thread.Sleep(-1);
+
+            // Команда выполняется 20 сек.
+            //var task = con.Command("/delay")
+            //    .Attribute("delay-time", "20")
+            //    .Send();
+
+            // Tell router we are done.
+            //con.Quit(1000);
         }
 
         class Log

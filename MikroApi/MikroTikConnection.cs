@@ -10,7 +10,7 @@ namespace DanilovSoft.MikroApi
 {
     public class MikroTikConnection : IDisposable
     {
-        private const RouterOsVersion DefaultOsVersion = RouterOsVersion.Post_v6_43;
+        private const RouterOsVersion DefaultOsVersion = RouterOsVersion.PostVersion643;
         private const int DefaultReadWriteTimeout = 30000;
         public const int DefaultPort = 8728;
         public const int DefaultSslPort = 8729;
@@ -20,7 +20,7 @@ namespace DanilovSoft.MikroApi
         internal readonly Encoding Encoding;
         private TimeSpan ConnectTimeout => TimeSpan.FromMilliseconds(ConnectTimeoutMs);
         private int _disposed;
-        private MikroTikSocket _socket;
+        private MikroTikSocket? _socket;
         /// <exception cref="InvalidOperationException"/>
         private MikroTikSocket Socket
         {
@@ -30,7 +30,7 @@ namespace DanilovSoft.MikroApi
                 return _socket;
             }
         }
-        private int _tagIndex = 0;
+        private int _tagIndex;
         public bool Connected { get; private set; }
 
         private int _receiveTimeout = DefaultReadWriteTimeout;
@@ -40,7 +40,9 @@ namespace DanilovSoft.MikroApi
             set
             {
                 if (Connected)
+                {
                     throw new InvalidOperationException("Can't change receive timeout after connection");
+                }
 
                 _receiveTimeout = value;
             }
@@ -52,7 +54,9 @@ namespace DanilovSoft.MikroApi
             set
             {
                 if (Connected)
+                {
                     throw new InvalidOperationException("Can't change send timeout after connection");
+                }
 
                 _sendTimeout = value;
             }
@@ -213,7 +217,9 @@ namespace DanilovSoft.MikroApi
             {
                 // Закрыть сокет если это еще не сделал враппер.
                 if (!wrapper.IsDisposed)
+                {
                     tcp.Dispose();
+                }
 
                 throw;
             }
@@ -247,7 +253,7 @@ namespace DanilovSoft.MikroApi
 
         private Task LoginAsync(string login, string password, RouterOsVersion version)
         {
-            if(version == RouterOsVersion.Post_v6_43)
+            if (version == RouterOsVersion.PostVersion643)
             {
                 return LoginPlainAsync(login, password);
             }
@@ -259,7 +265,7 @@ namespace DanilovSoft.MikroApi
 
         private void Login(string login, string password, RouterOsVersion version)
         {
-            if (version == RouterOsVersion.Post_v6_43)
+            if (version == RouterOsVersion.PostVersion643)
             {
                 LoginPlain(login, password);
             }
@@ -372,7 +378,7 @@ namespace DanilovSoft.MikroApi
             // Добавить в словарь.
             MikroTikResponseListener listener = Socket.AddListener();
 
-            command.SetTag(listener.Tag);
+            command.SetTag(listener._tag);
 
             // Синхронная отправка команды в сокет без получения результата.
             // Последовательность результатов будет делегироваться в Listener.
@@ -394,8 +400,8 @@ namespace DanilovSoft.MikroApi
             // Добавить в словарь.
             MikroTikResponseListener listener = Socket.AddListener();
 
-            command.SetTag(listener.Tag);
-            
+            command.SetTag(listener._tag);
+
             // Асинхронная отправка запроса в сокет.
             await Socket.SendAsync(command).ConfigureAwait(false);
 
@@ -410,14 +416,18 @@ namespace DanilovSoft.MikroApi
         private void ThrowIfNotConnected()
         {
             if (!Connected)
+            {
                 throw new InvalidOperationException("You are not connected");
+            }
         }
 
         /// <exception cref="InvalidOperationException"/>
         private void ThrowIfLoggedIn()
         {
             if (Connected)
+            {
                 throw new InvalidOperationException("You are Already connected");
+            }
         }
 
         /// <summary>
@@ -489,7 +499,9 @@ namespace DanilovSoft.MikroApi
         private string EncodePassword(string password, string hash)
         {
             if (hash.Length != 32)
+            {
                 throw new ArgumentOutOfRangeException(nameof(hash));
+            }
 
             byte[] bHash = new byte[16];
             for (int i = 0; i < 16; i++)
@@ -518,12 +530,12 @@ namespace DanilovSoft.MikroApi
         }
 
         public void Dispose()
-		{
+        {
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 0)
             {
                 _socket?.Dispose();
                 _socket = null;
             }
         }
-	}
+    }
 }
