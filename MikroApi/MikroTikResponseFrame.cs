@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Text;
 
 namespace DanilovSoft.MikroApi
@@ -58,7 +59,7 @@ namespace DanilovSoft.MikroApi
                 }
 
                 n++;
-                sb.AppendFormat("\"{0}\"=\"{1}\"", item.Key, item.Value);
+                sb.AppendFormat(CultureInfo.InvariantCulture, "\"{0}\"=\"{1}\"", item.Key, item.Value);
             }
             return sb.ToString();
         }

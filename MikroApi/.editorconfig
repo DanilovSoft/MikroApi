@@ -5,6 +5,7 @@ dotnet_diagnostic.CA1002.severity = none
 
 # CA1720: Идентификатор содержит имя типа
 dotnet_diagnostic.CA1720.severity = none
+dotnet_diagnostic.CA1812.severity = none
 
 # IDE0057: Использовать оператор диапазона
 dotnet_diagnostic.IDE0057.severity = none

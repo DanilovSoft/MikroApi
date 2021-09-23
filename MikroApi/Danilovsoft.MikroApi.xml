@@ -775,7 +775,6 @@
             Возвращает <see langword="default"/> если нет ни одной строки.
             </summary>
             <exception cref="T:System.InvalidOperationException"/>
-            <returns></returns>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikResponse.ScalarOrDefault">
             <summary>
@@ -864,7 +863,7 @@
             Принимает сообщения инициализированные командой /listen.
             </summary>
         </member>
-        <member name="F:DanilovSoft.MikroApi.MikroTikResponseListener.Tag">
+        <member name="F:DanilovSoft.MikroApi.MikroTikResponseListener._tag">
             <summary>
             Тег связанный с текущим подписчиком.
             </summary>
@@ -1182,9 +1181,6 @@
             <summary>
             Convert.ChangeType
             </summary>
-            <param name="value"></param>
-            <param name="targetType"></param>
-            <returns></returns>
         </member>
         <member name="T:DanilovSoft.MikroApi.QueueResult`1">
             <summary>

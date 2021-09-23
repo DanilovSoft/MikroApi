@@ -1,5 +1,6 @@
 ﻿using DanilovSoft.MikroApi;
 using System;
+using System.Globalization;
 using System.Text;
 using System.Threading;
 
@@ -9,6 +10,8 @@ namespace ConsoleAppCore
     {
         private static void Main()
         {
+            //string s = string.Format(CultureInfo.InvariantCulture, "{0} bla {1}", "проверка", "qwerty");
+
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
             // Support localized comments.
