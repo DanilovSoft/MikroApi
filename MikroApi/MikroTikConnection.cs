@@ -21,8 +21,8 @@ namespace DanilovSoft.MikroApi
         public const int DefaultSslPort = 8729;
         public const int ConnectTimeoutMs = 10000;
         
-        public static Encoding DefaultEncoding { get; } = Encoding.UTF8;
-        public static TimeSpan DefaultPingInterval { get; } = TimeSpan.FromSeconds(30);
+        public static Encoding DefaultEncoding { get; set; } = Encoding.UTF8;
+        public static TimeSpan DefaultPingInterval { get; set; } = TimeSpan.FromSeconds(30);
 
         internal readonly Encoding _encoding;
         private TimeSpan ConnectTimeout => TimeSpan.FromMilliseconds(ConnectTimeoutMs);
