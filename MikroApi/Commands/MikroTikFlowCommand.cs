@@ -6,12 +6,12 @@ namespace DanilovSoft.MikroApi
 {
     public class MikroTikFlowCommand : MikroTikCommand
     {
-        private readonly MikroTikConnection _con;
+        private readonly MikroTikConnection _mtConnection;
 
         // ctor
         public MikroTikFlowCommand(string command, MikroTikConnection connection) : base(command)
         {
-            _con = connection ?? throw new ArgumentNullException(nameof(connection));
+            _mtConnection = connection ?? throw new ArgumentNullException(nameof(connection));
         }
 
         #region Query
@@ -113,7 +113,10 @@ namespace DanilovSoft.MikroApi
         /// Отправляет команду и возвращает ответ сервера.
         /// </summary>
         /// <exception cref="MikroTikTrapException"/>
-        public MikroTikResponse Send() => _con.Send(this);
+        public MikroTikResponse Send()
+        {
+            return _mtConnection.Send(this);
+        }
 
         ///// <summary>
         ///// Отправляет команду и возвращает ответ сервера.
@@ -130,57 +133,57 @@ namespace DanilovSoft.MikroApi
         /// Команда будет выполняться пока не будет прервана с помощью Cancel.
         /// </summary>
         /// <exception cref="MikroTikTrapException"/>
-        public MikroTikResponseListener Listen() => _con.Listen(this);
+        public MikroTikResponseListener Listen() => _mtConnection.Listen(this);
 
         /// <summary>
         /// Отправляет команду помечая её тегом.
         /// Команда будет выполняться пока не будет прервана с помощью Cancel.
         /// </summary>
-        public Task<MikroTikResponseListener> ListenAsync() => _con.ListenAsync(this);
+        public Task<MikroTikResponseListener> ListenAsync() => _mtConnection.ListenAsync(this);
 
         #endregion Listen
 
         #region Scalar
 
         /// <exception cref="InvalidOperationException"/>
-        public string Scalar() => _con.Send(this).Scalar();
+        public string Scalar() => _mtConnection.Send(this).Scalar();
 
         /// <exception cref="InvalidOperationException"/>
-        public T Scalar<T>() => _con.Send(this).Scalar<T>();
+        public T Scalar<T>() => _mtConnection.Send(this).Scalar<T>();
 
         /// <exception cref="InvalidOperationException"/>
-        public string Scalar(string columnName) => _con.Send(this).Scalar(columnName);
+        public string Scalar(string columnName) => _mtConnection.Send(this).Scalar(columnName);
 
         /// <exception cref="InvalidOperationException"/>
-        public T Scalar<T>(string columnName) => _con.Send(this).Scalar<T>(columnName);
+        public T Scalar<T>(string columnName) => _mtConnection.Send(this).Scalar<T>(columnName);
 
         #endregion
 
         #region ScalarArray
 
         /// <exception cref="InvalidOperationException"/>
-        public string[] ScalarArray() => _con.Send(this).ScalarArray();
+        public string[] ScalarArray() => _mtConnection.Send(this).ScalarArray();
 
         /// <exception cref="InvalidOperationException"/>
-        public T[] ScalarArray<T>() => _con.Send(this).ScalarArray<T>();
+        public T[] ScalarArray<T>() => _mtConnection.Send(this).ScalarArray<T>();
 
-        public string[] ScalarArray(string columnName) => _con.Send(this).ScalarArray(columnName);
+        public string[] ScalarArray(string columnName) => _mtConnection.Send(this).ScalarArray(columnName);
 
-        public T[] ScalarArray<T>(string columnName) => _con.Send(this).ScalarArray<T>(columnName);
+        public T[] ScalarArray<T>(string columnName) => _mtConnection.Send(this).ScalarArray<T>(columnName);
 
         #endregion
 
         #region ScalarList
 
         /// <exception cref="InvalidOperationException"/>
-        public List<string> ScalarList() => _con.Send(this).ScalarList();
+        public List<string> ScalarList() => _mtConnection.Send(this).ScalarList();
 
         /// <exception cref="InvalidOperationException"/>
-        public List<T> ScalarList<T>() => _con.Send(this).ScalarList<T>();
+        public List<T> ScalarList<T>() => _mtConnection.Send(this).ScalarList<T>();
 
-        public List<string> ScalarList(string columnName) => _con.Send(this).ScalarList(columnName);
+        public List<string> ScalarList(string columnName) => _mtConnection.Send(this).ScalarList(columnName);
 
-        public List<T> ScalarList<T>(string columnName) => _con.Send(this).ScalarList<T>(columnName);
+        public List<T> ScalarList<T>(string columnName) => _mtConnection.Send(this).ScalarList<T>(columnName);
 
         #endregion
 
@@ -191,7 +194,7 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         /// <exception cref="InvalidOperationException"/>
         /// <returns></returns>
-        public string ScalarOrDefault() => _con.Send(this).ScalarOrDefault();
+        public string? ScalarOrDefault() => _mtConnection.Send(this).ScalarOrDefault();
 
         /// <summary>
         /// Возвращает <see langword="default"/> если нет ни одной строки.
@@ -199,21 +202,21 @@ namespace DanilovSoft.MikroApi
         /// <typeparam name="T"></typeparam>
         /// <exception cref="InvalidOperationException"/>
         /// <returns></returns>
-        public T ScalarOrDefault<T>() => _con.Send(this).ScalarOrDefault<T>();
+        public T? ScalarOrDefault<T>() => _mtConnection.Send(this).ScalarOrDefault<T>();
 
         /// <summary>
         /// Возвращает <see langword="null"/> если нет ни одной строки.
         /// </summary>
         /// <exception cref="InvalidOperationException"/>
         /// <returns></returns>
-        public string ScalarOrDefault(string columnName) => _con.Send(this).ScalarOrDefault(columnName);
+        public string? ScalarOrDefault(string columnName) => _mtConnection.Send(this).ScalarOrDefault(columnName);
 
         /// <summary>
         /// Возвращает <see langword="default"/> если нет ни одной строки.
         /// </summary>
         /// <exception cref="InvalidOperationException"/>
         /// <returns></returns>
-        public T ScalarOrDefault<T>(string columnName) => _con.Send(this).ScalarOrDefault<T>(columnName);
+        public T? ScalarOrDefault<T>(string columnName) => _mtConnection.Send(this).ScalarOrDefault<T>(columnName);
 
         #endregion
 
@@ -222,17 +225,17 @@ namespace DanilovSoft.MikroApi
         /// <summary>
         /// Когда результатом является одна строка.
         /// </summary>
-        public MikroTikResponseFrame Single() => _con.Send(this).Single();
+        public MikroTikResponseFrame Single() => _mtConnection.Send(this).Single();
 
         /// <summary>
         /// Когда результатом является одна строка.
         /// </summary>
-        public T Single<T>(Func<MikroTikResponseFrame, T> selector) => _con.Send(this).Single(selector);
+        public T Single<T>(Func<MikroTikResponseFrame, T> selector) => _mtConnection.Send(this).Single(selector);
 
         /// <summary>
         /// Когда результатом является одна строка.
         /// </summary>
-        public T Single<T>() => _con.Send(this).Single<T>();
+        public T Single<T>() => _mtConnection.Send(this).Single<T>();
 
         #endregion
 
@@ -241,17 +244,17 @@ namespace DanilovSoft.MikroApi
         /// <summary>
         /// Когда результатом является одна строка.
         /// </summary>
-        public MikroTikResponseFrame SingleOrDefault() => _con.Send(this).SingleOrDefault();
+        public MikroTikResponseFrame? SingleOrDefault() => _mtConnection.Send(this).SingleOrDefault();
 
         /// <summary>
         /// Когда результатом является одна строка.
         /// </summary>
-        public T SingleOrDefault<T>(Func<MikroTikResponseFrame, T> selector) => _con.Send(this).SingleOrDefault(selector);
+        public T? SingleOrDefault<T>(Func<MikroTikResponseFrame, T> selector) => _mtConnection.Send(this).SingleOrDefault(selector);
 
         /// <summary>
         /// Когда результатом является одна строка.
         /// </summary>
-        public T SingleOrDefault<T>() => _con.Send(this).SingleOrDefault<T>();
+        public T? SingleOrDefault<T>() => _mtConnection.Send(this).SingleOrDefault<T>();
 
         #endregion
 
@@ -263,12 +266,12 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public T[] ToArray<T>() => _con.Send(this).ToArray<T>();
+        public T[] ToArray<T>() => _mtConnection.Send(this).ToArray<T>();
 
-        public T[] ToArray<T>(Func<MikroTikResponseFrame, T> selector) => _con.Send(this).ToArray<T>(selector);
+        public T[] ToArray<T>(Func<MikroTikResponseFrame, T> selector) => _mtConnection.Send(this).ToArray<T>(selector);
 
         /// <param name="anonymousObject">Анонимный объект тип которого используется для создания результата функции.</param>
-        public T[] ToArray<T>(T anonymousObject) => _con.Send(this).ToArray<T>(anonymousObject);
+        public T[] ToArray<T>(T anonymousObject) => _mtConnection.Send(this).ToArray<T>(anonymousObject);
 
         #endregion
 
@@ -280,9 +283,9 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public List<T> ToList<T>() => _con.Send(this).ToList<T>();
+        public List<T> ToList<T>() => _mtConnection.Send(this).ToList<T>();
 
-        public List<T> ToList<T>(Func<MikroTikResponseFrame, T> selector) => _con.Send(this).ToList<T>(selector);
+        public List<T> ToList<T>(Func<MikroTikResponseFrame, T> selector) => _mtConnection.Send(this).ToList<T>(selector);
 
         /// <summary>
         /// 
@@ -290,7 +293,7 @@ namespace DanilovSoft.MikroApi
         /// <typeparam name="T"></typeparam>
         /// <param name="anonymousObject">Анонимный объект тип которого используется для создания результата функции.</param>
         /// <returns></returns>
-        public List<T> ToList<T>(T anonymousObject) => _con.Send(this).ToList<T>(anonymousObject);
+        public List<T> ToList<T>(T anonymousObject) => _mtConnection.Send(this).ToList<T>(anonymousObject);
 
         #endregion
 
@@ -302,149 +305,149 @@ namespace DanilovSoft.MikroApi
         /// <exception cref="MikroTikTrapException"/>
         /// <exception cref="MikroTikFatalException"/>
         /// <exception cref="MikroTikDisconnectException"/>
-        public Task<MikroTikResponse> SendAsync() => _con.SendAsync(this);
+        public Task<MikroTikResponse> SendAsync() => _mtConnection.SendAsync(this);
 
         public async Task<string> ScalarAsync()
         {
-            var result = await _con.SendAsync(this).ConfigureAwait(false);
+            var result = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return result.Scalar();
         }
 
         public async Task<T> ScalarAsync<T>()
         {
-            var result = await _con.SendAsync(this).ConfigureAwait(false);
+            var result = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return result.Scalar<T>();
         }
 
         public async Task<string> ScalarAsync(string columnName)
         {
-            var result = await _con.SendAsync(this).ConfigureAwait(false);
+            var result = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return result.Scalar(columnName);
         }
 
         public async Task<T> ScalarAsync<T>(string columnName)
         {
-            var result = await _con.SendAsync(this).ConfigureAwait(false);
+            var result = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return result.Scalar<T>(columnName);
         }
 
         public async Task<List<string>> ScalarListAsync()
         {
-            var response = await _con.SendAsync(this).ConfigureAwait(false);
+            var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.ScalarList();
         }
 
         public async Task<List<T>> ScalarListAsync<T>()
         {
-            var response = await _con.SendAsync(this).ConfigureAwait(false);
+            var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.ScalarList<T>();
         }
 
         public async Task<List<string>> ScalarListAsync(string columnName)
         {
-            var response = await _con.SendAsync(this).ConfigureAwait(false);
+            var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.ScalarList(columnName);
         }
 
         public async Task<List<T>> ScalarListAsync<T>(string columnName)
         {
-            var response = await _con.SendAsync(this).ConfigureAwait(false);
+            var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.ScalarList<T>(columnName);
         }
 
-        public async Task<string> ScalarOrDefaultAsync()
+        public async Task<string?> ScalarOrDefaultAsync()
         {
-            var response = await _con.SendAsync(this).ConfigureAwait(false);
+            var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.ScalarOrDefault();
         }
 
-        public async Task<T> ScalarOrDefaultAsync<T>()
+        public async Task<T?> ScalarOrDefaultAsync<T>()
         {
-            var response = await _con.SendAsync(this).ConfigureAwait(false);
+            var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.ScalarOrDefault<T>();
         }
 
-        public async Task<string> ScalarOrDefaultAsync(string columnName)
+        public async Task<string?> ScalarOrDefaultAsync(string columnName)
         {
-            var response = await _con.SendAsync(this).ConfigureAwait(false);
+            var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.ScalarOrDefault(columnName);
         }
 
-        public async Task<T> ScalarOrDefaultAsync<T>(string columnName)
+        public async Task<T?> ScalarOrDefaultAsync<T>(string columnName)
         {
-            var response = await _con.SendAsync(this).ConfigureAwait(false);
+            var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.ScalarOrDefault<T>(columnName);
         }
 
         public async Task<MikroTikResponseFrame> SingleAsync()
         {
-            var response = await _con.SendAsync(this).ConfigureAwait(false);
+            var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.Single();
         }
 
         public async Task<T> SingleAsync<T>(Func<MikroTikResponseFrame, T> selector)
         {
-            var response = await _con.SendAsync(this).ConfigureAwait(false);
+            var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.Single<T>(selector);
         }
 
         public async Task<T> SingleAsync<T>()
         {
-            var response = await _con.SendAsync(this).ConfigureAwait(false);
+            var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.Single<T>();
         }
 
-        public async Task<MikroTikResponseFrame> SingleOrDefaultAsync()
+        public async Task<MikroTikResponseFrame?> SingleOrDefaultAsync()
         {
-            var response = await _con.SendAsync(this).ConfigureAwait(false);
+            var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.SingleOrDefault();
         }
 
-        public async Task<T> SingleOrDefaultAsync<T>(Func<MikroTikResponseFrame, T> selector)
+        public async Task<T?> SingleOrDefaultAsync<T>(Func<MikroTikResponseFrame, T> selector)
         {
-            var response = await _con.SendAsync(this).ConfigureAwait(false);
+            var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.SingleOrDefault(selector);
         }
 
-        public async Task<T> SingleOrDefaultAsync<T>()
+        public async Task<T?> SingleOrDefaultAsync<T>()
         {
-            var response = await _con.SendAsync(this).ConfigureAwait(false);
+            var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.SingleOrDefault<T>();
         }
 
         public async Task<T[]> ToArrayAsync<T>()
         {
-            var response = await _con.SendAsync(this).ConfigureAwait(false);
+            var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.ToArray<T>();
         }
 
         public async Task<T[]> ToArrayAsync<T>(Func<MikroTikResponseFrame, T> selector)
         {
-            var response = await _con.SendAsync(this).ConfigureAwait(false);
+            var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.ToArray<T>(selector);
         }
 
         public async Task<T[]> ToArrayAsync<T>(T anonymousObject)
         {
-            var response = await _con.SendAsync(this).ConfigureAwait(false);
+            var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.ToArray<T>(anonymousObject);
         }
 
         public async Task<List<T>> ToListAsync<T>()
         {
-            var response = await _con.SendAsync(this).ConfigureAwait(false);
+            var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.ToList<T>();
         }
 
         public async Task<List<T>> ToListAsync<T>(Func<MikroTikResponseFrame, T> selector)
         {
-            var response = await _con.SendAsync(this).ConfigureAwait(false);
+            var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.ToList<T>(selector);
         }
 
         public async Task<List<T>> ToListAsync<T>(T anonymousObject)
         {
-            var response = await _con.SendAsync(this).ConfigureAwait(false);
+            var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.ToList<T>(anonymousObject);
         }
 

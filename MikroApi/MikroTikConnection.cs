@@ -5,6 +5,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
 using System.Net.Security;
+using DanilovSoft.MikroApi.Helpers;
+using System.Runtime.CompilerServices;
+using System.IO;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 
 namespace DanilovSoft.MikroApi
 {
@@ -16,8 +21,8 @@ namespace DanilovSoft.MikroApi
         public const int DefaultSslPort = 8729;
         public const int ConnectTimeoutMs = 10000;
         
-        public static Encoding DefaultEncoding = Encoding.UTF8;
-        public static TimeSpan DefaultPingInterval = TimeSpan.FromSeconds(30);
+        public static Encoding DefaultEncoding { get; } = Encoding.UTF8;
+        public static TimeSpan DefaultPingInterval { get; } = TimeSpan.FromSeconds(30);
 
         internal readonly Encoding _encoding;
         private TimeSpan ConnectTimeout => TimeSpan.FromMilliseconds(ConnectTimeoutMs);
@@ -26,6 +31,7 @@ namespace DanilovSoft.MikroApi
         private int _tagIndex;
         private int _receiveTimeout = DefaultReadWriteTimeout;
         private int _sendTimeout = DefaultReadWriteTimeout;
+        private bool _authorized;
 
         // ctor
         public MikroTikConnection() : this(DefaultEncoding)
@@ -49,7 +55,7 @@ namespace DanilovSoft.MikroApi
             }
         }
 
-        public bool Connected { get; private set; }
+        public bool Connected => _authorized;
         public int ReceiveTimeout
         {
             get => _receiveTimeout;
@@ -88,42 +94,53 @@ namespace DanilovSoft.MikroApi
         }
 
         /// <summary>
-        /// Потокобезопасно создает уникальный тег.
+        /// Потокобезопасно создает следующий уникальный тег.
         /// </summary>
+        /// <remarks>От 0 до 65535.</remarks>
         internal string CreateUniqueTag()
         {
             // Создать уникальный tag.
             ushort intTag = unchecked((ushort)Interlocked.Increment(ref _tagIndex));
-            return intTag.ToString();
+            return intTag.ToString(CultureInfo.InvariantCulture);
         }
 
         #region Connect
 
+        /// <exception cref="ObjectDisposedException"/>
         public void Connect(string hostname, int port, string login, string password)
         {
             Connect(hostname, port, login, password, DefaultOsVersion);
         }
 
+        /// <exception cref="ObjectDisposedException"/>
         public void Connect(string hostname, int port, string login, string password, RouterOsVersion version = RouterOsVersion.PostVersion6Dot43)
         {
-            _socket = Connect(hostname, port, ssl: false);
+            CheckDisposed();
+
+            _socket = Connect(hostname, port, useSsl: false);
             Login(login, password, version);
         }
 
         /// <summary>
         /// Для api-ssl.
         /// </summary>
+        /// <exception cref="ObjectDisposedException"/>
         public void ConnectSsl(string hostname, int port, string login, string password)
         {
+            CheckDisposed();
+
             ConnectSsl(hostname, port, login, password, DefaultOsVersion);
         }
 
         /// <summary>
         /// Для api-ssl.
         /// </summary>
+        /// <exception cref="ObjectDisposedException"/>
         public void ConnectSsl(string hostname, int port, string login, string password, RouterOsVersion version)
         {
-            _socket = Connect(hostname, port, ssl: true);
+            CheckDisposed();
+
+            _socket = Connect(hostname, port, useSsl: true);
             Login(login, password, version);
         }
 
@@ -193,7 +210,9 @@ namespace DanilovSoft.MikroApi
                 throw new ArgumentNullException(nameof(command));
             }
 
-            return Socket.SendAndGetResponse(command);
+            CheckConnected();
+
+            return _socket.SendAndGetResponse(command);
         }
 
         /// <summary>
@@ -201,6 +220,11 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         public Task<MikroTikResponse> SendAsync(MikroTikCommand command)
         {
+            if (command is null)
+            {
+                throw new ArgumentNullException(nameof(command));
+            }
+
             return Socket.SendAndGetResponseAsync(command);
         }
 
@@ -215,10 +239,15 @@ namespace DanilovSoft.MikroApi
         /// <exception cref="MikroTikTrapException"/>
         public MikroTikResponseListener Listen(MikroTikCommand command)
         {
+            if (command is null)
+            {
+                throw new ArgumentNullException(nameof(command));
+            }
+
             command.ThrowIfCompleted();
 
             // Добавить в словарь.
-            MikroTikResponseListener listener = Socket.AddListener();
+            var listener = Socket.AddListener();
 
             command.SetTag(listener._tag);
 
@@ -237,10 +266,15 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         public async Task<MikroTikResponseListener> ListenAsync(MikroTikCommand command)
         {
+            if (command is null)
+            {
+                throw new ArgumentNullException(nameof(command));
+            }
+
             command.ThrowIfCompleted();
 
             // Добавить в словарь.
-            MikroTikResponseListener listener = Socket.AddListener();
+            var listener = Socket.AddListener();
 
             command.SetTag(listener._tag);
 
@@ -315,53 +349,65 @@ namespace DanilovSoft.MikroApi
             return Socket.QuitAsync(millisecondsTimeout);
         }
 
-        private MikroTikSocket Connect(string hostname, int port, bool ssl)
+        #region Non Public
+
+        private static TcpClient ConnectTcp(string hostname, int port)
         {
             var tcp = new TcpClient();
-
             try
             {
                 tcp.Connect(hostname, port);
+                return NullableHelper.SetNull(ref tcp);
             }
-            catch
+            finally
             {
-                tcp.Dispose();
-                throw;
+                tcp?.Dispose();
             }
+        }
 
-            NetworkStream nstream = tcp.GetStream();
-
-            if (ssl)
+        private static SslStream AuthenticateSsl(Stream stream, string hostname)
+        {
+            var sslStream = new SslStream(stream, leaveInnerStreamOpen: false);
+            try
             {
-                var sslStream = new SslStream(nstream, leaveInnerStreamOpen: false);
-                try
-                {
-                    sslStream.AuthenticateAsClient(hostname);
-                }
-                catch
-                {
-                    sslStream.Dispose();
-                    tcp.Dispose();
-                    throw;
-                }
-                return new MikroTikSocket(this, tcp, sslStream);
+                sslStream.AuthenticateAsClient(hostname);
+                return NullableHelper.SetNull(ref sslStream);
             }
-            else
+            finally
             {
-                return new MikroTikSocket(this, tcp, nstream);
+                sslStream?.Dispose();
+            }
+        }
+
+        private MikroTikSocket Connect(string hostname, int port, bool useSsl)
+        {
+            var tcp = ConnectTcp(hostname, port);
+            var tcpStream = tcp.GetStream();
+            try
+            {
+                Stream finalStream = useSsl 
+                    ? AuthenticateSsl(tcpStream, hostname) 
+                    : tcpStream;
+
+                NullableHelper.SetNull(ref tcpStream);
+                return new MikroTikSocket(this, NullableHelper.SetNull(ref tcp), finalStream);
+            }
+            finally
+            {
+                tcpStream?.Dispose();
+                tcp?.Dispose();
             }
         }
 
         /// <exception cref="TimeoutException"/>
         /// <exception cref="OperationCanceledException"/>
-        private async Task<MikroTikSocket> ConnectAsync(string hostname, int port, bool ssl, CancellationToken cancellationToken)
+        private async Task<MikroTikSocket> ConnectAsync(string hostname, int port, bool useSsl, CancellationToken cancellationToken)
         {
             var tcp = new TcpClient();
             var wrapper = new CancellationTokenHelper(tcp, ConnectTimeout, cancellationToken);
-
             try
             {
-                await wrapper.WrapAsync(tcp.ConnectAsync(hostname, port)).ConfigureAwait(false);
+                await wrapper.WrapAsync(tcp.ConnectAsync(hostname, port, cancellationToken)).ConfigureAwait(false);
             }
             catch
             {
@@ -374,9 +420,9 @@ namespace DanilovSoft.MikroApi
                 throw;
             }
 
-            NetworkStream nstream = tcp.GetStream();
+            var nstream = tcp.GetStream();
 
-            if (ssl)
+            if (useSsl)
             {
                 var sslStream = new SslStream(nstream, leaveInnerStreamOpen: false);
                 try
@@ -398,20 +444,22 @@ namespace DanilovSoft.MikroApi
         }
 
         /// <exception cref="MikroTikConnectionException"/>
+        [MemberNotNull(nameof(_socket))]
         private void CheckConnected()
         {
             if (!Connected)
             {
-                throw new MikroTikConnectionException("You are not connected");
+                ThrowHelper.ThrowNotConnected();
             }
         }
 
         /// <exception cref="MikroTikConnectionException"/>
-        private void CheckLoggedIn()
+        //[MemberNotNull(nameof(_socket))]
+        private void CheckAlreadyAuthorized()
         {
-            if (Connected)
+            if (_authorized)
             {
-                throw new MikroTikConnectionException("You are already connected");
+                ThrowHelper.ThrowAlreadyConnected();
             }
         }
 
@@ -446,10 +494,10 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         private void Login(string login, string password)
         {
-            CheckLoggedIn();
+            CheckAlreadyAuthorized();
 
             var command = new MikroTikCommand("/login");
-            MikroTikResponse resp = _socket.SendAndGetResponse(command);
+            var resp = _socket.SendAndGetResponse(command);
 
             string hash = resp[0]["ret"];
             string response = EncodePassword(password, hash);
@@ -459,31 +507,31 @@ namespace DanilovSoft.MikroApi
                 .Attribute("response", response);
 
             _socket.SendAndGetResponse(secondCommand);
-            Connected = true;
+            _authorized = true;
         }
 
         private void LoginPlain(string login, string password)
         {
-            CheckLoggedIn();
+            CheckAlreadyAuthorized();
 
             var command = new MikroTikCommand("/login")
                 .Attribute("name", login)
                 .Attribute("password", password);
 
             _socket.SendAndGetResponse(command);
-            Connected = true;
+            _authorized = true;
         }
 
         private async Task LoginPlainAsync(string login, string password)
         {
-            CheckLoggedIn();
+            CheckAlreadyAuthorized();
 
             var command = new MikroTikCommand("/login")
                 .Attribute("name", login)
                 .Attribute("password", password);
 
             MikroTikResponse resp = await _socket.SendAndGetResponseAsync(command).ConfigureAwait(false);
-            Connected = true;
+            _authorized = true;
         }
 
         /// <summary>
@@ -491,10 +539,10 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         private async Task LoginAsync(string login, string password)
         {
-            CheckLoggedIn();
+            CheckAlreadyAuthorized();
 
             var command = new MikroTikCommand("/login");
-            MikroTikResponse resp = await _socket.SendAndGetResponseAsync(command).ConfigureAwait(false);
+            var resp = await _socket.SendAndGetResponseAsync(command).ConfigureAwait(false);
 
             string hash = resp[0]["ret"];
             string response = EncodePassword(password, hash);
@@ -504,7 +552,7 @@ namespace DanilovSoft.MikroApi
                 .Attribute("response", response);
 
             await _socket.SendAndGetResponseAsync(secondCommand).ConfigureAwait(false);
-            Connected = true;
+            _authorized = true;
         }
 
         #endregion
@@ -546,5 +594,17 @@ namespace DanilovSoft.MikroApi
                 return sb.ToString();
             }
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void CheckDisposed()
+        {
+            if (!_disposed)
+            {
+                return;
+            }
+            ThrowHelper.ThrowConnectionDisposed();
+        }
+
+        #endregion
     }
 }

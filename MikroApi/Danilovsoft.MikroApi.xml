@@ -4,13 +4,13 @@
         <name>DanilovSoft.MikroApi</name>
     </assembly>
     <members>
-        <member name="M:DanilovSoft.MikroApi.CancellationTokenHelper.WrapAsync(System.Func{System.Threading.Tasks.Task})">
-            <exception cref="T:System.OperationCanceledException"/>
+        <member name="M:DanilovSoft.MikroApi.CancellationTokenHelper.WrapAsync(System.Func{System.Threading.Tasks.ValueTask})">
             <exception cref="T:System.TimeoutException"/>
+            <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.CancellationTokenHelper.WrapAsync(System.Threading.Tasks.Task)">
-            <exception cref="T:System.OperationCanceledException"/>
+        <member name="M:DanilovSoft.MikroApi.CancellationTokenHelper.WrapAsync(System.Threading.Tasks.ValueTask)">
             <exception cref="T:System.TimeoutException"/>
+            <exception cref="T:System.OperationCanceledException"/>
         </member>
         <member name="T:DanilovSoft.MikroApi.MikroTikAsyncCancelCommand">
             <summary>
@@ -387,6 +387,12 @@
             Value generated with :return command
             </summary>
         </member>
+        <member name="M:DanilovSoft.MikroApi.Helpers.ThrowHelper.ThrowNotConnected">
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikConnectionException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.Helpers.ThrowHelper.ThrowAlreadyConnected">
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikConnectionException"/>
+        </member>
         <member name="M:DanilovSoft.MikroApi.IMikroTikResponseListener.AddResult(DanilovSoft.MikroApi.MikroTikResponseFrame)">
             <summary>
             Добавляет результат в коллекцию. Вызывается если получен тегированный фрейм сообщения.
@@ -487,18 +493,27 @@
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CreateUniqueTag">
             <summary>
-            Потокобезопасно создает уникальный тег.
+            Потокобезопасно создает следующий уникальный тег.
             </summary>
+            <remarks>От 0 до 65535.</remarks>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Connect(System.String,System.Int32,System.String,System.String)">
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Connect(System.String,System.Int32,System.String,System.String,DanilovSoft.MikroApi.RouterOsVersion)">
+            <exception cref="T:System.ObjectDisposedException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectSsl(System.String,System.Int32,System.String,System.String)">
             <summary>
             Для api-ssl.
             </summary>
+            <exception cref="T:System.ObjectDisposedException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectSsl(System.String,System.Int32,System.String,System.String,DanilovSoft.MikroApi.RouterOsVersion)">
             <summary>
             Для api-ssl.
             </summary>
+            <exception cref="T:System.ObjectDisposedException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectAsync(System.String,System.Int32,System.String,System.String)">
             <exception cref="T:System.TimeoutException"/>
@@ -531,20 +546,6 @@
             <exception cref="T:System.TimeoutException"/>
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectAsync(System.String,System.Int32,System.Boolean,System.Threading.CancellationToken)">
-            <exception cref="T:System.TimeoutException"/>
-            <exception cref="T:System.OperationCanceledException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Login(System.String,System.String)">
-            <summary>
-            Использует MD5.
-            </summary>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.LoginAsync(System.String,System.String)">
-            <summary>
-            Использует MD5.
-            </summary>
-        </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Send(DanilovSoft.MikroApi.MikroTikCommand)">
             <summary>
             Отправляет команду и возвращает ответ сервера.
@@ -568,12 +569,6 @@
             Отправляет команду помечая её тегом.
             Команда будет выполняться пока не будет прервана с помощью Cancel.
             </summary>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ThrowIfNotConnected">
-            <exception cref="T:System.InvalidOperationException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ThrowIfLoggedIn">
-            <exception cref="T:System.InvalidOperationException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CancelListeners">
             <summary>
@@ -614,6 +609,26 @@
             Сообщает серверу что выполняется разъединение. Не бросает исключения.
             </summary>
             <param name="millisecondsTimeout">Позволяет подождать подтверждение от сервера что-бы лишний раз не происходило исключение в потоке читающем из сокета.</param>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectAsync(System.String,System.Int32,System.Boolean,System.Threading.CancellationToken)">
+            <exception cref="T:System.TimeoutException"/>
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CheckConnected">
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikConnectionException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CheckAlreadyAuthorized">
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikConnectionException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Login(System.String,System.String)">
+            <summary>
+            Использует MD5.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.LoginAsync(System.String,System.String)">
+            <summary>
+            Использует MD5.
+            </summary>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikConnection.EncodePassword(System.String,System.String)">
             <summary>
@@ -1124,7 +1139,7 @@
             <summary>
             Попытка остановить таймер.
             </summary>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikConnectionClosedAbnormally"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroTikConnectionClosedAbnormallyException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.StreamExtensions.ReadBlock(System.IO.Stream,System.Byte[],System.Int32,System.Int32)">
             <summary>

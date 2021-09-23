@@ -5,7 +5,7 @@ using static ExceptionMessages;
 
 namespace DanilovSoft.MikroApi
 {
-    internal class CancellationTokenHelper
+    internal sealed class CancellationTokenHelper
     {
         private readonly object _sync = new();
         private readonly IDisposable _disposable;
@@ -23,16 +23,16 @@ namespace DanilovSoft.MikroApi
 
         public bool IsDisposed => _isDisposed;
 
-        /// <exception cref="OperationCanceledException"/>
         /// <exception cref="TimeoutException"/>
-        public Task WrapAsync(Func<Task> asyncAction)
+        /// <exception cref="OperationCanceledException"/>
+        public Task WrapAsync(Func<ValueTask> asyncAction)
         {
             return WrapAsync(asyncAction());
         }
 
-        /// <exception cref="OperationCanceledException"/>
         /// <exception cref="TimeoutException"/>
-        public async Task WrapAsync(Task task)
+        /// <exception cref="OperationCanceledException"/>
+        public async Task WrapAsync(ValueTask task)
         {
             int atomicDispose;
 
@@ -48,18 +48,18 @@ namespace DanilovSoft.MikroApi
                         await task.ConfigureAwait(false);
                     }
                     catch (Exception ex) when (_cancellationToken.IsCancellationRequested)
-                    /* Пользователь отменил операцию */
+                    // Пользователь отменил операцию.
                     {
                         throw new OperationCanceledException(OperationCanceledMessage, ex, _cancellationToken);
                     }
                     catch (Exception ex) when (linked.IsCancellationRequested)
-                    /* Превышен таймаут */
+                    // Превышен таймаут.
                     {
                         throw new TimeoutException(ConnectTimeoutExceptionMessage, ex);
                     }
                     finally
                     {
-                        /* Отменяем Dispose */
+                        // Отменяем Dispose.
                         atomicDispose = Interlocked.CompareExchange(ref _atomicDisposed, 2, 0);
                     }
                 }

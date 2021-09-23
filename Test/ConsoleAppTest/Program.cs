@@ -25,6 +25,7 @@ namespace ConsoleAppCore
                     //.Query("disabled", "false") // filter
                     //.Query("name", "sfp1")      // filter
                     //.Proplist("comment", "name", "mtu") // limit output to these columns alone
+                    .Proplist("address", "mac-address", "host-name", "status")
                     .Send();
 
                 con.Quit(1000);
