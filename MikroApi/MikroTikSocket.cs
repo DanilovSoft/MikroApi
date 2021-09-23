@@ -58,7 +58,7 @@ namespace DanilovSoft.MikroApi
         internal MikroTikSocket(MikroTikConnection connection, TcpClient tcpClient, Stream stream)
         {
             _connection = connection;
-            _encoding = connection.Encoding;
+            _encoding = connection._encoding;
             _tcpClient = tcpClient;
 
             //Stream stream = tcpClient.GetStream();

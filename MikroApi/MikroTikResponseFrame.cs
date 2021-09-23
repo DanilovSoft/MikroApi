@@ -38,7 +38,7 @@ namespace DanilovSoft.MikroApi
         {
             get
             {
-                if (TryGetValue(key, out string value))
+                if (TryGetValue(key, out var value))
                 {
                     return value;
                 }

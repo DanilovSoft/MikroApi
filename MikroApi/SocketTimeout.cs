@@ -42,7 +42,7 @@ namespace DanilovSoft.MikroApi
         /// <summary>
         /// Попытка остановить таймер.
         /// </summary>
-        /// <exception cref="MikroTikConnectionClosedAbnormally"/>
+        /// <exception cref="MikroTikConnectionClosedAbnormallyException"/>
         public void Stop()
         {
             // Остановить таймер если он запланирован.
@@ -63,7 +63,7 @@ namespace DanilovSoft.MikroApi
             else
             // Не успели отменить таймер.
             {
-                throw new MikroTikConnectionClosedAbnormally();
+                throw new MikroTikConnectionClosedAbnormallyException();
             }
         }
 

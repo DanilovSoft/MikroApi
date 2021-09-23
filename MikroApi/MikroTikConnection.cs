@@ -8,32 +8,48 @@ using System.Net.Security;
 
 namespace DanilovSoft.MikroApi
 {
-    public class MikroTikConnection : IDisposable
+    public sealed class MikroTikConnection : IDisposable
     {
-        private const RouterOsVersion DefaultOsVersion = RouterOsVersion.PostVersion643;
+        private const RouterOsVersion DefaultOsVersion = RouterOsVersion.PostVersion6Dot43;
         private const int DefaultReadWriteTimeout = 30000;
         public const int DefaultPort = 8728;
         public const int DefaultSslPort = 8729;
         public const int ConnectTimeoutMs = 10000;
+        
         public static Encoding DefaultEncoding = Encoding.UTF8;
         public static TimeSpan DefaultPingInterval = TimeSpan.FromSeconds(30);
-        internal readonly Encoding Encoding;
+
+        internal readonly Encoding _encoding;
         private TimeSpan ConnectTimeout => TimeSpan.FromMilliseconds(ConnectTimeoutMs);
-        private int _disposed;
         private MikroTikSocket? _socket;
-        /// <exception cref="InvalidOperationException"/>
-        private MikroTikSocket Socket
+        private bool _disposed;
+        private int _tagIndex;
+        private int _receiveTimeout = DefaultReadWriteTimeout;
+        private int _sendTimeout = DefaultReadWriteTimeout;
+
+        // ctor
+        public MikroTikConnection() : this(DefaultEncoding)
         {
-            get
+            // Этот конструктор лучше оставить пустым.
+        }
+
+        // ctor
+        public MikroTikConnection(Encoding encoding)
+        {
+            _encoding = encoding ?? throw new ArgumentNullException(nameof(encoding));
+        }
+
+        public void Dispose()
+        {
+            if (!_disposed)
             {
-                ThrowIfNotConnected();
-                return _socket;
+                _disposed = true;
+                _socket?.Dispose();
+                _socket = null;
             }
         }
-        private int _tagIndex;
-        public bool Connected { get; private set; }
 
-        private int _receiveTimeout = DefaultReadWriteTimeout;
+        public bool Connected { get; private set; }
         public int ReceiveTimeout
         {
             get => _receiveTimeout;
@@ -47,7 +63,6 @@ namespace DanilovSoft.MikroApi
                 _receiveTimeout = value;
             }
         }
-        private int _sendTimeout = DefaultReadWriteTimeout;
         public int SendTimeout
         {
             get => _sendTimeout;
@@ -62,16 +77,14 @@ namespace DanilovSoft.MikroApi
             }
         }
 
-        // ctor
-        public MikroTikConnection() : this(DefaultEncoding)
+        /// <exception cref="InvalidOperationException"/>
+        private MikroTikSocket Socket
         {
-            // Этот конструктор лучше оставить пустым.
-        }
-
-        // ctor
-        public MikroTikConnection(Encoding encoding)
-        {
-            Encoding = encoding ?? throw new ArgumentNullException(nameof(encoding));
+            get
+            {
+                CheckConnected();
+                return _socket;
+            }
         }
 
         /// <summary>
@@ -165,6 +178,143 @@ namespace DanilovSoft.MikroApi
             await LoginAsync(login, password, version).ConfigureAwait(false);
         }
 
+        #endregion
+
+        #region Send
+
+        /// <summary>
+        /// Отправляет команду и возвращает ответ сервера.
+        /// </summary>
+        /// <exception cref="MikroTikTrapException"/>
+        public MikroTikResponse Send(MikroTikCommand command)
+        {
+            if (command is null)
+            {
+                throw new ArgumentNullException(nameof(command));
+            }
+
+            return Socket.SendAndGetResponse(command);
+        }
+
+        /// <summary>
+        /// Отправляет команду и возвращает ответ сервера.
+        /// </summary>
+        public Task<MikroTikResponse> SendAsync(MikroTikCommand command)
+        {
+            return Socket.SendAndGetResponseAsync(command);
+        }
+
+        #endregion
+
+        #region Listen
+
+        /// <summary>
+        /// Отправляет команду помечая её тегом.
+        /// Команда будет выполняться пока не будет прервана с помощью Cancel.
+        /// </summary>
+        /// <exception cref="MikroTikTrapException"/>
+        public MikroTikResponseListener Listen(MikroTikCommand command)
+        {
+            command.ThrowIfCompleted();
+
+            // Добавить в словарь.
+            MikroTikResponseListener listener = Socket.AddListener();
+
+            command.SetTag(listener._tag);
+
+            // Синхронная отправка команды в сокет без получения результата.
+            // Последовательность результатов будет делегироваться в Listener.
+            Socket.Send(command);
+
+            command.Completed();
+
+            return listener;
+        }
+
+        /// <summary>
+        /// Отправляет команду помечая её тегом.
+        /// Команда будет выполняться пока не будет прервана с помощью Cancel.
+        /// </summary>
+        public async Task<MikroTikResponseListener> ListenAsync(MikroTikCommand command)
+        {
+            command.ThrowIfCompleted();
+
+            // Добавить в словарь.
+            MikroTikResponseListener listener = Socket.AddListener();
+
+            command.SetTag(listener._tag);
+
+            // Асинхронная отправка запроса в сокет.
+            await Socket.SendAsync(command).ConfigureAwait(false);
+
+            command.Completed();
+
+            return listener;
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Отправляет запрос на отмену всех выполняющихся задач и ожидает подтверждения об упешной отмене.
+        /// </summary>
+        public void CancelListeners()
+        {
+            CancelListeners(wait: true);
+        }
+
+        /// <summary>
+        /// Отправляет запрос на отмену всех выполняющихся задач и ожидает подтверждения об упешной отмене.
+        /// </summary>
+        public Task CancelListenersAsync()
+        {
+            return Socket.CancelListenersAsync(wait: true);
+        }
+
+        /// <summary>
+        /// Отправляет запрос на отмену всех выполняющихся задач.
+        /// </summary>
+        /// <param name="wait">True если нужно дождаться подтверждения об успешной отмене. Значение по умолчанию True</param>
+        public void CancelListeners(bool wait)
+        {
+            Socket.CancelListeners(wait);
+        }
+
+        /// <summary>
+        /// Отправляет запрос на отмену всех выполняющихся задач.
+        /// </summary>
+        /// <param name="wait">True если нужно дождаться подтверждения об успешной отмене. Значение по умолчанию True</param>
+        public Task CancelListenersAsync(bool wait)
+        {
+            return Socket.CancelListenersAsync(wait);
+        }
+
+        /// <summary>
+        /// Подготавливает команду для отправки.
+        /// </summary>
+        /// <param name="command">Начальный текст команды</param>
+        public MikroTikFlowCommand Command(string command)
+        {
+            return new MikroTikFlowCommand(command, this);
+        }
+
+        /// <summary>
+        /// Сообщает серверу что выполняется разъединение. Не бросает исключения.
+        /// </summary>
+        /// <param name="millisecondsTimeout">Позволяет подождать подтверждение от сервера что-бы лишний раз не происходило исключение в потоке читающем из сокета.</param>
+        public bool Quit(int millisecondsTimeout)
+        {
+            return Socket.Quit(millisecondsTimeout);
+        }
+
+        /// <summary>
+        /// Сообщает серверу что выполняется разъединение. Не бросает исключения.
+        /// </summary>
+        /// <param name="millisecondsTimeout">Позволяет подождать подтверждение от сервера что-бы лишний раз не происходило исключение в потоке читающем из сокета.</param>
+        public Task<bool> QuitAsync(int millisecondsTimeout)
+        {
+            return Socket.QuitAsync(millisecondsTimeout);
+        }
+
         private MikroTikSocket Connect(string hostname, int port, bool ssl)
         {
             var tcp = new TcpClient();
@@ -247,13 +397,29 @@ namespace DanilovSoft.MikroApi
             }
         }
 
-        #endregion
+        /// <exception cref="MikroTikConnectionException"/>
+        private void CheckConnected()
+        {
+            if (!Connected)
+            {
+                throw new MikroTikConnectionException("You are not connected");
+            }
+        }
+
+        /// <exception cref="MikroTikConnectionException"/>
+        private void CheckLoggedIn()
+        {
+            if (Connected)
+            {
+                throw new MikroTikConnectionException("You are already connected");
+            }
+        }
 
         #region Login
 
         private Task LoginAsync(string login, string password, RouterOsVersion version)
         {
-            if (version == RouterOsVersion.PostVersion643)
+            if (version == RouterOsVersion.PostVersion6Dot43)
             {
                 return LoginPlainAsync(login, password);
             }
@@ -265,7 +431,7 @@ namespace DanilovSoft.MikroApi
 
         private void Login(string login, string password, RouterOsVersion version)
         {
-            if (version == RouterOsVersion.PostVersion643)
+            if (version == RouterOsVersion.PostVersion6Dot43)
             {
                 LoginPlain(login, password);
             }
@@ -280,7 +446,7 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         private void Login(string login, string password)
         {
-            ThrowIfLoggedIn();
+            CheckLoggedIn();
 
             var command = new MikroTikCommand("/login");
             MikroTikResponse resp = _socket.SendAndGetResponse(command);
@@ -298,7 +464,7 @@ namespace DanilovSoft.MikroApi
 
         private void LoginPlain(string login, string password)
         {
-            ThrowIfLoggedIn();
+            CheckLoggedIn();
 
             var command = new MikroTikCommand("/login")
                 .Attribute("name", login)
@@ -310,7 +476,7 @@ namespace DanilovSoft.MikroApi
 
         private async Task LoginPlainAsync(string login, string password)
         {
-            ThrowIfLoggedIn();
+            CheckLoggedIn();
 
             var command = new MikroTikCommand("/login")
                 .Attribute("name", login)
@@ -325,7 +491,7 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         private async Task LoginAsync(string login, string password)
         {
-            ThrowIfLoggedIn();
+            CheckLoggedIn();
 
             var command = new MikroTikCommand("/login");
             MikroTikResponse resp = await _socket.SendAndGetResponseAsync(command).ConfigureAwait(false);
@@ -342,154 +508,6 @@ namespace DanilovSoft.MikroApi
         }
 
         #endregion
-
-        #region Send
-
-        /// <summary>
-        /// Отправляет команду и возвращает ответ сервера.
-        /// </summary>
-        /// <exception cref="MikroTikTrapException"/>
-        public MikroTikResponse Send(MikroTikCommand command)
-        {
-            return Socket.SendAndGetResponse(command);
-        }
-
-        /// <summary>
-        /// Отправляет команду и возвращает ответ сервера.
-        /// </summary>
-        public Task<MikroTikResponse> SendAsync(MikroTikCommand command)
-        {
-            return Socket.SendAndGetResponseAsync(command);
-        }
-
-        #endregion
-
-        #region Listen
-
-        /// <summary>
-        /// Отправляет команду помечая её тегом.
-        /// Команда будет выполняться пока не будет прервана с помощью Cancel.
-        /// </summary>
-        /// <exception cref="MikroTikTrapException"/>
-        public MikroTikResponseListener Listen(MikroTikCommand command)
-        {
-            command.ThrowIfCompleted();
-
-            // Добавить в словарь.
-            MikroTikResponseListener listener = Socket.AddListener();
-
-            command.SetTag(listener._tag);
-
-            // Синхронная отправка команды в сокет без получения результата.
-            // Последовательность результатов будет делегироваться в Listener.
-            Socket.Send(command);
-
-            command.Completed();
-
-            return listener;
-        }
-
-        /// <summary>
-        /// Отправляет команду помечая её тегом.
-        /// Команда будет выполняться пока не будет прервана с помощью Cancel.
-        /// </summary>
-        public async Task<MikroTikResponseListener> ListenAsync(MikroTikCommand command)
-        {
-            command.ThrowIfCompleted();
-
-            // Добавить в словарь.
-            MikroTikResponseListener listener = Socket.AddListener();
-
-            command.SetTag(listener._tag);
-
-            // Асинхронная отправка запроса в сокет.
-            await Socket.SendAsync(command).ConfigureAwait(false);
-
-            command.Completed();
-
-            return listener;
-        }
-
-        #endregion
-
-        /// <exception cref="InvalidOperationException"/>
-        private void ThrowIfNotConnected()
-        {
-            if (!Connected)
-            {
-                throw new InvalidOperationException("You are not connected");
-            }
-        }
-
-        /// <exception cref="InvalidOperationException"/>
-        private void ThrowIfLoggedIn()
-        {
-            if (Connected)
-            {
-                throw new InvalidOperationException("You are Already connected");
-            }
-        }
-
-        /// <summary>
-        /// Отправляет запрос на отмену всех выполняющихся задач и ожидает подтверждения об упешной отмене.
-        /// </summary>
-        public void CancelListeners()
-        {
-            CancelListeners(wait: true);
-        }
-
-        /// <summary>
-        /// Отправляет запрос на отмену всех выполняющихся задач и ожидает подтверждения об упешной отмене.
-        /// </summary>
-        public Task CancelListenersAsync()
-        {
-            return Socket.CancelListenersAsync(wait: true);
-        }
-
-        /// <summary>
-        /// Отправляет запрос на отмену всех выполняющихся задач.
-        /// </summary>
-        /// <param name="wait">True если нужно дождаться подтверждения об успешной отмене. Значение по умолчанию True</param>
-        public void CancelListeners(bool wait)
-        {
-            Socket.CancelListeners(wait);
-        }
-
-        /// <summary>
-        /// Отправляет запрос на отмену всех выполняющихся задач.
-        /// </summary>
-        /// <param name="wait">True если нужно дождаться подтверждения об успешной отмене. Значение по умолчанию True</param>
-        public Task CancelListenersAsync(bool wait)
-        {
-            return Socket.CancelListenersAsync(wait);
-        }
-
-        /// <summary>
-        /// Подготавливает команду для отправки.
-        /// </summary>
-        /// <param name="command">Начальный текст команды</param>
-        public MikroTikFlowCommand Command(string command)
-        {
-            return new MikroTikFlowCommand(command, this);
-        }
-
-        /// <summary>
-        /// Сообщает серверу что выполняется разъединение. Не бросает исключения.
-        /// </summary>
-        /// <param name="millisecondsTimeout">Позволяет подождать подтверждение от сервера что-бы лишний раз не происходило исключение в потоке читающем из сокета.</param>
-        public bool Quit(int millisecondsTimeout)
-        {
-            return Socket.Quit(millisecondsTimeout);
-        }
-
-        /// <summary>
-        /// Сообщает серверу что выполняется разъединение. Не бросает исключения.
-        /// </summary>
-        /// <param name="millisecondsTimeout">Позволяет подождать подтверждение от сервера что-бы лишний раз не происходило исключение в потоке читающем из сокета.</param>
-        public Task<bool> QuitAsync(int millisecondsTimeout)
-        {
-            return Socket.QuitAsync(millisecondsTimeout);
-        }
 
         /// <summary>
         /// Возвращает HEX строку длиной 34 символа.
@@ -509,7 +527,7 @@ namespace DanilovSoft.MikroApi
                 bHash[i] = Convert.ToByte(hash.Substring(i * 2, 2), 16);
             }
 
-            byte[] pass = Encoding.GetBytes(password);
+            byte[] pass = _encoding.GetBytes(password);
             byte[] buf = new byte[pass.Length + bHash.Length + 1];
 
             Array.Copy(pass, 0, buf, 1, pass.Length);
@@ -526,15 +544,6 @@ namespace DanilovSoft.MikroApi
                     sb.Append(cHash[i].ToString("X2"));
                 }
                 return sb.ToString();
-            }
-        }
-
-        public void Dispose()
-        {
-            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 0)
-            {
-                _socket?.Dispose();
-                _socket = null;
             }
         }
     }

@@ -317,7 +317,7 @@
             <param name="anonymousObject">Анонимный объект тип которого используется для создания результата функции.</param>
             <returns></returns>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.DanilovSoft#MikroApi#IAsyncResponse#SendAsync">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.SendAsync">
             <summary>
             Отправляет команду и возвращает ответ сервера.
             </summary>
@@ -412,118 +412,6 @@
             <summary>
             Вызывается если от сервера получен "!done". Значит сервер прекратил отправку сообщений для этого подписчика. Подписчик удаляется из словаря.
             </summary>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.SendAsync">
-            <summary>
-            Отправляет команду и возвращает ответ сервера.
-            </summary>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikTrapException"/>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikFatalException"/>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikDisconnectException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.Scalar">
-            <exception cref="T:System.InvalidOperationException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.Scalar``1">
-            <exception cref="T:System.InvalidOperationException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.Scalar(System.String)">
-            <exception cref="T:System.InvalidOperationException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.Scalar``1(System.String)">
-            <exception cref="T:System.InvalidOperationException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.ScalarList">
-            <exception cref="T:System.InvalidOperationException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.ScalarList``1">
-            <exception cref="T:System.InvalidOperationException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.ScalarOrDefault">
-            <summary>
-            Возвращает <see langword="null"/> если нет ни одной строки.
-            </summary>
-            <exception cref="T:System.InvalidOperationException"/>
-            <returns></returns>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.ScalarOrDefault``1">
-            <summary>
-            Возвращает <see langword="default"/> если нет ни одной строки.
-            </summary>
-            <typeparam name="T"></typeparam>
-            <exception cref="T:System.InvalidOperationException"/>
-            <returns></returns>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.ScalarOrDefault(System.String)">
-            <summary>
-            Возвращает <see langword="null"/> если нет ни одной строки.
-            </summary>
-            <exception cref="T:System.InvalidOperationException"/>
-            <returns></returns>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.ScalarOrDefault``1(System.String)">
-            <summary>
-            Возвращает <see langword="default"/> если нет ни одной строки.
-            </summary>
-            <exception cref="T:System.InvalidOperationException"/>
-            <returns></returns>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.Single">
-            <summary>
-            Когда результатом является одна строка.
-            </summary>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.Single``1(System.Func{DanilovSoft.MikroApi.MikroTikResponseFrame,``0})">
-            <summary>
-            Когда результатом является одна строка.
-            </summary>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.Single``1">
-            <summary>
-            Когда результатом является одна строка.
-            </summary>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.SingleOrDefault">
-            <summary>
-            Когда результатом является одна строка.
-            </summary>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.SingleOrDefault``1(System.Func{DanilovSoft.MikroApi.MikroTikResponseFrame,``0})">
-            <summary>
-            Когда результатом является одна строка.
-            </summary>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.SingleOrDefault``1">
-            <summary>
-            Когда результатом является одна строка.
-            </summary>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.ToArray``1">
-            <summary>
-            Создает список объектов
-            члены которого должны использовать атрибут <see cref="T:DanilovSoft.MikroApi.MikroTikPropertyAttribute"/> для привязки данных.
-            </summary>
-            <typeparam name="T"></typeparam>
-            <returns></returns>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.ToArray``1(``0)">
-            <param name="anonymousObject">Анонимный объект тип которого используется для создания результата функции.</param>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.ToList``1">
-            <summary>
-            Создает список объектов
-            члены которого должны использовать атрибут <see cref="T:DanilovSoft.MikroApi.MikroTikPropertyAttribute"/> для привязки данных.
-            </summary>
-            <typeparam name="T"></typeparam>
-            <returns></returns>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IAsyncResponse.ToList``1(``0)">
-            <summary>
-            
-            </summary>
-            <typeparam name="T"></typeparam>
-            <param name="anonymousObject">Анонимный объект тип которого используется для создания результата функции.</param>
-            <returns></returns>
         </member>
         <member name="T:DanilovSoft.MikroApi.Threading.ListenerQueue`1">
             <summary>

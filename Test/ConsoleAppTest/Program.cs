@@ -19,13 +19,13 @@ namespace ConsoleAppCore
 
             using (var con = new MikroTikConnection())
             {
-                con.Connect("10.0.0.1", 8728, "api_dbg", "api");
+                con.Connect("10.0.0.1", 8728, "api_dbg", "debug_password");
 
                 var ifaces = con.Command("/ip dhcp-server lease print")
                     //.Query("disabled", "false") // filter
                     //.Query("name", "sfp1")      // filter
                     //.Proplist("comment", "name", "mtu") // limit output to these columns alone
-                    .ToAsync()
+                    .Send();
 
                 con.Quit(1000);
             }

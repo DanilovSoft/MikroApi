@@ -17,10 +17,6 @@ namespace DanilovSoft.MikroApi.Threading
     internal sealed class ListenerQueue<T> where T : notnull
     {
         private readonly Channel<QueueResult<T>> _channel;
-        /// <summary>
-        /// <see langword="true"/> если был получен "!done" или "CriticalException".
-        /// </summary>
-        internal bool IsDone => _channel.Reader.Completion.IsCompleted;
 
         // ctor
         public ListenerQueue()
@@ -32,6 +28,11 @@ namespace DanilovSoft.MikroApi.Threading
                 SingleWriter = true,
             });
         }
+
+        /// <summary>
+        /// <see langword="true"/> если был получен "!done" или "CriticalException".
+        /// </summary>
+        internal bool IsDone => _channel.Reader.Completion.IsCompleted;
 
         /// <summary>
         /// Ожидает получения ответа от сервера.
