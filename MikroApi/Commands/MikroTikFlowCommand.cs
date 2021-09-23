@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace DanilovSoft.MikroApi
 {
-    public class MikroTikFlowCommand : MikroTikCommand, IAsyncResponse
+    public class MikroTikFlowCommand : MikroTikCommand
     {
         private readonly MikroTikConnection _con;
 
@@ -294,11 +294,6 @@ namespace DanilovSoft.MikroApi
 
         #endregion
 
-        public IAsyncResponse ToAsync()
-        {
-            return this;
-        }
-
         #region IAsyncResponse
 
         /// <summary>
@@ -307,147 +302,147 @@ namespace DanilovSoft.MikroApi
         /// <exception cref="MikroTikTrapException"/>
         /// <exception cref="MikroTikFatalException"/>
         /// <exception cref="MikroTikDisconnectException"/>
-        Task<MikroTikResponse> IAsyncResponse.SendAsync() => _con.SendAsync(this);
+        public Task<MikroTikResponse> SendAsync() => _con.SendAsync(this);
 
-        async Task<string> IAsyncResponse.Scalar()
+        public async Task<string> ScalarAsync()
         {
             var result = await _con.SendAsync(this).ConfigureAwait(false);
             return result.Scalar();
         }
 
-        async Task<T> IAsyncResponse.Scalar<T>()
+        public async Task<T> ScalarAsync<T>()
         {
             var result = await _con.SendAsync(this).ConfigureAwait(false);
             return result.Scalar<T>();
         }
 
-        async Task<string> IAsyncResponse.Scalar(string columnName)
+        public async Task<string> ScalarAsync(string columnName)
         {
             var result = await _con.SendAsync(this).ConfigureAwait(false);
             return result.Scalar(columnName);
         }
 
-        async Task<T> IAsyncResponse.Scalar<T>(string columnName)
+        public async Task<T> ScalarAsync<T>(string columnName)
         {
             var result = await _con.SendAsync(this).ConfigureAwait(false);
             return result.Scalar<T>(columnName);
         }
 
-        async Task<List<string>> IAsyncResponse.ScalarList()
+        public async Task<List<string>> ScalarListAsync()
         {
             var response = await _con.SendAsync(this).ConfigureAwait(false);
             return response.ScalarList();
         }
 
-        async Task<List<T>> IAsyncResponse.ScalarList<T>()
+        public async Task<List<T>> ScalarListAsync<T>()
         {
             var response = await _con.SendAsync(this).ConfigureAwait(false);
             return response.ScalarList<T>();
         }
 
-        async Task<List<string>> IAsyncResponse.ScalarList(string columnName)
+        public async Task<List<string>> ScalarListAsync(string columnName)
         {
             var response = await _con.SendAsync(this).ConfigureAwait(false);
             return response.ScalarList(columnName);
         }
 
-        async Task<List<T>> IAsyncResponse.ScalarList<T>(string columnName)
+        public async Task<List<T>> ScalarListAsync<T>(string columnName)
         {
             var response = await _con.SendAsync(this).ConfigureAwait(false);
             return response.ScalarList<T>(columnName);
         }
 
-        async Task<string> IAsyncResponse.ScalarOrDefault()
+        public async Task<string> ScalarOrDefaultAsync()
         {
             var response = await _con.SendAsync(this).ConfigureAwait(false);
             return response.ScalarOrDefault();
         }
 
-        async Task<T> IAsyncResponse.ScalarOrDefault<T>()
+        public async Task<T> ScalarOrDefaultAsync<T>()
         {
             var response = await _con.SendAsync(this).ConfigureAwait(false);
             return response.ScalarOrDefault<T>();
         }
 
-        async Task<string> IAsyncResponse.ScalarOrDefault(string columnName)
+        public async Task<string> ScalarOrDefaultAsync(string columnName)
         {
             var response = await _con.SendAsync(this).ConfigureAwait(false);
             return response.ScalarOrDefault(columnName);
         }
 
-        async Task<T> IAsyncResponse.ScalarOrDefault<T>(string columnName)
+        public async Task<T> ScalarOrDefaultAsync<T>(string columnName)
         {
             var response = await _con.SendAsync(this).ConfigureAwait(false);
             return response.ScalarOrDefault<T>(columnName);
         }
 
-        async Task<MikroTikResponseFrame> IAsyncResponse.Single()
+        public async Task<MikroTikResponseFrame> SingleAsync()
         {
             var response = await _con.SendAsync(this).ConfigureAwait(false);
             return response.Single();
         }
 
-        async Task<T> IAsyncResponse.Single<T>(Func<MikroTikResponseFrame, T> selector)
+        public async Task<T> SingleAsync<T>(Func<MikroTikResponseFrame, T> selector)
         {
             var response = await _con.SendAsync(this).ConfigureAwait(false);
             return response.Single<T>(selector);
         }
 
-        async Task<T> IAsyncResponse.Single<T>()
+        public async Task<T> SingleAsync<T>()
         {
             var response = await _con.SendAsync(this).ConfigureAwait(false);
             return response.Single<T>();
         }
 
-        async Task<MikroTikResponseFrame> IAsyncResponse.SingleOrDefault()
+        public async Task<MikroTikResponseFrame> SingleOrDefaultAsync()
         {
             var response = await _con.SendAsync(this).ConfigureAwait(false);
             return response.SingleOrDefault();
         }
 
-        async Task<T> IAsyncResponse.SingleOrDefault<T>(Func<MikroTikResponseFrame, T> selector)
+        public async Task<T> SingleOrDefaultAsync<T>(Func<MikroTikResponseFrame, T> selector)
         {
             var response = await _con.SendAsync(this).ConfigureAwait(false);
             return response.SingleOrDefault(selector);
         }
 
-        async Task<T> IAsyncResponse.SingleOrDefault<T>()
+        public async Task<T> SingleOrDefaultAsync<T>()
         {
             var response = await _con.SendAsync(this).ConfigureAwait(false);
             return response.SingleOrDefault<T>();
         }
 
-        async Task<T[]> IAsyncResponse.ToArray<T>()
+        public async Task<T[]> ToArrayAsync<T>()
         {
             var response = await _con.SendAsync(this).ConfigureAwait(false);
             return response.ToArray<T>();
         }
 
-        async Task<T[]> IAsyncResponse.ToArray<T>(Func<MikroTikResponseFrame, T> selector)
+        public async Task<T[]> ToArrayAsync<T>(Func<MikroTikResponseFrame, T> selector)
         {
             var response = await _con.SendAsync(this).ConfigureAwait(false);
             return response.ToArray<T>(selector);
         }
 
-        async Task<T[]> IAsyncResponse.ToArray<T>(T anonymousObject)
+        public async Task<T[]> ToArrayAsync<T>(T anonymousObject)
         {
             var response = await _con.SendAsync(this).ConfigureAwait(false);
             return response.ToArray<T>(anonymousObject);
         }
 
-        async Task<List<T>> IAsyncResponse.ToList<T>()
+        public async Task<List<T>> ToListAsync<T>()
         {
             var response = await _con.SendAsync(this).ConfigureAwait(false);
             return response.ToList<T>();
         }
 
-        async Task<List<T>> IAsyncResponse.ToList<T>(Func<MikroTikResponseFrame, T> selector)
+        public async Task<List<T>> ToListAsync<T>(Func<MikroTikResponseFrame, T> selector)
         {
             var response = await _con.SendAsync(this).ConfigureAwait(false);
             return response.ToList<T>(selector);
         }
 
-        async Task<List<T>> IAsyncResponse.ToList<T>(T anonymousObject)
+        public async Task<List<T>> ToListAsync<T>(T anonymousObject)
         {
             var response = await _con.SendAsync(this).ConfigureAwait(false);
             return response.ToList<T>(anonymousObject);

@@ -91,7 +91,7 @@ namespace DanilovSoft.MikroApi
             Connect(hostname, port, login, password, DefaultOsVersion);
         }
 
-        public void Connect(string hostname, int port, string login, string password, RouterOsVersion version)
+        public void Connect(string hostname, int port, string login, string password, RouterOsVersion version = RouterOsVersion.PostVersion6Dot43)
         {
             _socket = Connect(hostname, port, ssl: false);
             Login(login, password, version);

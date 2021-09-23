@@ -2,7 +2,7 @@
 {
     public enum RouterOsVersion
     {
-        PreVersion643,
-        PostVersion643
+        PreVersion6Dot43,
+        PostVersion6Dot43
     }
 }

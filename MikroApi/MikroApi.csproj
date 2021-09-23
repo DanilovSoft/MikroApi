@@ -43,4 +43,8 @@
 		<PackageReference Include="System.Threading.Channels" Version="5.0.0" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Interfaces\" />
+	</ItemGroup>
+
 </Project>
