@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using System.IO;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Net;
 
 namespace DanilovSoft.MikroApi
 {
@@ -365,12 +366,41 @@ namespace DanilovSoft.MikroApi
             }
         }
 
+        private static async Task<TcpClient> ConnectTcpAsync(string hostname, int port, CancellationToken cancellationToken)
+        {
+            var tcp = new TcpClient();
+            try
+            {
+                await tcp.ConnectAsync(hostname, port, cancellationToken).ConfigureAwait(false);
+                return NullableHelper.SetNull(ref tcp);
+            }
+            finally
+            {
+                tcp?.Dispose();
+            }
+        }
+
         private static SslStream AuthenticateSsl(Stream stream, string hostname)
         {
             var sslStream = new SslStream(stream, leaveInnerStreamOpen: false);
             try
             {
                 sslStream.AuthenticateAsClient(hostname);
+                return NullableHelper.SetNull(ref sslStream);
+            }
+            finally
+            {
+                sslStream?.Dispose();
+            }
+        }
+
+        private static async Task<SslStream> AuthenticateSslAsync(Stream stream, string hostname, CancellationToken cancellationToken)
+        {
+            var options = new SslClientAuthenticationOptions { TargetHost = hostname };
+            var sslStream = new SslStream(stream, leaveInnerStreamOpen: false);
+            try
+            {
+                await sslStream.AuthenticateAsClientAsync(options, cancellationToken).ConfigureAwait(false);
                 return NullableHelper.SetNull(ref sslStream);
             }
             finally
@@ -403,43 +433,21 @@ namespace DanilovSoft.MikroApi
         /// <exception cref="OperationCanceledException"/>
         private async Task<MikroTikSocket> ConnectAsync(string hostname, int port, bool useSsl, CancellationToken cancellationToken)
         {
-            var tcp = new TcpClient();
-            var wrapper = new CancellationTokenHelper(tcp, ConnectTimeout, cancellationToken);
+            var tcp = await ConnectTcpAsync(hostname, port, cancellationToken).ConfigureAwait(false);
+            var tcpStream = tcp.GetStream();
             try
             {
-                await wrapper.WrapAsync(tcp.ConnectAsync(hostname, port, cancellationToken)).ConfigureAwait(false);
-            }
-            catch
-            {
-                // Закрыть сокет если это еще не сделал враппер.
-                if (!wrapper.IsDisposed)
-                {
-                    tcp.Dispose();
-                }
+                Stream finalStream = useSsl
+                    ? await AuthenticateSslAsync(tcpStream, hostname, cancellationToken).ConfigureAwait(false)
+                    : tcpStream;
 
-                throw;
+                NullableHelper.SetNull(ref tcpStream);
+                return new MikroTikSocket(this, NullableHelper.SetNull(ref tcp), finalStream);
             }
-
-            var nstream = tcp.GetStream();
-
-            if (useSsl)
+            finally
             {
-                var sslStream = new SslStream(nstream, leaveInnerStreamOpen: false);
-                try
-                {
-                    await sslStream.AuthenticateAsClientAsync(hostname).ConfigureAwait(false);
-                }
-                catch
-                {
-                    sslStream.Dispose();
-                    tcp.Dispose();
-                    throw;
-                }
-                return new MikroTikSocket(this, tcp, sslStream);
-            }
-            else
-            {
-                return new MikroTikSocket(this, tcp, nstream);
+                tcpStream?.Dispose();
+                tcp?.Dispose();
             }
         }
 

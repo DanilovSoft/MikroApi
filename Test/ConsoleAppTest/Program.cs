@@ -1,14 +1,16 @@
 ﻿using DanilovSoft.MikroApi;
 using System;
 using System.Globalization;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace ConsoleAppCore
 {
     class Program
     {
-        private static void Main()
+        private static async Task Main()
         {
             //string s = string.Format(CultureInfo.InvariantCulture, "{0} bla {1}", "проверка", "qwerty");
 
@@ -19,7 +21,7 @@ namespace ConsoleAppCore
 
             using (var con = new MikroTikConnection())
             {
-                con.Connect("10.0.0.1", 8728, "api_dbg", "debug_password");
+                await con.ConnectSslAsync("ex.my.to", 8729, "api_dbg", "debug_password");
 
                 var command = con.Command("/ip dhcp-server lease print")
                     //.Query("disabled", "false") // filter
