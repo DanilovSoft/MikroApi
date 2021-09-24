@@ -145,47 +145,47 @@
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Query(System.String)">
             <summary>
-            Добавляет уточнение вида "?query"
+            Добавляет уточнение вида "?query".
             </summary>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Query(System.String,System.String)">
             <summary>
-            Добавляет уточнение вида "?query=value"
+            Добавляет уточнение вида "?query=value".
             </summary>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Query(System.String,System.String[])">
             <summary>
-            Добавляет уточнение вида "?query=value1,value2,..."
+            Добавляет уточнение вида "?query=value1,value2,...".
             </summary>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Attribute(System.String)">
             <summary>
-            Добавляет атрибут вида "=name="
+            Добавляет атрибут вида "=name=".
             </summary>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Attribute(System.String,System.String)">
             <summary>
-            Добавляет атрибут вида "=name=value"
+            Добавляет атрибут вида "=name=value".
             </summary>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Attribute(System.String,System.String[])">
             <summary>
-            Добавляет атрибут вида "=name=value1,value2,..."
+            Добавляет атрибут вида "=name=value1,value2,...".
             </summary>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Attribute(System.String,System.Collections.Generic.IEnumerable{System.String})">
             <summary>
-            Добавляет атрибут вида "=name=value1,value2,..."
+            Добавляет атрибут вида "=name=value1,value2,...".
             </summary>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Proplist(System.Collections.Generic.IEnumerable{System.String})">
             <summary>
-            Добавляет атрибут вида "=.proplist=value1,value2,..."
+            Добавляет атрибут вида "=.proplist=value1,value2,...".
             </summary>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Proplist(System.String[])">
             <summary>
-            Добавляет атрибут вида "=.proplist=value1,value2,..."
+            Добавляет атрибут вида "=.proplist=value1,value2,...".
             </summary>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Send">
@@ -199,7 +199,7 @@
             Отправляет команду помечая её тегом.
             Команда будет выполняться пока не будет прервана с помощью Cancel.
             </summary>
-            <exception cref="!:MikroTikTrapException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiTrapException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ListenAsync">
             <summary>
@@ -396,6 +396,50 @@
         <member name="M:DanilovSoft.MikroApi.Helpers.ThrowHelper.ThrowCommandAlreadySent">
             <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
         </member>
+        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.Connect(System.String,System.String,System.String,System.Int32)">
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.Connect(System.String,System.String,System.String,System.Int32,DanilovSoft.MikroApi.RouterOsVersion)">
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.ConnectSsl(System.String,System.String,System.String,System.Int32)">
+            <summary>
+            Для api-ssl.
+            </summary>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.ConnectSsl(System.String,System.String,System.String,System.Int32,DanilovSoft.MikroApi.RouterOsVersion)">
+            <summary>
+            Для api-ssl.
+            </summary>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.ConnectAsync(System.String,System.String,System.String,System.Int32,System.Threading.CancellationToken)">
+            <exception cref="T:System.TimeoutException"/>
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.ConnectAsync(System.String,System.String,System.String,System.Int32,DanilovSoft.MikroApi.RouterOsVersion,System.Threading.CancellationToken)">
+            <exception cref="T:System.TimeoutException"/>
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.ConnectSslAsync(System.String,System.String,System.String,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Для api-ssl.
+            </summary>
+            <exception cref="T:System.TimeoutException"/>
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.ConnectSslAsync(System.String,System.String,System.String,System.Int32,DanilovSoft.MikroApi.RouterOsVersion,System.Threading.CancellationToken)">
+            <summary>
+            Для api-ssl.
+            </summary>
+            <exception cref="T:System.TimeoutException"/>
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
         <member name="M:DanilovSoft.MikroApi.IMikroTikResponseListener.AddResult(DanilovSoft.MikroApi.MikroTikResponseFrame)">
             <summary>
             Добавляет результат в коллекцию. Вызывается если получен тегированный фрейм сообщения.
@@ -494,61 +538,6 @@
         <member name="P:DanilovSoft.MikroApi.MikroTikConnection.Socket">
             <exception cref="T:System.InvalidOperationException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CreateUniqueTag">
-            <summary>
-            Потокобезопасно создает следующий уникальный тег.
-            </summary>
-            <remarks>От 0 до 65535.</remarks>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Connect(System.String,System.Int32,System.String,System.String)">
-            <exception cref="T:System.ObjectDisposedException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Connect(System.String,System.Int32,System.String,System.String,DanilovSoft.MikroApi.RouterOsVersion)">
-            <exception cref="T:System.ObjectDisposedException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectSsl(System.String,System.Int32,System.String,System.String)">
-            <summary>
-            Для api-ssl.
-            </summary>
-            <exception cref="T:System.ObjectDisposedException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectSsl(System.String,System.Int32,System.String,System.String,DanilovSoft.MikroApi.RouterOsVersion)">
-            <summary>
-            Для api-ssl.
-            </summary>
-            <exception cref="T:System.ObjectDisposedException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectAsync(System.String,System.Int32,System.String,System.String)">
-            <exception cref="T:System.TimeoutException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectAsync(System.String,System.Int32,System.String,System.String,DanilovSoft.MikroApi.RouterOsVersion)">
-            <exception cref="T:System.TimeoutException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectAsync(System.String,System.Int32,System.String,System.String,DanilovSoft.MikroApi.RouterOsVersion,System.Threading.CancellationToken)">
-            <exception cref="T:System.TimeoutException"/>
-            <exception cref="T:System.OperationCanceledException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectSslAsync(System.String,System.Int32,System.String,System.String)">
-            <summary>
-            Для api-ssl.
-            </summary>
-            <exception cref="T:System.TimeoutException"/>
-            <exception cref="T:System.OperationCanceledException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectSslAsync(System.String,System.Int32,System.String,System.String,DanilovSoft.MikroApi.RouterOsVersion)">
-            <summary>
-            Для api-ssl.
-            </summary>
-            <exception cref="T:System.TimeoutException"/>
-            <exception cref="T:System.OperationCanceledException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectSslAsync(System.String,System.Int32,System.String,System.String,DanilovSoft.MikroApi.RouterOsVersion,System.Threading.CancellationToken)">
-            <summary>
-            Для api-ssl.
-            </summary>
-            <exception cref="T:System.TimeoutException"/>
-            <exception cref="T:System.OperationCanceledException"/>
-        </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Send(DanilovSoft.MikroApi.MikroTikCommand)">
             <summary>
             Отправляет команду и возвращает ответ сервера.
@@ -613,32 +602,38 @@
             </summary>
             <param name="millisecondsTimeout">Позволяет подождать подтверждение от сервера что-бы лишний раз не происходило исключение в потоке читающем из сокета.</param>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectAsync(System.String,System.Int32,System.Boolean,System.Threading.CancellationToken)">
-            <exception cref="T:System.TimeoutException"/>
-            <exception cref="T:System.OperationCanceledException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CheckConnected">
-            <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CheckAlreadyAuthorized">
-            <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Login(System.String,System.String)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CreateUniqueTag">
             <summary>
-            Использует MD5.
+            Потокобезопасно создает следующий уникальный тег.
             </summary>
+            <remarks>От 0 до 65535.</remarks>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.LoginAsync(System.String,System.String)">
-            <summary>
-            Использует MD5.
-            </summary>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.EncodePassword(System.String,System.String)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.EncodePassword(System.String,System.String,System.Text.Encoding)">
             <summary>
             Возвращает HEX строку длиной 34 символа.
             </summary>
             <param name="password">Пароль пользователя.</param>
             <param name="hash">Хеш от микротика.</param>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ConnectAsyncCore(System.String,System.Int32,System.Boolean,System.Threading.CancellationToken)">
+            <exception cref="T:System.TimeoutException"/>
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CheckAuthorized">
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CheckNotAuthorized">
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Login(DanilovSoft.MikroApi.MikroTikSocket,System.String,System.String)">
+            <summary>
+            Использует MD5.
+            </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.LoginAsync(DanilovSoft.MikroApi.MikroTikSocket,System.String,System.String)">
+            <summary>
+            Использует MD5.
+            </summary>
         </member>
         <member name="T:DanilovSoft.MikroApi.MikroTikResponse">
             <summary>

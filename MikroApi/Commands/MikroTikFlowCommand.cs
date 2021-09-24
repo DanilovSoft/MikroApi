@@ -17,7 +17,7 @@ namespace DanilovSoft.MikroApi
         #region Query
 
         /// <summary>
-        /// Добавляет уточнение вида "?query"
+        /// Добавляет уточнение вида "?query".
         /// </summary>
         public new MikroTikFlowCommand Query(string query)
         {
@@ -26,7 +26,7 @@ namespace DanilovSoft.MikroApi
         }
 
         /// <summary>
-        /// Добавляет уточнение вида "?query=value"
+        /// Добавляет уточнение вида "?query=value".
         /// </summary>
         public new MikroTikFlowCommand Query(string query, string value)
         {
@@ -35,7 +35,7 @@ namespace DanilovSoft.MikroApi
         }
 
         /// <summary>
-        /// Добавляет уточнение вида "?query=value1,value2,..."
+        /// Добавляет уточнение вида "?query=value1,value2,...".
         /// </summary>
         public new MikroTikFlowCommand Query(string query, params string[] values)
         {
@@ -48,7 +48,7 @@ namespace DanilovSoft.MikroApi
         #region Attribute
 
         /// <summary>
-        /// Добавляет атрибут вида "=name="
+        /// Добавляет атрибут вида "=name=".
         /// </summary>
         public new MikroTikFlowCommand Attribute(string name)
         {
@@ -57,7 +57,7 @@ namespace DanilovSoft.MikroApi
         }
 
         /// <summary>
-        /// Добавляет атрибут вида "=name=value"
+        /// Добавляет атрибут вида "=name=value".
         /// </summary>
         public new MikroTikFlowCommand Attribute(string name, string value)
         {
@@ -66,7 +66,7 @@ namespace DanilovSoft.MikroApi
         }
 
         /// <summary>
-        /// Добавляет атрибут вида "=name=value1,value2,..."
+        /// Добавляет атрибут вида "=name=value1,value2,...".
         /// </summary>
         public new MikroTikFlowCommand Attribute(string name, params string[] values)
         {
@@ -75,7 +75,7 @@ namespace DanilovSoft.MikroApi
         }
 
         /// <summary>
-        /// Добавляет атрибут вида "=name=value1,value2,..."
+        /// Добавляет атрибут вида "=name=value1,value2,...".
         /// </summary>
         public new MikroTikFlowCommand Attribute(string name, IEnumerable<string> values)
         {
@@ -88,7 +88,7 @@ namespace DanilovSoft.MikroApi
         #region Proplist
 
         /// <summary>
-        /// Добавляет атрибут вида "=.proplist=value1,value2,..."
+        /// Добавляет атрибут вида "=.proplist=value1,value2,...".
         /// </summary>
         public new MikroTikFlowCommand Proplist(IEnumerable<string> values)
         {
@@ -97,7 +97,7 @@ namespace DanilovSoft.MikroApi
         }
 
         /// <summary>
-        /// Добавляет атрибут вида "=.proplist=value1,value2,..."
+        /// Добавляет атрибут вида "=.proplist=value1,value2,...".
         /// </summary>
         public new MikroTikFlowCommand Proplist(params string[] values)
         {
@@ -132,7 +132,7 @@ namespace DanilovSoft.MikroApi
         /// Отправляет команду помечая её тегом.
         /// Команда будет выполняться пока не будет прервана с помощью Cancel.
         /// </summary>
-        /// <exception cref="MikroTikTrapException"/>
+        /// <exception cref="MikroApiTrapException"/>
         public MikroTikResponseListener Listen() => _mtConnection.Listen(this);
 
         /// <summary>

@@ -21,7 +21,7 @@ namespace ConsoleAppCore
 
             using (var con = new MikroTikConnection())
             {
-                await con.ConnectSslAsync("ex.my.to", 8729, "api_dbg", "debug_password");
+                con.Connect("api_dbg", "debug_password", "10.0.0.1", 8728, RouterOsVersion.PostVersion6Dot43);
 
                 var command = con.Command("/ip dhcp-server lease print")
                     //.Query("disabled", "false") // filter
