@@ -21,12 +21,13 @@ namespace ConsoleAppCore
             {
                 con.Connect("10.0.0.1", 8728, "api_dbg", "debug_password");
 
-                var ifaces = con.Command("/ip dhcp-server lease print")
+                var command = con.Command("/ip dhcp-server lease print")
                     //.Query("disabled", "false") // filter
                     //.Query("name", "sfp1")      // filter
                     //.Proplist("comment", "name", "mtu") // limit output to these columns alone
-                    .Proplist("address", "mac-address", "host-name", "status")
-                    .Send();
+                    .Proplist("address", "mac-address", "host-name", "status");
+
+                var ifaces = command.Send();
 
                 con.Quit(1000);
             }
@@ -144,7 +145,7 @@ namespace ConsoleAppCore
                         listener.Cancel();
                     }
                 }
-                catch (MikroTikCommandInterruptedException)
+                catch (MikroApiCommandInterruptedException)
                 {
                     // Операция прервана по запросу Cancel
                     return;
@@ -170,7 +171,7 @@ namespace ConsoleAppCore
                 {
                     result = listener.ListenNext();
                 }
-                catch (MikroTikCommandInterruptedException)
+                catch (MikroApiCommandInterruptedException)
                 {
                     // Операция прервана по запросу Cancel
                     return;

@@ -202,7 +202,7 @@ namespace DanilovSoft.MikroApi
         /// <summary>
         /// Отправляет команду и возвращает ответ сервера.
         /// </summary>
-        /// <exception cref="MikroTikTrapException"/>
+        /// <exception cref="MikroApiTrapException"/>
         public MikroTikResponse Send(MikroTikCommand command)
         {
             if (command is null)
@@ -236,7 +236,7 @@ namespace DanilovSoft.MikroApi
         /// Отправляет команду помечая её тегом.
         /// Команда будет выполняться пока не будет прервана с помощью Cancel.
         /// </summary>
-        /// <exception cref="MikroTikTrapException"/>
+        /// <exception cref="MikroApiTrapException"/>
         public MikroTikResponseListener Listen(MikroTikCommand command)
         {
             if (command is null)
@@ -244,7 +244,7 @@ namespace DanilovSoft.MikroApi
                 throw new ArgumentNullException(nameof(command));
             }
 
-            command.ThrowIfCompleted();
+            command.CheckCompleted();
 
             // Добавить в словарь.
             var listener = Socket.AddListener();
@@ -271,7 +271,7 @@ namespace DanilovSoft.MikroApi
                 throw new ArgumentNullException(nameof(command));
             }
 
-            command.ThrowIfCompleted();
+            command.CheckCompleted();
 
             // Добавить в словарь.
             var listener = Socket.AddListener();
@@ -443,7 +443,7 @@ namespace DanilovSoft.MikroApi
             }
         }
 
-        /// <exception cref="MikroTikConnectionException"/>
+        /// <exception cref="MikroApiConnectionException"/>
         [MemberNotNull(nameof(_socket))]
         private void CheckConnected()
         {
@@ -453,7 +453,7 @@ namespace DanilovSoft.MikroApi
             }
         }
 
-        /// <exception cref="MikroTikConnectionException"/>
+        /// <exception cref="MikroApiConnectionException"/>
         //[MemberNotNull(nameof(_socket))]
         private void CheckAlreadyAuthorized()
         {

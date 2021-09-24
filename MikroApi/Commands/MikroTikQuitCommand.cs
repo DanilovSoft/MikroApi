@@ -78,7 +78,7 @@ namespace DanilovSoft.MikroApi
         // Не может произойти.
         void IMikroTikResponseListener.AddResult(MikroTikResponseFrame message) { }
         // Не может произойти.
-        void IMikroTikResponseListener.AddTrap(MikroTikTrapException trapException) { }
+        void IMikroTikResponseListener.AddTrap(MikroApiTrapException trapException) { }
         // Не может произойти.
         void IMikroTikResponseListener.Done() { }
         #endregion

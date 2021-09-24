@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using DanilovSoft.MikroApi.Helpers;
 
 namespace DanilovSoft.MikroApi
 {
@@ -11,6 +12,21 @@ namespace DanilovSoft.MikroApi
     [DebuggerTypeProxy(typeof(TypeProxy))]
     public class MikroTikCommand
     {
+        internal readonly List<string> _lines = new();
+        private int _tagIndex = -1;
+
+        // ctor
+        public MikroTikCommand(string command)
+        {
+            if (command == null)
+            {
+                throw new ArgumentNullException(nameof(command));
+            }
+
+            string formatted = string.Join("/", command.Split(' '));
+            AddLine(formatted);
+        }
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string DebugDisplay
         {
@@ -26,24 +42,11 @@ namespace DanilovSoft.MikroApi
                 }
             }
         }
-        internal readonly List<string> _lines = new();
-        private int _tagIndex = -1;
+
         /// <summary>
         /// True если команда была успешно отправлена. Отправленные команды нельзя отправлять повторно.
         /// </summary>
         public bool IsCompleted { get; private set; }
-
-        // ctor
-        public MikroTikCommand(string command)
-        {
-            if (command == null)
-            {
-                throw new ArgumentNullException(nameof(command));
-            }
-
-            string formatted = string.Join("/", command.Split(' '));
-            AddLine(formatted);
-        }
 
         /// <summary>
         /// Добавляет строку в список без каких либо проверок и изменений.
@@ -244,10 +247,11 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         /// <exception cref="InvalidOperationException"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void ThrowIfCompleted()
+        internal void CheckCompleted()
         {
             if (IsCompleted)
             {
+                ThrowHelper.ThrowAlreadyConnected
                 throw new InvalidOperationException("This command is already sent");
             }
         }

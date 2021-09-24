@@ -15,7 +15,7 @@ namespace DanilovSoft.MikroApi
         /// <summary>
         /// Добавляет исключение как результат в коллекцию. Вызывается если получено сообщение об ошибке.
         /// </summary>
-        void AddTrap(MikroTikTrapException trapException);
+        void AddTrap(MikroApiTrapException trapException);
 
         /// <summary>
         /// Добавляет исключение как результат в коллекцию.

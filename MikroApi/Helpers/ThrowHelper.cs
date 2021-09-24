@@ -13,20 +13,28 @@ namespace DanilovSoft.MikroApi.Helpers
             throw new ObjectDisposedException(typeof(MikroTikConnection).Name);
         }
 
-        /// <exception cref="MikroTikConnectionException"/>
+        /// <exception cref="MikroApiConnectionException"/>
         [DoesNotReturn]
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowNotConnected()
         {
-            throw new MikroTikConnectionException("You are not connected");
+            throw new MikroApiConnectionException("You are not connected");
         }
 
-        /// <exception cref="MikroTikConnectionException"/>
+        /// <exception cref="MikroApiConnectionException"/>
         [DoesNotReturn]
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowAlreadyConnected()
         {
-            throw new MikroTikConnectionException("You are already connected");
+            throw new MikroApiConnectionException("You are already connected");
+        }
+
+        /// <exception cref="MikroApiConnectionException"/>
+        [DoesNotReturn]
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static void ThrowCommandAlreadySent()
+        {
+            throw new MikrotikExce("This command is already sent");
         }
     }
 }

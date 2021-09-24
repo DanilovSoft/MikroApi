@@ -6,19 +6,19 @@ namespace DanilovSoft.MikroApi
     /// Сообщение сервера в результате закрытия соединения.
     /// </summary>
     [Serializable]
-    public class MikroTikFatalException : Exception
+    public class MikroApiFatalException : Exception
     {
-        public MikroTikFatalException()
+        public MikroApiFatalException()
         {
 
         }
 
-        public MikroTikFatalException(string message) : base(message)
+        public MikroApiFatalException(string message) : base(message)
         {
 
         }
 
-        public MikroTikFatalException(string message, Exception innerException) : base(message, innerException)
+        public MikroApiFatalException(string message, Exception innerException) : base(message, innerException)
         {
 
         }

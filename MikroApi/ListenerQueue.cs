@@ -143,13 +143,13 @@ namespace DanilovSoft.MikroApi.Threading
         /// Вызывается потоком читающим из сокета.
         /// </summary>
         /// <param name="trapException">Результат.</param>
-        public void AddTrap(MikroTikTrapException trapException)
+        public void AddTrap(MikroApiTrapException trapException)
         {
             if (trapException.Category == TrapCategory.ExecutionOfCommandInterrupted)
             {
                 // Операция грациозно прервана. Переопределить исключение что-бы пользователь
                 // мог понять что операция отменена грациозно.
-                InnerAdd(new QueueResult<T>(new MikroTikCommandInterruptedException(trapException.Message)));
+                InnerAdd(new QueueResult<T>(new MikroApiCommandInterruptedException(trapException.Message)));
             }
             else
             {
@@ -182,7 +182,7 @@ namespace DanilovSoft.MikroApi.Threading
         public void Done()
         {
             // Больше не будет сообщений.
-            _channel.Writer.TryComplete(new MikroTikDoneException());
+            _channel.Writer.TryComplete(new MikroApiDoneException());
         }
     }
 }

@@ -112,7 +112,7 @@ namespace DanilovSoft.MikroApi
         /// <summary>
         /// Отправляет команду и возвращает ответ сервера.
         /// </summary>
-        /// <exception cref="MikroTikTrapException"/>
+        /// <exception cref="MikroApiTrapException"/>
         public MikroTikResponse Send()
         {
             return _mtConnection.Send(this);
@@ -302,9 +302,9 @@ namespace DanilovSoft.MikroApi
         /// <summary>
         /// Отправляет команду и возвращает ответ сервера.
         /// </summary>
-        /// <exception cref="MikroTikTrapException"/>
-        /// <exception cref="MikroTikFatalException"/>
-        /// <exception cref="MikroTikDisconnectException"/>
+        /// <exception cref="MikroApiTrapException"/>
+        /// <exception cref="MikroApiFatalException"/>
+        /// <exception cref="MikroApiDisconnectException"/>
         public Task<MikroTikResponse> SendAsync() => _mtConnection.SendAsync(this);
 
         public async Task<string> ScalarAsync()

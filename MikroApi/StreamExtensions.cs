@@ -10,7 +10,7 @@ namespace DanilovSoft.MikroApi
         /// <summary>
         /// Считывает строго заданное количество данных.
         /// </summary>
-        /// <exception cref="MikroTikDisconnectException"/>
+        /// <exception cref="MikroApiDisconnectException"/>
         [DebuggerStepThrough]
         public static void ReadBlock(this Stream stream, byte[] buffer, int offset, int count)
         {
@@ -23,7 +23,7 @@ namespace DanilovSoft.MikroApi
                 }
                 else
                 {
-                    throw new MikroTikDisconnectException();
+                    throw new MikroApiDisconnectException();
                 }
             }
         }
@@ -31,7 +31,7 @@ namespace DanilovSoft.MikroApi
         /// <summary>
         /// Считывает строго заданное количество данных.
         /// </summary>
-        /// <exception cref="MikroTikDisconnectException"/>
+        /// <exception cref="MikroApiDisconnectException"/>
         //[DebuggerStepThrough]
         public static async ValueTask ReadBlockAsync(this Stream stream, Memory<byte> buffer)
         {
@@ -44,7 +44,7 @@ namespace DanilovSoft.MikroApi
                 }
                 else
                 {
-                    throw new MikroTikDisconnectException();
+                    throw new MikroApiDisconnectException();
                 }
             }
         }

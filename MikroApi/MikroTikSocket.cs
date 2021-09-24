@@ -315,7 +315,7 @@ namespace DanilovSoft.MikroApi
                                             }
                                             else
                                             {
-                                                listener.AddTrap(new MikroTikTrapException(frame));
+                                                listener.AddTrap(new MikroApiTrapException(frame));
                                             }
                                         }
                                     }
@@ -339,7 +339,7 @@ namespace DanilovSoft.MikroApi
                                 if (fatal)
                                 // Сервер закрывает соединение.
                                 {
-                                    var exception = new MikroTikFatalException(fatalMessage);
+                                    var exception = new MikroApiFatalException(fatalMessage);
 
                                     ConnectionClosed(exception, gotFatal: true);
 
@@ -354,7 +354,7 @@ namespace DanilovSoft.MikroApi
 
                                 if (trap)
                                 {
-                                    var trapException = new MikroTikTrapException(fullResponse[0]);
+                                    var trapException = new MikroApiTrapException(fullResponse[0]);
                                     _mainQueue.AddTrap(trapException);
                                 }
 
@@ -572,7 +572,7 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         internal async Task<MikroTikResponse> SendAndGetResponseAsync(MikroTikCommand command)
         {
-            command.ThrowIfCompleted();
+            command.CheckCompleted();
 
             // Отправка и получение ответа через очередь.
             MikroTikResponse result = await RequestAsync(command).ConfigureAwait(false);
@@ -587,7 +587,7 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         internal MikroTikResponse SendAndGetResponse(MikroTikCommand command)
         {
-            command.ThrowIfCompleted();
+            command.CheckCompleted();
 
             // Отправка и получение ответа через очередь.
             MikroTikResponse result = Request(command);
@@ -1001,7 +1001,7 @@ namespace DanilovSoft.MikroApi
             {
                 if (_socketException == null)
                 {
-                    _socketException = new MikroTikDisconnectException("Сокет был закрыт в связи с таймаутом чтения.");
+                    _socketException = new MikroApiDisconnectException("Сокет был закрыт в связи с таймаутом чтения.");
                 }
             }
             CloseSocket();
@@ -1013,7 +1013,7 @@ namespace DanilovSoft.MikroApi
             {
                 if (_socketException == null)
                 {
-                    _socketException = new MikroTikDisconnectException("Сокет был закрыт в связи с таймаутом отправки.");
+                    _socketException = new MikroApiDisconnectException("Сокет был закрыт в связи с таймаутом отправки.");
                 }
             }
             CloseSocket();
