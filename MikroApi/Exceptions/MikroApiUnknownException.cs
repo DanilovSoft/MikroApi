@@ -2,22 +2,18 @@
 
 namespace DanilovSoft.MikroApi
 {
-    [Serializable]
-    public class MikroTikUnknownLengthException : Exception
+    public class MikroTikUnknownLengthException : MikroApiException
     {
         public MikroTikUnknownLengthException()
         {
-
         }
 
-        public MikroTikUnknownLengthException(string message) : base(message)
+        public MikroTikUnknownLengthException(string? message) : base(message)
         {
-
         }
 
-        public MikroTikUnknownLengthException(string message, Exception innerException) : base(message, innerException)
+        public MikroTikUnknownLengthException(string? message, Exception? innerException) : base(message, innerException)
         {
-
         }
     }
 }

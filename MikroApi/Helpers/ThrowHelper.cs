@@ -34,7 +34,7 @@ namespace DanilovSoft.MikroApi.Helpers
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void ThrowCommandAlreadySent()
         {
-            throw new MikrotikExce("This command is already sent");
+            throw new MikroApiException("This command is already sent");
         }
     }
 }

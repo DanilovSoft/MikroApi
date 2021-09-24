@@ -3,7 +3,6 @@ using System.Globalization;
 
 namespace DanilovSoft.MikroApi
 {
-    [Serializable]
     public class MikroApiTrapException : MikroApiException
     {
         public MikroApiTrapException()
@@ -22,6 +21,20 @@ namespace DanilovSoft.MikroApi
             }
         }
 
+        public MikroApiTrapException(TrapCategory? category, string message) : base(message)
+        {
+            Category = category;
+        }
+
+        public MikroApiTrapException(string? message, Exception? innerException) : base(message, innerException)
+        {
+        }
+
+        public MikroApiTrapException(TrapCategory? category, string message, Exception innerException) : base(message, innerException)
+        {
+            Category = category;
+        }
+
         public TrapCategory? Category { get; }
 
         private static string? GetMessage(MikroTikResponseFrame frame)
@@ -32,21 +45,6 @@ namespace DanilovSoft.MikroApi
             }
 
             return message;
-        }
-
-        public MikroApiTrapException(TrapCategory? category, string message) : base(message)
-        {
-            Category = category;
-        }
-
-        public MikroApiTrapException(string message, Exception innerException) : base(message, innerException)
-        {
-
-        }
-
-        public MikroApiTrapException(TrapCategory? category, string message, Exception innerException) : base(message, innerException)
-        {
-            Category = category;
         }
     }
 }

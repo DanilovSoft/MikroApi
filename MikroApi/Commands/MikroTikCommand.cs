@@ -249,11 +249,11 @@ namespace DanilovSoft.MikroApi
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void CheckCompleted()
         {
-            if (IsCompleted)
+            if (!IsCompleted)
             {
-                ThrowHelper.ThrowAlreadyConnected
-                throw new InvalidOperationException("This command is already sent");
+                return;
             }
+            ThrowHelper.ThrowCommandAlreadySent();
         }
 
         public override string ToString()

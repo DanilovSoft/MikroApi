@@ -137,7 +137,7 @@
             Запрещает использовать эту команду повторно.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikCommand.ThrowIfCompleted">
+        <member name="M:DanilovSoft.MikroApi.MikroTikCommand.CheckCompleted">
             <summary>
             Генерирует исключение если текущий экземпляр команды уже был однажды отправлен в сокет.
             </summary>
@@ -192,14 +192,14 @@
             <summary>
             Отправляет команду и возвращает ответ сервера.
             </summary>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikTrapException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiTrapException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Listen">
             <summary>
             Отправляет команду помечая её тегом.
             Команда будет выполняться пока не будет прервана с помощью Cancel.
             </summary>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikTrapException"/>
+            <exception cref="!:MikroTikTrapException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ListenAsync">
             <summary>
@@ -321,9 +321,9 @@
             <summary>
             Отправляет команду и возвращает ответ сервера.
             </summary>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikTrapException"/>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikFatalException"/>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikDisconnectException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiTrapException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiFatalException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiDisconnectException"/>
         </member>
         <member name="F:DanilovSoft.MikroApi.MikroTikQuitCommand._criticalException">
             <summary>
@@ -337,12 +337,12 @@
             </summary>
             <param name="millisecondsTimeout"></param>
         </member>
-        <member name="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException">
+        <member name="T:DanilovSoft.MikroApi.MikroApiCommandInterruptedException">
             <summary>
             Представляет ошибку в результате успешной отмены операции.
             </summary>
         </member>
-        <member name="T:DanilovSoft.MikroApi.MikroTikFatalException">
+        <member name="T:DanilovSoft.MikroApi.MikroApiFatalException">
             <summary>
             Сообщение сервера в результате закрытия соединения.
             </summary>
@@ -388,10 +388,13 @@
             </summary>
         </member>
         <member name="M:DanilovSoft.MikroApi.Helpers.ThrowHelper.ThrowNotConnected">
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikConnectionException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.Helpers.ThrowHelper.ThrowAlreadyConnected">
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikConnectionException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.Helpers.ThrowHelper.ThrowCommandAlreadySent">
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.IMikroTikResponseListener.AddResult(DanilovSoft.MikroApi.MikroTikResponseFrame)">
             <summary>
@@ -399,7 +402,7 @@
             </summary>
             <param name="messageFrame"></param>
         </member>
-        <member name="M:DanilovSoft.MikroApi.IMikroTikResponseListener.AddTrap(DanilovSoft.MikroApi.MikroTikTrapException)">
+        <member name="M:DanilovSoft.MikroApi.IMikroTikResponseListener.AddTrap(DanilovSoft.MikroApi.MikroApiTrapException)">
             <summary>
             Добавляет исключение как результат в коллекцию. Вызывается если получено сообщение об ошибке.
             </summary>
@@ -469,7 +472,7 @@
             Вызывается потоком читающим из сокета.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.Threading.ListenerQueue`1.AddTrap(DanilovSoft.MikroApi.MikroTikTrapException)">
+        <member name="M:DanilovSoft.MikroApi.Threading.ListenerQueue`1.AddTrap(DanilovSoft.MikroApi.MikroApiTrapException)">
             <summary>
             Добавляет исключение как результат в коллекцию.
             Вызывается потоком читающим из сокета.
@@ -550,7 +553,7 @@
             <summary>
             Отправляет команду и возвращает ответ сервера.
             </summary>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikTrapException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiTrapException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikConnection.SendAsync(DanilovSoft.MikroApi.MikroTikCommand)">
             <summary>
@@ -562,7 +565,7 @@
             Отправляет команду помечая её тегом.
             Команда будет выполняться пока не будет прервана с помощью Cancel.
             </summary>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikTrapException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiTrapException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ListenAsync(DanilovSoft.MikroApi.MikroTikCommand)">
             <summary>
@@ -615,10 +618,10 @@
             <exception cref="T:System.OperationCanceledException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CheckConnected">
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikConnectionException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CheckAlreadyAuthorized">
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikConnectionException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Login(System.String,System.String)">
             <summary>
@@ -837,7 +840,7 @@
             Вызывается потоком читающим из сокета.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.DanilovSoft#MikroApi#IMikroTikResponseListener#AddTrap(DanilovSoft.MikroApi.MikroTikTrapException)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.DanilovSoft#MikroApi#IMikroTikResponseListener#AddTrap(DanilovSoft.MikroApi.MikroApiTrapException)">
             <summary>
             Добавляет исключение как результат в коллекцию.
             </summary>
@@ -863,69 +866,69 @@
             <summary>
             Ожидает очередной ответ от сервера.
             </summary>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikDoneException"/>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiDoneException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiCommandInterruptedException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenNext(System.Int32)">
             <summary>
             Ожидает очередной ответ от сервера.
             </summary>
             <exception cref="T:System.TimeoutException"/>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikDoneException"/>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiDoneException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiCommandInterruptedException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenNext(System.Threading.CancellationToken)">
             <summary>
             Ожидает очередной ответ от сервера.
             </summary>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikDoneException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiDoneException"/>
             <exception cref="T:System.OperationCanceledException"/>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiCommandInterruptedException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenNext(System.Int32,System.Threading.CancellationToken)">
             <summary>
             Ожидает очередной ответ от сервера.
             </summary>
             <exception cref="T:System.TimeoutException"/>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikDoneException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiDoneException"/>
             <exception cref="T:System.OperationCanceledException"/>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiCommandInterruptedException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenNextAsync">
             <summary>
             Ожидает очередной ответ от сервера.
             </summary>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikTrapException"/>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikDoneException"/>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiTrapException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiDoneException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiCommandInterruptedException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenNextAsync(System.Int32)">
             <summary>
             Ожидает очередной ответ от сервера.
             </summary>
             <exception cref="T:System.TimeoutException"/>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikDoneException"/>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikTrapException"/>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiDoneException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiTrapException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiCommandInterruptedException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenNextAsync(System.Threading.CancellationToken)">
             <summary>
             Ожидает очередной ответ от сервера.
             </summary>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikTrapException"/>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikDoneException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiTrapException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiDoneException"/>
             <exception cref="T:System.OperationCanceledException"/>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiCommandInterruptedException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.ListenNextAsync(System.Int32,System.Threading.CancellationToken)">
             <summary>
             Ожидает очередной ответ от сервера.
             </summary>
             <exception cref="T:System.TimeoutException"/>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikTrapException"/>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikDoneException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiTrapException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiDoneException"/>
             <exception cref="T:System.OperationCanceledException"/>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikCommandInterruptedException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiCommandInterruptedException"/>
         </member>
         <member name="F:DanilovSoft.MikroApi.MikroTikSocket._mainQueue">
             <summary>
@@ -1139,19 +1142,19 @@
             <summary>
             Попытка остановить таймер.
             </summary>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikConnectionClosedAbnormallyException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionClosedAbnormallyException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.StreamExtensions.ReadBlock(System.IO.Stream,System.Byte[],System.Int32,System.Int32)">
             <summary>
             Считывает строго заданное количество данных.
             </summary>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikDisconnectException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiDisconnectException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.StreamExtensions.ReadBlockAsync(System.IO.Stream,System.Memory{System.Byte})">
             <summary>
             Считывает строго заданное количество данных.
             </summary>
-            <exception cref="T:DanilovSoft.MikroApi.MikroTikDisconnectException"/>
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiDisconnectException"/>
         </member>
     </members>
 </doc>

@@ -2,7 +2,7 @@
 
 namespace DanilovSoft.MikroApi
 {
-    public class MikroApiConnectionException : Exception
+    public class MikroApiConnectionException : MikroApiException
     {
         public MikroApiConnectionException()
         {
@@ -12,7 +12,7 @@ namespace DanilovSoft.MikroApi
         {
         }
 
-        public MikroApiConnectionException(string message, Exception innerException) : base(message, innerException)
+        public MikroApiConnectionException(string message, Exception? innerException) : base(message, innerException)
         {
         }
     }

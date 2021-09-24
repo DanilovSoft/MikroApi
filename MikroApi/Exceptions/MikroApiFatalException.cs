@@ -5,8 +5,7 @@ namespace DanilovSoft.MikroApi
     /// <summary>
     /// Сообщение сервера в результате закрытия соединения.
     /// </summary>
-    [Serializable]
-    public class MikroApiFatalException : Exception
+    public class MikroApiFatalException : MikroApiException
     {
         public MikroApiFatalException()
         {
@@ -18,7 +17,7 @@ namespace DanilovSoft.MikroApi
 
         }
 
-        public MikroApiFatalException(string message, Exception innerException) : base(message, innerException)
+        public MikroApiFatalException(string? message, Exception? innerException) : base(message, innerException)
         {
 
         }
