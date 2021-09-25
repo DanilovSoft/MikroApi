@@ -6,10 +6,10 @@ namespace DanilovSoft.MikroApi
 {
     public class MikroTikFlowCommand : MikroTikCommand
     {
-        private readonly MikroTikConnection _mtConnection;
+        private readonly IMikroTikConnection _mtConnection;
 
         // ctor
-        public MikroTikFlowCommand(string command, MikroTikConnection connection) : base(command)
+        public MikroTikFlowCommand(string command, IMikroTikConnection connection) : base(command)
         {
             _mtConnection = connection ?? throw new ArgumentNullException(nameof(connection));
         }
@@ -225,12 +225,12 @@ namespace DanilovSoft.MikroApi
         /// <summary>
         /// Когда результатом является одна строка.
         /// </summary>
-        public MikroTikResponseFrame Single() => _mtConnection.Send(this).Single();
+        public MikroTikResponseFrameDictionary Single() => _mtConnection.Send(this).Single();
 
         /// <summary>
         /// Когда результатом является одна строка.
         /// </summary>
-        public T Single<T>(Func<MikroTikResponseFrame, T> selector) => _mtConnection.Send(this).Single(selector);
+        public T Single<T>(Func<MikroTikResponseFrameDictionary, T> selector) => _mtConnection.Send(this).Single(selector);
 
         /// <summary>
         /// Когда результатом является одна строка.
@@ -244,12 +244,12 @@ namespace DanilovSoft.MikroApi
         /// <summary>
         /// Когда результатом является одна строка.
         /// </summary>
-        public MikroTikResponseFrame? SingleOrDefault() => _mtConnection.Send(this).SingleOrDefault();
+        public MikroTikResponseFrameDictionary? SingleOrDefault() => _mtConnection.Send(this).SingleOrDefault();
 
         /// <summary>
         /// Когда результатом является одна строка.
         /// </summary>
-        public T? SingleOrDefault<T>(Func<MikroTikResponseFrame, T> selector) => _mtConnection.Send(this).SingleOrDefault(selector);
+        public T? SingleOrDefault<T>(Func<MikroTikResponseFrameDictionary, T> selector) => _mtConnection.Send(this).SingleOrDefault(selector);
 
         /// <summary>
         /// Когда результатом является одна строка.
@@ -268,7 +268,7 @@ namespace DanilovSoft.MikroApi
         /// <returns></returns>
         public T[] ToArray<T>() => _mtConnection.Send(this).ToArray<T>();
 
-        public T[] ToArray<T>(Func<MikroTikResponseFrame, T> selector) => _mtConnection.Send(this).ToArray<T>(selector);
+        public T[] ToArray<T>(Func<MikroTikResponseFrameDictionary, T> selector) => _mtConnection.Send(this).ToArray<T>(selector);
 
         /// <param name="anonymousObject">Анонимный объект тип которого используется для создания результата функции.</param>
         public T[] ToArray<T>(T anonymousObject) => _mtConnection.Send(this).ToArray<T>(anonymousObject);
@@ -285,7 +285,7 @@ namespace DanilovSoft.MikroApi
         /// <returns></returns>
         public List<T> ToList<T>() => _mtConnection.Send(this).ToList<T>();
 
-        public List<T> ToList<T>(Func<MikroTikResponseFrame, T> selector) => _mtConnection.Send(this).ToList<T>(selector);
+        public List<T> ToList<T>(Func<MikroTikResponseFrameDictionary, T> selector) => _mtConnection.Send(this).ToList<T>(selector);
 
         /// <summary>
         /// 
@@ -379,13 +379,13 @@ namespace DanilovSoft.MikroApi
             return response.ScalarOrDefault<T>(columnName);
         }
 
-        public async Task<MikroTikResponseFrame> SingleAsync()
+        public async Task<MikroTikResponseFrameDictionary> SingleAsync()
         {
             var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.Single();
         }
 
-        public async Task<T> SingleAsync<T>(Func<MikroTikResponseFrame, T> selector)
+        public async Task<T> SingleAsync<T>(Func<MikroTikResponseFrameDictionary, T> selector)
         {
             var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.Single<T>(selector);
@@ -397,13 +397,13 @@ namespace DanilovSoft.MikroApi
             return response.Single<T>();
         }
 
-        public async Task<MikroTikResponseFrame?> SingleOrDefaultAsync()
+        public async Task<MikroTikResponseFrameDictionary?> SingleOrDefaultAsync()
         {
             var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.SingleOrDefault();
         }
 
-        public async Task<T?> SingleOrDefaultAsync<T>(Func<MikroTikResponseFrame, T> selector)
+        public async Task<T?> SingleOrDefaultAsync<T>(Func<MikroTikResponseFrameDictionary, T> selector)
         {
             var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.SingleOrDefault(selector);
@@ -421,7 +421,7 @@ namespace DanilovSoft.MikroApi
             return response.ToArray<T>();
         }
 
-        public async Task<T[]> ToArrayAsync<T>(Func<MikroTikResponseFrame, T> selector)
+        public async Task<T[]> ToArrayAsync<T>(Func<MikroTikResponseFrameDictionary, T> selector)
         {
             var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.ToArray<T>(selector);
@@ -439,7 +439,7 @@ namespace DanilovSoft.MikroApi
             return response.ToList<T>();
         }
 
-        public async Task<List<T>> ToListAsync<T>(Func<MikroTikResponseFrame, T> selector)
+        public async Task<List<T>> ToListAsync<T>(Func<MikroTikResponseFrameDictionary, T> selector)
         {
             var response = await _mtConnection.SendAsync(this).ConfigureAwait(false);
             return response.ToList<T>(selector);

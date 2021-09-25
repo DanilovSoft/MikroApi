@@ -22,7 +22,7 @@ namespace DanilovSoft.MikroApi.Mapping
                 MemberType = fieldInfo.FieldType;
             }
 
-            SetValueHandler = new SetMemberValueDelegate(DynamicReflectionDelegateFactory.Instance.CreateSet<object>(memberInfo));
+            SetValueHandler = new SetMemberValueDelegate(DynamicReflectionDelegateFactory.CreateSet<object>(memberInfo));
             //var attribute = memberInfo.GetCustomAttribute<TypeConverterAttribute>();
             //if (attribute != null)
             //{

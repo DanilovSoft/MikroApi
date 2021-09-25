@@ -33,7 +33,7 @@ namespace DanilovSoft.MikroApi.Mapping
             return dict;
         }
 
-        public object ReadObject(MikroTikResponseFrame frame)
+        public object ReadObject(MikroTikResponseFrameDictionary frame)
         {
             object obj = _activator.CreateInstance();
 

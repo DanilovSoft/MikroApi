@@ -7,15 +7,15 @@ namespace DanilovSoft.MikroApi.Mapping
     internal sealed class ContractActivator
     {
         private readonly Func<object> _activator;
-        private readonly Func<object[], object> _anonimousActivator;
-        public readonly OnDeserializingDelegate OnDeserializingHandle;
-        public readonly OnDeserializedDelegate OnDeserializedHandle;
+        //private readonly Func<object[], object>? _anonimousActivator;
+        public readonly OnDeserializingDelegate? OnDeserializingHandle;
+        public readonly OnDeserializedDelegate? OnDeserializedHandle;
 
         public ContractActivator(Type type)
         {
             //if(!anonimouseType)
             {
-                _activator = DynamicReflectionDelegateFactory.Instance.CreateDefaultConstructor<object>(type);
+                _activator = DynamicReflectionDelegateFactory.CreateDefaultConstructor<object>(type);
                 OnDeserializingHandle = null;
 
                 MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
@@ -23,12 +23,12 @@ namespace DanilovSoft.MikroApi.Mapping
                 {
                     if (method.IsDefined(typeof(OnDeserializingAttribute), false))
                     {
-                        OnDeserializingHandle = DynamicReflectionDelegateFactory.Instance.CreateOnDeserializingMethodCall(method, type);
+                        OnDeserializingHandle = DynamicReflectionDelegateFactory.CreateOnDeserializingMethodCall(method, type);
                     }
 
                     if (method.IsDefined(typeof(OnDeserializedAttribute), false))
                     {
-                        OnDeserializedHandle = DynamicReflectionDelegateFactory.Instance.CreateOnDeserializedMethodCall(method, type);
+                        OnDeserializedHandle = DynamicReflectionDelegateFactory.CreateOnDeserializedMethodCall(method, type);
                     }
                 }
             }
@@ -47,10 +47,10 @@ namespace DanilovSoft.MikroApi.Mapping
             //}
         }
 
-        public object CreateAnonimousInstance(object[] args)
-        {
-            return _anonimousActivator.Invoke(args);
-        }
+        //public object CreateAnonimousInstance(object[] args)
+        //{
+        //    return _anonimousActivator.Invoke(args);
+        //}
 
         public object CreateInstance()
         {

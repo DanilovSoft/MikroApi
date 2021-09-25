@@ -85,7 +85,7 @@ namespace DanilovSoft.MikroApi
         /// Потокобезопасно добавляет исключение всем подписчикам и удаляет их из словаря.
         /// Вызывается потоком читающим из сокета или отправляющим в сокет.
         /// </summary>
-        internal void AddCriticalException(Exception exception, bool gotFatan)
+        internal void AddCriticalException(Exception exception, bool gotFatal)
         {
             lock (_dict)
             {
@@ -97,7 +97,7 @@ namespace DanilovSoft.MikroApi
                         {
                             lock (listener.SyncObj)
                             {
-                                if (gotFatan)
+                                if (gotFatal)
                                 {
                                     listener.AddFatal(exception);
                                 }

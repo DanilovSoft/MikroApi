@@ -18,18 +18,14 @@ namespace DanilovSoft.MikroApi
     {
         public const int DefaultApiPort = 8728;
         public const int DefaultApiSslPort = 8729;
-        private const RouterOsVersion DefaultOsVersion = RouterOsVersion.PostVersion6Dot43;
-        private const int DefaultReadWriteTimeout = 30000;
-        public const int DefaultPort = 8728;
-        public const int DefaultSslPort = 8729;
-        public const int ConnectTimeoutMs = 10000;
-
         public static Encoding DefaultEncoding { get; set; } = Encoding.UTF8;
         public static TimeSpan DefaultPingInterval { get; set; } = TimeSpan.FromSeconds(30);
 
+        private const RouterOsVersion DefaultOsVersion = RouterOsVersion.PostVersion6Dot43;
+        private const int DefaultReadWriteTimeout = 30000;
         internal readonly Encoding _encoding;
-        private TimeSpan ConnectTimeout => TimeSpan.FromMilliseconds(ConnectTimeoutMs);
-        private MikroTikSocket? _authorizedSocket;
+        //private TimeSpan ConnectTimeout => TimeSpan.FromMilliseconds(ConnectTimeoutMs);
+        private MtOpenConnection? _authorizedSocket;
         private bool _disposed;
         private int _tagIndex;
         private int _receiveTimeout = DefaultReadWriteTimeout;
@@ -83,17 +79,6 @@ namespace DanilovSoft.MikroApi
                 }
 
                 _sendTimeout = value;
-            }
-        }
-
-        /// <exception cref="InvalidOperationException"/>
-        [Obsolete]
-        private MikroTikSocket Socket
-        {
-            get
-            {
-                CheckAuthorized();
-                return _authorizedSocket;
             }
         }
 
@@ -225,9 +210,9 @@ namespace DanilovSoft.MikroApi
                 throw new ArgumentNullException(nameof(command));
             }
 
-            CheckAuthorized();
+            var connection = CheckAuthorized();
 
-            return _authorizedSocket.SendAndGetResponse(command);
+            return connection.SendAndGetResponse(command);
         }
 
         /// <summary>
@@ -240,9 +225,9 @@ namespace DanilovSoft.MikroApi
                 throw new ArgumentNullException(nameof(command));
             }
 
-            CheckAuthorized();
+            var connection = CheckAuthorized();
 
-            return _authorizedSocket.SendAndGetResponseAsync(command);
+            return connection.SendAndGetResponseAsync(command);
         }
 
         #endregion
@@ -263,18 +248,16 @@ namespace DanilovSoft.MikroApi
 
             command.CheckCompleted();
 
-            CheckAuthorized();
-
-            var socket = _authorizedSocket;
+            var connection = CheckAuthorized();
 
             // Добавить в словарь.
-            var listener = socket.AddListener();
+            var listener = connection.AddListener();
 
             command.SetTag(listener._tag);
 
             // Синхронная отправка команды в сокет без получения результата.
             // Последовательность результатов будет делегироваться в Listener.
-            socket.Send(command);
+            connection.Send(command);
 
             command.Completed();
 
@@ -294,17 +277,15 @@ namespace DanilovSoft.MikroApi
 
             command.CheckCompleted();
 
-            CheckAuthorized();
-
-            var socket = _authorizedSocket;
+            var connection = CheckAuthorized();
 
             // Добавить в словарь.
-            var listener = socket.AddListener();
+            var listener = connection.AddListener();
 
             command.SetTag(listener._tag);
 
             // Асинхронная отправка запроса в сокет.
-            await socket.SendAsync(command).ConfigureAwait(false);
+            await connection.SendAsync(command).ConfigureAwait(false);
 
             command.Completed();
 
@@ -326,9 +307,9 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         public Task CancelListenersAsync()
         {
-            CheckAuthorized();
+            var connection = CheckAuthorized();
 
-            return _authorizedSocket.CancelListenersAsync(wait: true);
+            return connection.CancelListenersAsync(wait: true);
         }
 
         /// <summary>
@@ -454,7 +435,7 @@ namespace DanilovSoft.MikroApi
             }
         }
 
-        private static async Task LoginPlainAsync(MikroTikSocket socket, string login, string password)
+        private static async Task LoginPlainAsync(MtOpenConnection socket, string login, string password)
         {
             //CheckAlreadyAuthorized();
 
@@ -512,7 +493,7 @@ namespace DanilovSoft.MikroApi
             return EncodePassword(password, hash, _encoding);
         }
 
-        private MikroTikSocket ConnectCore(string hostname, int port, bool useSsl)
+        private MtOpenConnection ConnectCore(string hostname, int port, bool useSsl)
         {
             var tcp = ConnectTcp(hostname, port);
             var tcpStream = tcp.GetStream();
@@ -523,7 +504,7 @@ namespace DanilovSoft.MikroApi
                     : tcpStream;
 
                 NullableHelper.SetNull(ref tcpStream);
-                return new MikroTikSocket(this, NullableHelper.SetNull(ref tcp), finalStream);
+                return new MtOpenConnection(this, NullableHelper.SetNull(ref tcp), finalStream);
             }
             finally
             {
@@ -534,7 +515,7 @@ namespace DanilovSoft.MikroApi
 
         /// <exception cref="TimeoutException"/>
         /// <exception cref="OperationCanceledException"/>
-        private async Task<MikroTikSocket> ConnectAsyncCore(string hostname, int port, bool useSsl, CancellationToken cancellationToken)
+        private async Task<MtOpenConnection> ConnectAsyncCore(string hostname, int port, bool useSsl, CancellationToken cancellationToken)
         {
             var tcp = await ConnectTcpAsync(hostname, port, cancellationToken).ConfigureAwait(false);
             var tcpStream = tcp.GetStream();
@@ -545,7 +526,7 @@ namespace DanilovSoft.MikroApi
                     : tcpStream;
 
                 NullableHelper.SetNull(ref tcpStream);
-                return new MikroTikSocket(this, NullableHelper.SetNull(ref tcp), finalStream);
+                return new MtOpenConnection(this, NullableHelper.SetNull(ref tcp), finalStream);
             }
             finally
             {
@@ -557,13 +538,13 @@ namespace DanilovSoft.MikroApi
         /// <exception cref="MikroApiConnectionException"/>
         [MemberNotNull(nameof(_authorizedSocket))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CheckAuthorized()
+        private MtOpenConnection CheckAuthorized()
         {
-            if (_authorizedSocket != null)
+            if (_authorizedSocket == null)
             {
-                return;
+                ThrowHelper.ThrowNotConnected();
             }
-            ThrowHelper.ThrowNotConnected();
+            return _authorizedSocket;
         }
 
         /// <exception cref="MikroApiConnectionException"/>
@@ -579,7 +560,7 @@ namespace DanilovSoft.MikroApi
 
         #region Login
 
-        private Task LoginAsync(MikroTikSocket socket, string login, string password, RouterOsVersion version)
+        private Task LoginAsync(MtOpenConnection socket, string login, string password, RouterOsVersion version)
         {
             if (version == RouterOsVersion.PostVersion6Dot43)
             {
@@ -591,7 +572,7 @@ namespace DanilovSoft.MikroApi
             }
         }
 
-        private void Login(MikroTikSocket socket, string login, string password, RouterOsVersion version)
+        private void Login(MtOpenConnection socket, string login, string password, RouterOsVersion version)
         {
             if (version == RouterOsVersion.PostVersion6Dot43)
             {
@@ -606,7 +587,7 @@ namespace DanilovSoft.MikroApi
         /// <summary>
         /// Использует MD5.
         /// </summary>
-        private void Login(MikroTikSocket socket, string login, string password)
+        private void Login(MtOpenConnection socket, string login, string password)
         {
             var command = new MikroTikCommand("/login");
             var resp = socket.SendAndGetResponse(command);
@@ -621,7 +602,7 @@ namespace DanilovSoft.MikroApi
             socket.SendAndGetResponse(secondCommand);
         }
 
-        private void LoginPlain(MikroTikSocket socket, string login, string password)
+        private void LoginPlain(MtOpenConnection socket, string login, string password)
         {
             CheckNotAuthorized();
 
@@ -635,7 +616,7 @@ namespace DanilovSoft.MikroApi
         /// <summary>
         /// Использует MD5.
         /// </summary>
-        private async Task LoginAsync(MikroTikSocket socket, string login, string password)
+        private async Task LoginAsync(MtOpenConnection socket, string login, string password)
         {
             var command = new MikroTikCommand("/login");
             var resp = await socket.SendAndGetResponseAsync(command).ConfigureAwait(false);

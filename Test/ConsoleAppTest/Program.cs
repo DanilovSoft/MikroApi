@@ -12,8 +12,6 @@ namespace ConsoleAppCore
     {
         private static async Task Main()
         {
-            //string s = string.Format(CultureInfo.InvariantCulture, "{0} bla {1}", "проверка", "qwerty");
-
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
             // Support localized comments.
@@ -21,7 +19,7 @@ namespace ConsoleAppCore
 
             using (var con = new MikroTikConnection())
             {
-                con.Connect("api_dbg", "debug_password", "10.0.0.1", 8728, RouterOsVersion.PostVersion6Dot43);
+                con.Connect("api_dbg", "debug_password", "10.0.0.1");
 
                 var command = con.Command("/ip dhcp-server lease print")
                     //.Query("disabled", "false") // filter
@@ -29,7 +27,7 @@ namespace ConsoleAppCore
                     //.Proplist("comment", "name", "mtu") // limit output to these columns alone
                     .Proplist("address", "mac-address", "host-name", "status");
 
-                var ifaces = command.Send();
+                var ifaces = command.SendAsync();
 
                 con.Quit(1000);
             }
@@ -138,7 +136,7 @@ namespace ConsoleAppCore
 
             while (!listener.IsComplete)
             {
-                MikroTikResponseFrame result;
+                MikroTikResponseFrameDictionary result;
                 try
                 {
                     result = listener.ListenNext();
@@ -168,7 +166,7 @@ namespace ConsoleAppCore
 
             while (!listener.IsComplete)
             {
-                MikroTikResponseFrame result;
+                MikroTikResponseFrameDictionary result;
                 try
                 {
                     result = listener.ListenNext();

@@ -65,7 +65,7 @@ namespace DanilovSoft.MikroApi
 
         #region Не используемые члены интерфейса
         // Не может произойти.
-        void IMikroTikResponseListener.AddResult(MikroTikResponseFrame message) { }
+        void IMikroTikResponseListener.AddResult(MikroTikResponseFrameDictionary message) { }
         // Не может произойти.
         void IMikroTikResponseListener.AddTrap(MikroApiTrapException trapException) { }
         // Не может произойти.

@@ -19,10 +19,10 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         public readonly string SelfTag;
         private readonly TaskCompletionSource<object?> _tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        private readonly MikroTikSocket _socket;
+        private readonly MtOpenConnection _socket;
 
         // ctor
-        internal MikroTikAsyncCancelCommand(string tag, string selfTag, MikroTikSocket socket) : base("/cancel")
+        internal MikroTikAsyncCancelCommand(string tag, string selfTag, MtOpenConnection socket) : base("/cancel")
         {
             Tag = tag;
             SelfTag = selfTag;
@@ -73,7 +73,7 @@ namespace DanilovSoft.MikroApi
         #region Не используемые члены интерфейса
 
         // Не может произойти.
-        void IMikroTikResponseListener.AddResult(MikroTikResponseFrame message)
+        void IMikroTikResponseListener.AddResult(MikroTikResponseFrameDictionary message)
         {
         }
 

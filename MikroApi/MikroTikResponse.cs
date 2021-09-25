@@ -13,7 +13,7 @@ namespace DanilovSoft.MikroApi
     /// </summary>
     [DebuggerDisplay("{DebugDisplay,nq}")]
     [DebuggerTypeProxy(typeof(TypeProxy))]
-    public class MikroTikResponse : IReadOnlyList<MikroTikResponseFrame>
+    public class MikroTikResponse : IReadOnlyList<MikroTikResponseFrameDictionary>
     {
         private const string MoreThanOneColumn = "There is more than one column.";
         private const string MoreThanOneRow = "There is more than one row.";
@@ -21,20 +21,20 @@ namespace DanilovSoft.MikroApi
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string DebugDisplay => $"Count = {_list.Count}";
-        private readonly List<MikroTikResponseFrame> _list;
+        private readonly List<MikroTikResponseFrameDictionary> _list;
 
         public MikroTikResponse()
         {
-            _list = new List<MikroTikResponseFrame>();
+            _list = new List<MikroTikResponseFrameDictionary>();
         }
 
-        public MikroTikResponseFrame this[int index] { get => _list[index]; set => _list[index] = value; }
+        public MikroTikResponseFrameDictionary this[int index] { get => _list[index]; set => _list[index] = value; }
 
         public int Count => _list.Count;
 
         //public bool IsReadOnly => false;
 
-        internal void Add(MikroTikResponseFrame item)
+        internal void Add(MikroTikResponseFrameDictionary item)
         {
             _list.Add(item);
         }
@@ -44,17 +44,17 @@ namespace DanilovSoft.MikroApi
             _list.Clear();
         }
 
-        public bool Contains(MikroTikResponseFrame item)
+        public bool Contains(MikroTikResponseFrameDictionary item)
         {
             return _list.Contains(item);
         }
 
-        public void CopyTo(MikroTikResponseFrame[] array, int arrayIndex)
+        public void CopyTo(MikroTikResponseFrameDictionary[] array, int arrayIndex)
         {
             _list.CopyTo(array, arrayIndex);
         }
 
-        public IEnumerator<MikroTikResponseFrame> GetEnumerator()
+        public IEnumerator<MikroTikResponseFrameDictionary> GetEnumerator()
         {
             return _list.GetEnumerator();
         }
@@ -64,17 +64,17 @@ namespace DanilovSoft.MikroApi
             return GetEnumerator();
         }
 
-        public int IndexOf(MikroTikResponseFrame item)
+        public int IndexOf(MikroTikResponseFrameDictionary item)
         {
             return _list.IndexOf(item);
         }
 
-        internal void Insert(int index, MikroTikResponseFrame item)
+        internal void Insert(int index, MikroTikResponseFrameDictionary item)
         {
             _list.Insert(index, item);
         }
 
-        internal bool Remove(MikroTikResponseFrame item)
+        internal bool Remove(MikroTikResponseFrameDictionary item)
         {
             return _list.Remove(item);
         }
@@ -92,7 +92,7 @@ namespace DanilovSoft.MikroApi
             // Должна быть только одна строка.
             if (Count == 1)
             {
-                MikroTikResponseFrame dict = this[0];
+                MikroTikResponseFrameDictionary dict = this[0];
 
                 // Должна быть только одна колонка.
                 if (dict.Count == 1)
@@ -211,7 +211,7 @@ namespace DanilovSoft.MikroApi
             // Если есть строки.
             if (Count > 0)
             {
-                MikroTikResponseFrame dict = this[0];
+                MikroTikResponseFrameDictionary dict = this[0];
 
                 // Должна быть только одна колонка.
                 if (dict.Count == 1)
@@ -254,7 +254,7 @@ namespace DanilovSoft.MikroApi
             // Если есть строки.
             if (Count > 0)
             {
-                MikroTikResponseFrame dict = this[0];
+                MikroTikResponseFrameDictionary dict = this[0];
 
                 // Должна быть только одна колонка.
                 if (dict.Count == 1)
@@ -301,7 +301,7 @@ namespace DanilovSoft.MikroApi
             // Если есть строки.
             if (Count > 0)
             {
-                MikroTikResponseFrame dict = this[0];
+                MikroTikResponseFrameDictionary dict = this[0];
 
                 // Должна быть только одна колонка.
                 if (dict.Count == 1)
@@ -344,7 +344,7 @@ namespace DanilovSoft.MikroApi
             // Если есть строки.
             if (Count > 0)
             {
-                MikroTikResponseFrame dict = this[0];
+                MikroTikResponseFrameDictionary dict = this[0];
 
                 // Должна быть только одна колонка.
                 if (dict.Count == 1)
@@ -476,7 +476,7 @@ namespace DanilovSoft.MikroApi
             // Должна быть только одна строка.
             if (Count == 1)
             {
-                MikroTikResponseFrame dict = this[0];
+                MikroTikResponseFrameDictionary dict = this[0];
 
                 // Должна быть только одна колонка.
                 if (dict.Count == 1)
@@ -538,12 +538,12 @@ namespace DanilovSoft.MikroApi
         /// <summary>
         /// Когда результатом является одна строка.
         /// </summary>
-        public MikroTikResponseFrame Single()
+        public MikroTikResponseFrameDictionary Single()
         {
             // Должна быть только одна строка.
             if (Count == 1)
             {
-                MikroTikResponseFrame dict = this[0];
+                MikroTikResponseFrameDictionary dict = this[0];
                 return dict;
             }
             else
@@ -562,7 +562,7 @@ namespace DanilovSoft.MikroApi
         /// <summary>
         /// Когда результатом является одна строка.
         /// </summary>
-        public T Single<T>(Func<MikroTikResponseFrame, T> selector)
+        public T Single<T>(Func<MikroTikResponseFrameDictionary, T> selector)
         {
             if (selector is null)
             {
@@ -571,7 +571,7 @@ namespace DanilovSoft.MikroApi
             // Должна быть только одна строка.
             if (Count == 1)
             {
-                MikroTikResponseFrame frame = this[0];
+                MikroTikResponseFrameDictionary frame = this[0];
                 return selector(frame);
             }
             else
@@ -595,7 +595,7 @@ namespace DanilovSoft.MikroApi
             // Должна быть только одна строка.
             if (Count == 1)
             {
-                MikroTikResponseFrame dict = this[0];
+                MikroTikResponseFrameDictionary dict = this[0];
                 ObjectMapper mapper = DynamicActivator.GetMapper<T>();
                 return (T)mapper.ReadObject(dict);
             }
@@ -619,7 +619,7 @@ namespace DanilovSoft.MikroApi
         /// <summary>
         /// Когда результатом является одна строка.
         /// </summary>
-        public MikroTikResponseFrame? SingleOrDefault()
+        public MikroTikResponseFrameDictionary? SingleOrDefault()
         {
             // Должна быть только одна строка.
             if (Count == 1)
@@ -643,7 +643,7 @@ namespace DanilovSoft.MikroApi
         /// <summary>
         /// Когда результатом является одна строка.
         /// </summary>
-        public T? SingleOrDefault<T>(Func<MikroTikResponseFrame, T> selector)
+        public T? SingleOrDefault<T>(Func<MikroTikResponseFrameDictionary, T> selector)
         {
             if (selector is null)
             {
@@ -652,7 +652,7 @@ namespace DanilovSoft.MikroApi
             // Должна быть только одна строка.
             if (Count == 1)
             {
-                MikroTikResponseFrame frame = this[0];
+                MikroTikResponseFrameDictionary frame = this[0];
                 return selector(frame);
             }
             else
@@ -676,7 +676,7 @@ namespace DanilovSoft.MikroApi
             // Должна быть только одна строка.
             if (Count == 1)
             {
-                MikroTikResponseFrame dict = this[0];
+                MikroTikResponseFrameDictionary dict = this[0];
                 ObjectMapper mapper = DynamicActivator.GetMapper<T>();
                 return (T)mapper.ReadObject(dict);
             }
@@ -718,7 +718,7 @@ namespace DanilovSoft.MikroApi
             return Array.Empty<T>();
         }
 
-        public T[] ToArray<T>(Func<MikroTikResponseFrame, T> selector)
+        public T[] ToArray<T>(Func<MikroTikResponseFrameDictionary, T> selector)
         {
             if (selector is null)
             {
@@ -779,7 +779,7 @@ namespace DanilovSoft.MikroApi
             return list;
         }
 
-        public List<T> ToList<T>(Func<MikroTikResponseFrame, T> selector)
+        public List<T> ToList<T>(Func<MikroTikResponseFrameDictionary, T> selector)
         {
             if (selector is null)
             {
@@ -851,7 +851,7 @@ namespace DanilovSoft.MikroApi
             }
 
             [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-            private List<MikroTikResponseFrame> Items => _self._list;
+            private List<MikroTikResponseFrameDictionary> Items => _self._list;
         }
     }
 }

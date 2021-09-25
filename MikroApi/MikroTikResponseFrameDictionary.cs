@@ -12,7 +12,7 @@ namespace DanilovSoft.MikroApi
     /// </summary>
     [DebuggerDisplay("{DebugDisplay,nq}")]
     [DebuggerTypeProxy(typeof(TypeProxy))]
-    public sealed class MikroTikResponseFrame : IReadOnlyDictionary<string, string>
+    public sealed class MikroTikResponseFrameDictionary : IReadOnlyDictionary<string, string>
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string DebugDisplay => $"Count = {_dict.Count}";
@@ -29,9 +29,9 @@ namespace DanilovSoft.MikroApi
         /// <summary>
         /// Преобразует строковое значение в требуемый тип.
         /// </summary>
-        public T Value<T>(string key)
+        public T? Value<T>(string key)
         {
-            return (T)MikroTikTypeConverter.ConvertValue(_dict[key], typeof(T));
+            return (T?)MikroTikTypeConverter.ConvertValue(_dict[key], typeof(T));
         }
 
         public string? this[string key, bool nullIfNotExist]
@@ -92,8 +92,8 @@ namespace DanilovSoft.MikroApi
         [DebuggerNonUserCode]
         private class TypeProxy
         {
-            private readonly MikroTikResponseFrame _self;
-            public TypeProxy(MikroTikResponseFrame self)
+            private readonly MikroTikResponseFrameDictionary _self;
+            public TypeProxy(MikroTikResponseFrameDictionary self)
             {
                 _self = self;
             }

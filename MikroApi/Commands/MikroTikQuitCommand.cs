@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Threading;
 
 namespace DanilovSoft.MikroApi
@@ -21,9 +22,9 @@ namespace DanilovSoft.MikroApi
         /// <summary>
         /// Исключение типа обрыв соединения.
         /// </summary>
-        private volatile Exception _criticalException;
+        private volatile Exception? _criticalException;
 
-        internal MikroTikQuitCommand(MikroTikSocket socket) : base("/quit")
+        internal MikroTikQuitCommand() : base("/quit")
         {
 
         }
@@ -39,10 +40,10 @@ namespace DanilovSoft.MikroApi
             bool success = Monitor.Wait(this, millisecondsTimeout);
             if (success)
             {
-                Exception ex = _criticalException;
+                var ex = _criticalException;
                 if (ex != null)
                 {
-                    Debug.WriteLine(string.Format(ExceptionDebugMessage, ex.Message));
+                    Debug.WriteLine(string.Format(CultureInfo.InvariantCulture, ExceptionDebugMessage, ex.Message));
                     return false;
                 }
             }
@@ -71,12 +72,12 @@ namespace DanilovSoft.MikroApi
                     // Сообщаем родителю что подтверждение получено.
                     Monitor.Pulse(state);
                 }
-            }, this);
+            }, this, preferLocal: true);
         }
 
         #region Не используемые члены интерфейса
         // Не может произойти.
-        void IMikroTikResponseListener.AddResult(MikroTikResponseFrame message) { }
+        void IMikroTikResponseListener.AddResult(MikroTikResponseFrameDictionary message) { }
         // Не может произойти.
         void IMikroTikResponseListener.AddTrap(MikroApiTrapException trapException) { }
         // Не может произойти.

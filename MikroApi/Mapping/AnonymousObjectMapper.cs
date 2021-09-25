@@ -10,7 +10,7 @@ namespace DanilovSoft.MikroApi.Mapping
 
         public AnonymousObjectMapper(Type type)
         {
-            _activator = DynamicReflectionDelegateFactory.Instance.CreateAnonimousConstructor(type);
+            _activator = DynamicReflectionDelegateFactory.CreateAnonimousConstructor(type);
             _properties = type.GetProperties().Select(x => new AnonProperty
             {
                 Name = x.Name,
@@ -18,7 +18,7 @@ namespace DanilovSoft.MikroApi.Mapping
             }).ToArray();
         }
 
-        public object ReadObject(MikroTikResponseFrame values)
+        public object ReadObject(MikroTikResponseFrameDictionary values)
         {
             object[] propValues = new object[_properties.Length];
             for (int i = 0; i < _properties.Length; i++)

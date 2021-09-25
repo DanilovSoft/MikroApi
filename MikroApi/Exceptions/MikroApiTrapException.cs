@@ -13,7 +13,7 @@ namespace DanilovSoft.MikroApi
         {
         }
 
-        public MikroApiTrapException(MikroTikResponseFrame frame) : base(message: GetMessage(frame))
+        public MikroApiTrapException(MikroTikResponseFrameDictionary frame) : base(message: GetMessage(frame))
         {
             if (frame.TryGetValue("category", out var v))
             {
@@ -37,7 +37,7 @@ namespace DanilovSoft.MikroApi
 
         public TrapCategory? Category { get; }
 
-        private static string? GetMessage(MikroTikResponseFrame frame)
+        private static string? GetMessage(MikroTikResponseFrameDictionary frame)
         {
             if (!frame.TryGetValue("message", out var message))
             {

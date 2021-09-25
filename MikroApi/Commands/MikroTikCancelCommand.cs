@@ -38,7 +38,7 @@ namespace DanilovSoft.MikroApi
         /// Собственный тег.
         /// </summary>
         public readonly string SelfTag;
-        private readonly MikroTikSocket _socket;
+        private readonly MtOpenConnection _socket;
         private volatile Exception? _exception;
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace DanilovSoft.MikroApi
         /// <param name="tag">Тег операции которую нужно отменить.</param>
         /// <param name="selfTag">Собственный тег команды.</param>
         /// <param name="socket"></param>
-        internal MikroTikCancelCommand(string tag, string selfTag, MikroTikSocket socket) : base("/cancel")
+        internal MikroTikCancelCommand(string tag, string selfTag, MtOpenConnection socket) : base("/cancel")
         {
             Tag = tag;
             SelfTag = selfTag;
@@ -84,7 +84,7 @@ namespace DanilovSoft.MikroApi
                     // Сообщаем родителю что работа завершена.
                     Monitor.Pulse(state);
                 }
-            }, this);
+            }, this, preferLocal: true);
 
             // Удалить себя из словаря.
             _socket.RemoveListener(SelfTag);
@@ -104,7 +104,7 @@ namespace DanilovSoft.MikroApi
                     // Сообщаем родителю что работа завершена.
                     Monitor.Pulse(state);
                 }
-            }, this);
+            }, this, preferLocal: true);
 
             // Удалить себя из словаря.
             _socket.RemoveListener(SelfTag);
@@ -122,7 +122,7 @@ namespace DanilovSoft.MikroApi
 
         #region Не используемые члены интерфейса
         // Не может произойти.
-        void IMikroTikResponseListener.AddResult(MikroTikResponseFrame message) { }
+        void IMikroTikResponseListener.AddResult(MikroTikResponseFrameDictionary message) { }
         // Не может произойти.
         void IMikroTikResponseListener.AddTrap(MikroApiTrapException trapException) { }
         #endregion

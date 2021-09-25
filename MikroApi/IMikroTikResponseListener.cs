@@ -10,7 +10,7 @@ namespace DanilovSoft.MikroApi
         /// Добавляет результат в коллекцию. Вызывается если получен тегированный фрейм сообщения.
         /// </summary>
         /// <param name="messageFrame"></param>
-        void AddResult(MikroTikResponseFrame messageFrame);
+        void AddResult(MikroTikResponseFrameDictionary messageFrame);
 
         /// <summary>
         /// Добавляет исключение как результат в коллекцию. Вызывается если получено сообщение об ошибке.

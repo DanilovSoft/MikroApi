@@ -1,6 +1,7 @@
 ﻿using DanilovSoft.MikroApi.Threading;
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,8 +14,8 @@ namespace DanilovSoft.MikroApi
     [DebuggerDisplay(@"\{{_queue}\}")]
     public sealed class MikroTikResponseListener : IMikroTikResponseListener
     {
-        private readonly ListenerQueue<MikroTikResponseFrame> _queue = new();
-        private readonly MikroTikSocket _socket;
+        private readonly ListenerQueue<MikroTikResponseFrameDictionary> _queue = new();
+        private readonly MtOpenConnection _socket;
         /// <summary>
         /// Тег связанный с текущим подписчиком.
         /// </summary>
@@ -36,7 +37,7 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         /// <param name="tag">Тег связанный с текущим подписчиком.</param>
         /// <param name="socket"></param>
-        internal MikroTikResponseListener(string tag, MikroTikSocket socket)
+        internal MikroTikResponseListener(string tag, MtOpenConnection socket)
         {
             _socket = socket;
             _tag = tag;
@@ -155,12 +156,12 @@ namespace DanilovSoft.MikroApi
         /// <exception cref="ObjectDisposedException"/>
         /// <exception cref="InvalidOperationException"/>
         /// <returns></returns>
-        internal bool TryTake(out MikroTikResponseFrame? cachedResult) => _queue.TryTake(out cachedResult);
+        internal bool TryTake([NotNullWhen(true)] out MikroTikResponseFrameDictionary? cachedResult) => _queue.TryTake(out cachedResult);
 
-        internal MikroTikResponseFrame Take(int millisecondsTimeout, CancellationToken cancellationToken) =>
+        internal MikroTikResponseFrameDictionary Take(int millisecondsTimeout, CancellationToken cancellationToken) =>
             _queue.Take(millisecondsTimeout, cancellationToken);
 
-        internal ValueTask<MikroTikResponseFrame> TakeAsync(int millisecondsTimeout, CancellationToken cancellationToken)
+        internal ValueTask<MikroTikResponseFrameDictionary> TakeAsync(int millisecondsTimeout, CancellationToken cancellationToken)
         {
             return _queue.TakeAsync(millisecondsTimeout, cancellationToken);
         }
@@ -194,7 +195,7 @@ namespace DanilovSoft.MikroApi
         /// Добавляет результат в коллекцию.
         /// Вызывается потоком читающим из сокета.
         /// </summary>
-        void IMikroTikResponseListener.AddResult(MikroTikResponseFrame result)
+        void IMikroTikResponseListener.AddResult(MikroTikResponseFrameDictionary result)
         {
             _queue.AddResult(result);
         }
@@ -246,7 +247,7 @@ namespace DanilovSoft.MikroApi
         /// </summary>
         /// <exception cref="MikroApiDoneException"/>
         /// <exception cref="MikroApiCommandInterruptedException"/>
-        public MikroTikResponseFrame ListenNext() => ListenNext(millisecondsTimeout: -1, CancellationToken.None);
+        public MikroTikResponseFrameDictionary ListenNext() => ListenNext(millisecondsTimeout: -1, CancellationToken.None);
 
         /// <summary>
         /// Ожидает очередной ответ от сервера.
@@ -254,7 +255,7 @@ namespace DanilovSoft.MikroApi
         /// <exception cref="TimeoutException"/>
         /// <exception cref="MikroApiDoneException"/>
         /// <exception cref="MikroApiCommandInterruptedException"/>
-        public MikroTikResponseFrame ListenNext(int millisecondsTimeout) => ListenNext(millisecondsTimeout, CancellationToken.None);
+        public MikroTikResponseFrameDictionary ListenNext(int millisecondsTimeout) => ListenNext(millisecondsTimeout, CancellationToken.None);
 
         /// <summary>
         /// Ожидает очередной ответ от сервера.
@@ -262,7 +263,7 @@ namespace DanilovSoft.MikroApi
         /// <exception cref="MikroApiDoneException"/>
         /// <exception cref="OperationCanceledException"/>
         /// <exception cref="MikroApiCommandInterruptedException"/>
-        public MikroTikResponseFrame ListenNext(CancellationToken cancellationToken) => ListenNext(millisecondsTimeout: -1, cancellationToken);
+        public MikroTikResponseFrameDictionary ListenNext(CancellationToken cancellationToken) => ListenNext(millisecondsTimeout: -1, cancellationToken);
 
         /// <summary>
         /// Ожидает очередной ответ от сервера.
@@ -271,7 +272,7 @@ namespace DanilovSoft.MikroApi
         /// <exception cref="MikroApiDoneException"/>
         /// <exception cref="OperationCanceledException"/>
         /// <exception cref="MikroApiCommandInterruptedException"/>
-        public MikroTikResponseFrame ListenNext(int millisecondsTimeout, CancellationToken cancellationToken)
+        public MikroTikResponseFrameDictionary ListenNext(int millisecondsTimeout, CancellationToken cancellationToken)
         {
             // Запускает поток для чтения, если это необходимо или забирает результат из кэша.
             return _socket.Listen(this, millisecondsTimeout, cancellationToken);
@@ -283,7 +284,7 @@ namespace DanilovSoft.MikroApi
         /// <exception cref="MikroApiTrapException"/>
         /// <exception cref="MikroApiDoneException"/>
         /// <exception cref="MikroApiCommandInterruptedException"/>
-        public ValueTask<MikroTikResponseFrame> ListenNextAsync()
+        public ValueTask<MikroTikResponseFrameDictionary> ListenNextAsync()
         {
             return ListenNextAsync(millisecondsTimeout: -1, CancellationToken.None);
         }
@@ -295,7 +296,7 @@ namespace DanilovSoft.MikroApi
         /// <exception cref="MikroApiDoneException"/>
         /// <exception cref="MikroApiTrapException"/>
         /// <exception cref="MikroApiCommandInterruptedException"/>
-        public ValueTask<MikroTikResponseFrame> ListenNextAsync(int millisecondsTimeout)
+        public ValueTask<MikroTikResponseFrameDictionary> ListenNextAsync(int millisecondsTimeout)
         {
             return ListenNextAsync(millisecondsTimeout, CancellationToken.None);
         }
@@ -307,7 +308,7 @@ namespace DanilovSoft.MikroApi
         /// <exception cref="MikroApiDoneException"/>
         /// <exception cref="OperationCanceledException"/>
         /// <exception cref="MikroApiCommandInterruptedException"/>
-        public ValueTask<MikroTikResponseFrame> ListenNextAsync(CancellationToken cancellationToken)
+        public ValueTask<MikroTikResponseFrameDictionary> ListenNextAsync(CancellationToken cancellationToken)
         {
             return ListenNextAsync(millisecondsTimeout: -1, cancellationToken);
         }
@@ -320,7 +321,7 @@ namespace DanilovSoft.MikroApi
         /// <exception cref="MikroApiDoneException"/>
         /// <exception cref="OperationCanceledException"/>
         /// <exception cref="MikroApiCommandInterruptedException"/>
-        public ValueTask<MikroTikResponseFrame> ListenNextAsync(int millisecondsTimeout, CancellationToken cancellationToken)
+        public ValueTask<MikroTikResponseFrameDictionary> ListenNextAsync(int millisecondsTimeout, CancellationToken cancellationToken)
         {
             // Запускает поток для чтения, если это необходимо или забирает результат из кэша.
             return _socket.ListenAsync(this, millisecondsTimeout, cancellationToken);
