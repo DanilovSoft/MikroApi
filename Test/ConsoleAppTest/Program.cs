@@ -1,7 +1,5 @@
 ﻿using DanilovSoft.MikroApi;
 using System;
-using System.Globalization;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,7 +25,7 @@ namespace ConsoleAppCore
                     //.Proplist("comment", "name", "mtu") // limit output to these columns alone
                     .Proplist("address", "mac-address", "host-name", "status");
 
-                var ifaces = command.SendAsync();
+                var ifaces = command.Send();
 
                 con.Quit(1000);
             }

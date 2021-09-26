@@ -5,6 +5,7 @@ namespace DanilovSoft.MikroApi
 {
     internal sealed class SocketTimeout : IDisposable
     {
+        private readonly object _syncTimer = new();
         private readonly Timer _watchdogTimer;
         private readonly TimerCallback _timerCallback;
         private readonly Slot _slot;
@@ -26,7 +27,7 @@ namespace DanilovSoft.MikroApi
             // Запланировать таймер если он остановлен.
             Interlocked.CompareExchange(ref _state, 1, 0);
 
-            lock (_watchdogTimer)
+            lock (_syncTimer)
             {
                 if (!_disposed)
                 {
@@ -50,7 +51,7 @@ namespace DanilovSoft.MikroApi
 
             if (state != 2)
             {
-                lock (_watchdogTimer)
+                lock (_syncTimer)
                 {
                     // Stop мог сработать из-за вызова Dispose пользователем на верхнем уровне.
                     if (!_disposed)
@@ -83,7 +84,7 @@ namespace DanilovSoft.MikroApi
 
         public void Dispose()
         {
-            lock (_watchdogTimer)
+            lock (_syncTimer)
             {
                 if (!_disposed)
                 {

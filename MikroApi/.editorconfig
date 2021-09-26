@@ -9,3 +9,6 @@ dotnet_diagnostic.CA1812.severity = none
 
 # IDE0057: Использовать оператор диапазона
 dotnet_diagnostic.IDE0057.severity = none
+
+# CA1031: Не перехватывать исключения общих типов
+dotnet_diagnostic.CA1031.severity = silent

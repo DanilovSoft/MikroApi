@@ -7,16 +7,41 @@ namespace DanilovSoft.MikroApi.Mapping
 {
     internal class DynamicReflectionDelegateFactory
     {
-        //public static readonly DynamicReflectionDelegateFactory Instance = new();
-        private static readonly Type[] _objectArrayTypes = new[] { typeof(object[]) };
+        private static readonly Type[] ObjectArrayTypes = new[] { typeof(object[]) };
 
-        private static DynamicMethod CreateDynamicMethod(string name, Type? returnType, Type[] parameterTypes, Type owner)
+        public static Action<T, object> CreateSet<T>(MemberInfo memberInfo)
         {
-            DynamicMethod dynamicMethod = !owner.IsInterface
-                ? new DynamicMethod(name, returnType, parameterTypes, owner, true)
-                : new DynamicMethod(name, returnType, parameterTypes, owner.Module, true);
+            if (memberInfo is PropertyInfo propertyInfo)
+            {
+                return CreateSet<T>(propertyInfo);
+            }
 
-            return dynamicMethod;
+            if (memberInfo is FieldInfo fieldInfo)
+            {
+                return CreateSet<T>(fieldInfo);
+            }
+
+            throw new InvalidOperationException($"Could not create setter for {memberInfo}.");
+        }
+
+        public static Action<T, object> CreateSet<T>(PropertyInfo propertyInfo)
+        {
+            DynamicMethod dynamicMethod = CreateDynamicMethod("Set" + propertyInfo.Name, null, new[] { typeof(T), typeof(object) }, propertyInfo.DeclaringType!);
+            ILGenerator generator = dynamicMethod.GetILGenerator();
+
+            GenerateCreateSetPropertyIL(propertyInfo, generator);
+
+            return (Action<T, object>)dynamicMethod.CreateDelegate(typeof(Action<T, object>));
+        }
+
+        public static Action<T, object> CreateSet<T>(FieldInfo fieldInfo)
+        {
+            DynamicMethod dynamicMethod = CreateDynamicMethod("Set" + fieldInfo.Name, null, new[] { typeof(T), typeof(object) }, fieldInfo.DeclaringType!);
+            ILGenerator generator = dynamicMethod.GetILGenerator();
+
+            GenerateCreateSetFieldIL(fieldInfo, generator);
+
+            return (Action<T, object>)dynamicMethod.CreateDelegate(typeof(Action<T, object>));
         }
 
         public static Func<T> CreateDefaultConstructor<T>(Type type)
@@ -41,7 +66,7 @@ namespace DanilovSoft.MikroApi.Mapping
 
             DynamicMethod dynamicMethod = CreateDynamicMethod("",
                 returnType: typeof(object),
-                parameterTypes: _objectArrayTypes,
+                parameterTypes: ObjectArrayTypes,
                 owner: type);
 
             dynamicMethod.InitLocals = true;
@@ -50,6 +75,35 @@ namespace DanilovSoft.MikroApi.Mapping
             AnonGenerateMethodCall(ctor, generator, 0);
 
             return (Func<object[], object>)dynamicMethod.CreateDelegate(typeof(Func<object[], object>));
+        }
+
+        public static OnDeserializingDelegate CreateOnDeserializingMethodCall(MethodInfo method, Type type)
+        {
+            DynamicMethod dynamicMethod = CreateDynamicMethod("", returnType: typeof(void), parameterTypes: new[] { typeof(object), typeof(object) }, owner: method.DeclaringType!);
+            ILGenerator generator = dynamicMethod.GetILGenerator();
+
+            GenerateCreateMethodCallIL(method, generator, type);
+
+            return (OnDeserializingDelegate)dynamicMethod.CreateDelegate(typeof(OnDeserializingDelegate));
+        }
+
+        public static OnDeserializedDelegate CreateOnDeserializedMethodCall(MethodInfo method, Type type)
+        {
+            DynamicMethod dynamicMethod = CreateDynamicMethod("", returnType: typeof(void), parameterTypes: new[] { typeof(object), typeof(object) }, owner: type);
+            ILGenerator generator = dynamicMethod.GetILGenerator();
+
+            GenerateCreateMethodCallIL(method, generator, type);
+
+            return (OnDeserializedDelegate)dynamicMethod.CreateDelegate(typeof(OnDeserializedDelegate));
+        }
+
+        private static DynamicMethod CreateDynamicMethod(string name, Type? returnType, Type[] parameterTypes, Type owner)
+        {
+            DynamicMethod dynamicMethod = !owner.IsInterface
+                ? new DynamicMethod(name, returnType, parameterTypes, owner, true)
+                : new DynamicMethod(name, returnType, parameterTypes, owner.Module, true);
+
+            return dynamicMethod;
         }
 
         private static void AnonGenerateMethodCall(MethodBase method, ILGenerator generator, int argsIndex)
@@ -70,7 +124,7 @@ namespace DanilovSoft.MikroApi.Mapping
 
             if (!method.IsConstructor && !method.IsStatic)
             {
-                generator.PushInstance(method.DeclaringType);
+                generator.PushInstance(method.DeclaringType!);
             }
 
             //LocalBuilder localConvertible = generator.DeclareLocal(typeof(IConvertible));
@@ -169,7 +223,7 @@ namespace DanilovSoft.MikroApi.Mapping
 
             if (returnType != typeof(void))
             {
-                generator.BoxIfNeeded(returnType);
+                generator.BoxIfNeeded(returnType!);
             }
             else
             {
@@ -207,26 +261,6 @@ namespace DanilovSoft.MikroApi.Mapping
             generator.Return();
         }
 
-        public static OnDeserializingDelegate CreateOnDeserializingMethodCall(MethodInfo method, Type type)
-        {
-            DynamicMethod dynamicMethod = CreateDynamicMethod("", returnType: typeof(void), parameterTypes: new[] { typeof(object), typeof(object) }, owner: method.DeclaringType);
-            ILGenerator generator = dynamicMethod.GetILGenerator();
-
-            GenerateCreateMethodCallIL(method, generator, type);
-
-            return (OnDeserializingDelegate)dynamicMethod.CreateDelegate(typeof(OnDeserializingDelegate));
-        }
-
-        public static OnDeserializedDelegate CreateOnDeserializedMethodCall(MethodInfo method, Type type)
-        {
-            DynamicMethod dynamicMethod = CreateDynamicMethod("", returnType: typeof(void), parameterTypes: new[] { typeof(object), typeof(object) }, owner: type);
-            ILGenerator generator = dynamicMethod.GetILGenerator();
-
-            GenerateCreateMethodCallIL(method, generator, type);
-
-            return (OnDeserializedDelegate)dynamicMethod.CreateDelegate(typeof(OnDeserializedDelegate));
-        }
-
         private static void GenerateCreateMethodCallIL(MethodInfo method, ILGenerator generator, Type type)
         {
             generator.PushInstance(type);
@@ -236,47 +270,12 @@ namespace DanilovSoft.MikroApi.Mapping
             generator.Return();
         }
 
-        public static Action<T, object> CreateSet<T>(MemberInfo memberInfo)
-        {
-            if (memberInfo is PropertyInfo propertyInfo)
-            {
-                return CreateSet<T>(propertyInfo);
-            }
-
-            if (memberInfo is FieldInfo fieldInfo)
-            {
-                return CreateSet<T>(fieldInfo);
-            }
-
-            throw new InvalidOperationException($"Could not create setter for {memberInfo}.");
-        }
-
-        public static Action<T, object> CreateSet<T>(PropertyInfo propertyInfo)
-        {
-            DynamicMethod dynamicMethod = CreateDynamicMethod("Set" + propertyInfo.Name, null, new[] { typeof(T), typeof(object) }, propertyInfo.DeclaringType);
-            ILGenerator generator = dynamicMethod.GetILGenerator();
-
-            GenerateCreateSetPropertyIL(propertyInfo, generator);
-
-            return (Action<T, object>)dynamicMethod.CreateDelegate(typeof(Action<T, object>));
-        }
-
-        public static Action<T, object> CreateSet<T>(FieldInfo fieldInfo)
-        {
-            DynamicMethod dynamicMethod = CreateDynamicMethod("Set" + fieldInfo.Name, null, new[] { typeof(T), typeof(object) }, fieldInfo.DeclaringType);
-            ILGenerator generator = dynamicMethod.GetILGenerator();
-
-            GenerateCreateSetFieldIL(fieldInfo, generator);
-
-            return (Action<T, object>)dynamicMethod.CreateDelegate(typeof(Action<T, object>));
-        }
-
         private static void GenerateCreateSetPropertyIL(PropertyInfo propertyInfo, ILGenerator generator)
         {
             var setMethod = propertyInfo.GetSetMethod(true);
-            if (!setMethod.IsStatic)
+            if (!setMethod!.IsStatic)
             {
-                generator.PushInstance(propertyInfo.DeclaringType);
+                generator.PushInstance(propertyInfo.DeclaringType!);
             }
 
             generator.Emit(OpCodes.Ldarg_1);
@@ -289,7 +288,7 @@ namespace DanilovSoft.MikroApi.Mapping
         {
             if (!fieldInfo.IsStatic)
             {
-                generator.PushInstance(fieldInfo.DeclaringType);
+                generator.PushInstance(fieldInfo.DeclaringType!);
             }
 
             generator.Emit(OpCodes.Ldarg_1);

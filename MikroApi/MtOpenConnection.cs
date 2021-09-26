@@ -578,7 +578,7 @@ namespace DanilovSoft.MikroApi
                                 if (fatal)
                                 // Сервер закрывает соединение.
                                 {
-                                    var exception = new MikroApiFatalException(fatalMessage);
+                                    var exception = new MikroApiFatalException(fatalMessage!);
 
                                     ConnectionClosed(exception, gotFatal: true);
 

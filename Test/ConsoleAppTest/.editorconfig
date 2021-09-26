@@ -1,0 +1,10 @@
+[*.cs]
+
+# IDE0051: Удалите неиспользуемые закрытые члены
+dotnet_diagnostic.IDE0051.severity = none
+
+# CA2016: Перенаправьте параметр "CancellationToken" в методы, которые его принимают.
+dotnet_diagnostic.CA2016.severity = none
+
+# CS1998: В асинхронном методе отсутствуют операторы await, будет выполнен синхронный метод
+dotnet_diagnostic.CS1998.severity = none

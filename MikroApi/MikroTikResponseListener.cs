@@ -15,7 +15,7 @@ namespace DanilovSoft.MikroApi
     public sealed class MikroTikResponseListener : IMikroTikResponseListener
     {
         private readonly ListenerQueue<MikroTikResponseFrameDictionary> _queue = new();
-        private readonly MtOpenConnection _socket;
+        private readonly MtOpenConnection _connection;
         /// <summary>
         /// Тег связанный с текущим подписчиком.
         /// </summary>
@@ -39,7 +39,7 @@ namespace DanilovSoft.MikroApi
         /// <param name="socket"></param>
         internal MikroTikResponseListener(string tag, MtOpenConnection socket)
         {
-            _socket = socket;
+            _connection = socket;
             _tag = tag;
         }
 
@@ -60,27 +60,27 @@ namespace DanilovSoft.MikroApi
             ThrowIfCanceled();
 
             // В любом случае нужен собственный тег что-бы результат не попал в основную очередь когда wait = false
-            string selfTag = _socket.CreateUniqueTag();
-            var cancelCommand = new MikroTikCancelCommand(_tag, selfTag, _socket);
+            string selfTag = _connection.CreateUniqueTag();
+            var cancelCommand = new MikroTikCancelCommand(_tag, selfTag, _connection);
 
             if (wait)
             {
                 // Добавляем команду в словарь (подписываемся на завершение отмены).
-                _socket._listeners.Add(selfTag, cancelCommand);
+                _connection._listeners.Add(selfTag, cancelCommand);
 
                 // Добавляем сокету тег в очередь ожидания.
-                bool readerIsStopped = _socket.AddTagToRead(selfTag);
+                bool readerIsStopped = _connection.AddTagToRead(selfTag);
 
                 // Важно захватить блокировку перед отправкой в сокет.
                 lock (cancelCommand)
                 {
                     // Отправить запрос без ожидания ответа.
-                    _socket.Send(cancelCommand);
+                    _connection.Send(cancelCommand);
 
                     if (readerIsStopped)
                     {
                         // Запуск потока для чтения.
-                        _socket.StartRead();
+                        _connection.StartRead();
                     }
 
                     // Этот Listener больше нельзя отменять.
@@ -93,7 +93,7 @@ namespace DanilovSoft.MikroApi
             else
             {
                 // Отправить запрос без ожидания ответа.
-                _socket.Send(cancelCommand);
+                _connection.Send(cancelCommand);
 
                 // Этот Listener больше нельзя отменять.
                 SetCanceled();
@@ -119,18 +119,18 @@ namespace DanilovSoft.MikroApi
             if (wait)
             {
                 // Подписываемся на завершение отмены.
-                MikroTikAsyncCancelCommand cancelCommand = _socket.CreateAsyncCancelCommand(_tag);
+                MikroTikAsyncCancelCommand cancelCommand = _connection.CreateAsyncCancelCommand(_tag);
 
                 // Добавляем задание для потока читающего из сокета.
-                bool readerIsStopped = _socket.AddTagToRead(cancelCommand.SelfTag);
+                bool readerIsStopped = _connection.AddTagToRead(cancelCommand.SelfTag);
 
                 // Отправляем тегированный запрос на отмену без ожидания результата.
-                await _socket.SendAsync(cancelCommand).ConfigureAwait(false);
+                await _connection.SendAsync(cancelCommand).ConfigureAwait(false);
 
                 if (readerIsStopped)
                 {
                     // Запуск потока для чтения.
-                    _socket.StartRead();
+                    _connection.StartRead();
                 }
 
                 // Этот Listener больше нельзя отменять.
@@ -142,7 +142,7 @@ namespace DanilovSoft.MikroApi
             else
             {
                 // Отправляем тегированный запрос на отмену без ожидания результата.
-                await _socket.CancelListenerNoWaitAsync(_tag).ConfigureAwait(false);
+                await _connection.CancelListenerNoWaitAsync(_tag).ConfigureAwait(false);
 
                 // Этот Listener больше нельзя отменять
                 SetCanceled();
@@ -237,7 +237,7 @@ namespace DanilovSoft.MikroApi
             _queue.Done();
 
             // Удалить текущий listener из словаря.
-            _socket.RemoveListener(_tag);
+            _connection.RemoveListener(_tag);
         }
 
         #endregion
@@ -275,7 +275,7 @@ namespace DanilovSoft.MikroApi
         public MikroTikResponseFrameDictionary ListenNext(int millisecondsTimeout, CancellationToken cancellationToken)
         {
             // Запускает поток для чтения, если это необходимо или забирает результат из кэша.
-            return _socket.Listen(this, millisecondsTimeout, cancellationToken);
+            return _connection.Listen(this, millisecondsTimeout, cancellationToken);
         }
 
         /// <summary>
@@ -324,7 +324,7 @@ namespace DanilovSoft.MikroApi
         public ValueTask<MikroTikResponseFrameDictionary> ListenNextAsync(int millisecondsTimeout, CancellationToken cancellationToken)
         {
             // Запускает поток для чтения, если это необходимо или забирает результат из кэша.
-            return _socket.ListenAsync(this, millisecondsTimeout, cancellationToken);
+            return _connection.ListenAsync(this, millisecondsTimeout, cancellationToken);
         }
     }
 }
