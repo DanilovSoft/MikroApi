@@ -19,12 +19,10 @@ namespace DanilovSoft.MikroApi
         public const int DefaultApiPort = 8728;
         public const int DefaultApiSslPort = 8729;
         public static Encoding DefaultEncoding { get; set; } = Encoding.UTF8;
-        public static TimeSpan DefaultPingInterval { get; set; } = TimeSpan.FromSeconds(30);
-
+        //public static TimeSpan DefaultPingInterval { get; set; } = TimeSpan.FromSeconds(30);
         private const RouterOsVersion DefaultOsVersion = RouterOsVersion.PostVersion6Dot43;
         private const int DefaultReadWriteTimeout = 30000;
         internal readonly Encoding _encoding;
-        //private TimeSpan ConnectTimeout => TimeSpan.FromMilliseconds(ConnectTimeoutMs);
         private MtOpenConnection? _authorizedSocket;
         private bool _disposed;
         private int _tagIndex;
@@ -83,7 +81,7 @@ namespace DanilovSoft.MikroApi
         }
 
         #region Connect
-        
+
         public void Connect(string login, string password, string hostname, int port = DefaultApiPort)
         {
             Connect(login, password, hostname, port, DefaultOsVersion);
@@ -143,8 +141,7 @@ namespace DanilovSoft.MikroApi
             return ConnectAsync(login, password, hostname, port, DefaultOsVersion, cancellationToken);
         }
 
-        public async Task ConnectAsync(string login, string password, string hostname, int port,
-                                       RouterOsVersion version = RouterOsVersion.PostVersion6Dot43,
+        public async Task ConnectAsync(string login, string password, string hostname, int port, RouterOsVersion version,
                                        CancellationToken cancellationToken = default)
         {
             if (hostname is null)

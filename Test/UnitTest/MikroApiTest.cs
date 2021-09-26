@@ -7,7 +7,7 @@ namespace UnitTests
 {
     public class MikroApiTest
     {
-        private const string Address = "192.168.88.1";
+        private const string Address = "10.0.0.1";
         private const int Port = 8728;
         private const string Login = "api";
         private const string Password = "api";
@@ -17,7 +17,7 @@ namespace UnitTests
         {
             using (var con = new MikroTikConnection())
             {
-                con.Connect(Address, Port, Login, Password);
+                con.Connect(Login, Password, Address, Port);
                 bool success = con.Quit(2000);
                 Assert.True(success);
             }
@@ -28,7 +28,7 @@ namespace UnitTests
         {
             using (var con = new MikroTikConnection())
             {
-                await con.ConnectAsync(Address, Port, Login, Password);
+                await con.ConnectAsync(Login, Password, Address, Port);
                 bool success = await con.QuitAsync(2000);
                 Assert.True(success);
             }
@@ -39,7 +39,7 @@ namespace UnitTests
         {
             using (var con = new MikroTikConnection())
             {
-                await con.ConnectAsync(Address, Port, Login, Password);
+                await con.ConnectAsync(Login, Password, Address, Port);
                 var task = Task.Run(() => con.CancelListeners());
                 bool success = task.Wait(3000);
                 Assert.True(success);
@@ -51,7 +51,7 @@ namespace UnitTests
         {
             using (var con = new MikroTikConnection())
             {
-                await con.ConnectAsync(Address, Port, Login, Password);
+                await con.ConnectAsync(Login, Password, Address, Port);
                 var task = con.CancelListenersAsync();
                 bool success = task.Wait(3000);
                 Assert.True(success);
@@ -63,7 +63,7 @@ namespace UnitTests
         {
             using (var con = new MikroTikConnection())
             {
-                await con.ConnectAsync(Address, Port, Login, Password);
+                await con.ConnectAsync(Login, Password, Address, Port);
 
                 var listener = con.Command("/ping")
                     .Attribute("address", "SERV.LAN")
@@ -81,7 +81,7 @@ namespace UnitTests
         {
             using (var con = new MikroTikConnection())
             {
-                await con.ConnectAsync(Address, Port, Login, Password);
+                await con.ConnectAsync(Login, Password, Address, Port);
 
                 var listener = con.Command("/ping")
                     .Attribute("address", "SERV.LAN")
