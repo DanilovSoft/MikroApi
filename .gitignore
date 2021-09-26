@@ -260,3 +260,4 @@ paket-files/
 __pycache__/
 *.pyc
 /MikroApi/NuGetKey.local.txt
+/MikroApi/nuget.txt
