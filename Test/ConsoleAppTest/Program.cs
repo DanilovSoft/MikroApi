@@ -15,17 +15,14 @@ namespace ConsoleAppCore
             // Support localized comments.
             MikroTikConnection.DefaultEncoding = Encoding.GetEncoding("windows-1251"); // RUS
 
-            using (var con = new MikroTikConnection())
+            using (var con = new MikroTikConnection(Encoding.GetEncoding("windows-1251")))
             {
                 con.Connect("api_dbg", "debug_password", "10.0.0.1");
 
-                var command = con.Command("/ip dhcp-server lease print")
-                    //.Query("disabled", "false") // filter
-                    //.Query("name", "sfp1")      // filter
-                    //.Proplist("comment", "name", "mtu") // limit output to these columns alone
-                    .Proplist("address", "mac-address", "host-name", "status");
-
-                var ifaces = command.Send();
+                var leases = con.Command("/ip dhcp-server lease print")
+                    .Query("disabled", "false") // filter
+                    .Proplist("address", "mac-address", "host-name", "status")
+                    .Send();
 
                 con.Quit(1000);
             }
