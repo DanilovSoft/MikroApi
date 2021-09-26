@@ -17,7 +17,7 @@ namespace ConsoleAppCore
 
             using (var con = new MikroTikConnection(Encoding.GetEncoding("windows-1251")))
             {
-                con.Connect("api_dbg", "debug_password", "10.0.0.1");
+                con.Connect("api_dbg", "debug_password", "10.0.0.1", useSsl: false);
 
                 var leases = con.Command("/ip dhcp-server lease print")
                     .Query("disabled", "false") // filter

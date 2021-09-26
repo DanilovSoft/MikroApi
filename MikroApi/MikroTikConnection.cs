@@ -19,7 +19,6 @@ namespace DanilovSoft.MikroApi
         public const int DefaultApiPort = 8728;
         public const int DefaultApiSslPort = 8729;
         public static Encoding DefaultEncoding { get; set; } = Encoding.UTF8;
-        //public static TimeSpan DefaultPingInterval { get; set; } = TimeSpan.FromSeconds(30);
         private const RouterOsVersion DefaultOsVersion = RouterOsVersion.PostVersion6Dot43;
         private const int DefaultReadWriteTimeout = 30000;
         internal readonly Encoding _encoding;
@@ -82,12 +81,12 @@ namespace DanilovSoft.MikroApi
 
         #region Connect
 
-        public void Connect(string login, string password, string hostname, int port = DefaultApiPort)
+        public void Connect(string login, string password, string hostname, bool useSsl, int port = DefaultApiPort)
         {
-            Connect(login, password, hostname, port, DefaultOsVersion);
+            Connect(login, password, hostname, useSsl, port, DefaultOsVersion);
         }
 
-        public void Connect(string login, string password, string hostname, int port, RouterOsVersion version = RouterOsVersion.PostVersion6Dot43)
+        public void Connect(string login, string password, string hostname, bool useSsl, int port, RouterOsVersion version = RouterOsVersion.PostVersion6Dot43)
         {
             if (hostname is null)
             {
@@ -97,7 +96,7 @@ namespace DanilovSoft.MikroApi
             CheckDisposed();
             CheckNotAuthorized();
 
-            var socket = ConnectCore(hostname, port, useSsl: false);
+            var socket = ConnectCore(hostname, port, useSsl);
             try
             {
                 Login(socket, login, password, version);
@@ -109,39 +108,39 @@ namespace DanilovSoft.MikroApi
             }
         }
 
-        public void ConnectSsl(string login, string password, string hostname, int port = DefaultApiSslPort)
+        //public void ConnectSsl(string login, string password, string hostname, int port = DefaultApiSslPort)
+        //{
+        //    ConnectSsl(login, password, hostname, port, DefaultOsVersion);
+        //}
+
+        //public void ConnectSsl(string login, string password, string hostname, int port, RouterOsVersion version = RouterOsVersion.PostVersion6Dot43)
+        //{
+        //    if (hostname is null)
+        //    {
+        //        throw new ArgumentNullException(nameof(hostname));
+        //    }
+
+        //    CheckDisposed();
+        //    CheckNotAuthorized();
+
+        //    var socket = ConnectCore(hostname, port, useSsl: true);
+        //    try
+        //    {
+        //        Login(socket, login, password, version);
+        //        _authorizedSocket = NullableHelper.SetNull(ref socket);
+        //    }
+        //    finally
+        //    {
+        //        socket?.Dispose();
+        //    }
+        //}
+
+        public Task ConnectAsync(string login, string password, string hostname, bool useSsl, int port = DefaultApiPort, CancellationToken cancellationToken = default)
         {
-            ConnectSsl(login, password, hostname, port, DefaultOsVersion);
+            return ConnectAsync(login, password, hostname, useSsl, port, DefaultOsVersion, cancellationToken);
         }
 
-        public void ConnectSsl(string login, string password, string hostname, int port, RouterOsVersion version = RouterOsVersion.PostVersion6Dot43)
-        {
-            if (hostname is null)
-            {
-                throw new ArgumentNullException(nameof(hostname));
-            }
-
-            CheckDisposed();
-            CheckNotAuthorized();
-
-            var socket = ConnectCore(hostname, port, useSsl: true);
-            try
-            {
-                Login(socket, login, password, version);
-                _authorizedSocket = NullableHelper.SetNull(ref socket);
-            }
-            finally
-            {
-                socket?.Dispose();
-            }
-        }
-
-        public Task ConnectAsync(string login, string password, string hostname, int port = DefaultApiPort, CancellationToken cancellationToken = default)
-        {
-            return ConnectAsync(login, password, hostname, port, DefaultOsVersion, cancellationToken);
-        }
-
-        public async Task ConnectAsync(string login, string password, string hostname, int port, RouterOsVersion version,
+        public async Task ConnectAsync(string login, string password, string hostname, bool useSsl, int port, RouterOsVersion version,
                                        CancellationToken cancellationToken = default)
         {
             if (hostname is null)
@@ -152,7 +151,7 @@ namespace DanilovSoft.MikroApi
             CheckDisposed();
             CheckNotAuthorized();
 
-            var socket = await ConnectAsyncCore(hostname, port, false, cancellationToken).ConfigureAwait(false);
+            var socket = await ConnectAsyncCore(hostname, port, useSsl, cancellationToken).ConfigureAwait(false);
             try
             {
                 await LoginAsync(socket, login, password, version).ConfigureAwait(false);
@@ -164,33 +163,33 @@ namespace DanilovSoft.MikroApi
             }
         }
 
-        public Task ConnectSslAsync(string login, string password, string hostname, int port = DefaultApiSslPort, CancellationToken cancellationToken = default)
-        {
-            return ConnectSslAsync(login, password, hostname, port, DefaultOsVersion, cancellationToken);
-        }
+        //public Task ConnectSslAsync(string login, string password, string hostname, int port = DefaultApiSslPort, CancellationToken cancellationToken = default)
+        //{
+        //    return ConnectSslAsync(login, password, hostname, port, DefaultOsVersion, cancellationToken);
+        //}
 
-        public async Task ConnectSslAsync(string login, string password, string hostname, int port, RouterOsVersion version = RouterOsVersion.PostVersion6Dot43,
-                                          CancellationToken cancellationToken = default)
-        {
-            if (hostname is null)
-            {
-                throw new ArgumentNullException(nameof(hostname));
-            }
+        //public async Task ConnectSslAsync(string login, string password, string hostname, int port, RouterOsVersion version = RouterOsVersion.PostVersion6Dot43,
+        //                                  CancellationToken cancellationToken = default)
+        //{
+        //    if (hostname is null)
+        //    {
+        //        throw new ArgumentNullException(nameof(hostname));
+        //    }
 
-            CheckDisposed();
-            CheckNotAuthorized();
+        //    CheckDisposed();
+        //    CheckNotAuthorized();
 
-            var socket = await ConnectAsyncCore(hostname, port, true, cancellationToken).ConfigureAwait(false);
-            try
-            {
-                await LoginAsync(socket, login, password, version).ConfigureAwait(false);
-                _authorizedSocket = NullableHelper.SetNull(ref socket);
-            }
-            finally
-            {
-                socket?.Dispose();
-            }
-        }
+        //    var socket = await ConnectAsyncCore(hostname, port, true, cancellationToken).ConfigureAwait(false);
+        //    try
+        //    {
+        //        await LoginAsync(socket, login, password, version).ConfigureAwait(false);
+        //        _authorizedSocket = NullableHelper.SetNull(ref socket);
+        //    }
+        //    finally
+        //    {
+        //        socket?.Dispose();
+        //    }
+        //}
 
         #endregion
 

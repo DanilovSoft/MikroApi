@@ -7,7 +7,7 @@
 		<RootNamespace>DanilovSoft.MikroApi</RootNamespace>
 		<AssemblyName>DanilovSoft.MikroApi</AssemblyName>
 		<Description>API allows users to create custom software solutions to communicate with MikroTik RouterOS.</Description>
-		<Version>1.4.0</Version>
+		<Version>1.5.0</Version>
 		<LangVersion>latest</LangVersion>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>MikroApi.pfx</AssemblyOriginatorKeyFile>

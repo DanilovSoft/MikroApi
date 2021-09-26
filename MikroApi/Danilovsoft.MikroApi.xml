@@ -396,47 +396,23 @@
         <member name="M:DanilovSoft.MikroApi.Helpers.ThrowHelper.ThrowCommandAlreadySent">
             <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.Connect(System.String,System.String,System.String,System.Int32)">
+        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.Connect(System.String,System.String,System.String,System.Boolean,System.Int32)">
+            <param name="useSsl">Для <c>api-ssl</c>.</param>
             <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
             <exception cref="T:System.ObjectDisposedException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.Connect(System.String,System.String,System.String,System.Int32,DanilovSoft.MikroApi.RouterOsVersion)">
+        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.Connect(System.String,System.String,System.String,System.Boolean,System.Int32,DanilovSoft.MikroApi.RouterOsVersion)">
+            <param name="useSsl">Для <c>api-ssl</c>.</param>
             <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
             <exception cref="T:System.ObjectDisposedException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.ConnectSsl(System.String,System.String,System.String,System.Int32)">
-            <summary>
-            Для api-ssl.
-            </summary>
-            <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
-            <exception cref="T:System.ObjectDisposedException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.ConnectSsl(System.String,System.String,System.String,System.Int32,DanilovSoft.MikroApi.RouterOsVersion)">
-            <summary>
-            Для api-ssl.
-            </summary>
-            <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
-            <exception cref="T:System.ObjectDisposedException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.ConnectAsync(System.String,System.String,System.String,System.Int32,System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.ConnectAsync(System.String,System.String,System.String,System.Boolean,System.Int32,System.Threading.CancellationToken)">
+            <param name="useSsl">Для <c>api-ssl</c>.</param>
             <exception cref="T:System.TimeoutException"/>
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.ConnectAsync(System.String,System.String,System.String,System.Int32,DanilovSoft.MikroApi.RouterOsVersion,System.Threading.CancellationToken)">
-            <exception cref="T:System.TimeoutException"/>
-            <exception cref="T:System.OperationCanceledException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.ConnectSslAsync(System.String,System.String,System.String,System.Int32,System.Threading.CancellationToken)">
-            <summary>
-            Для api-ssl.
-            </summary>
-            <exception cref="T:System.TimeoutException"/>
-            <exception cref="T:System.OperationCanceledException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.ConnectSslAsync(System.String,System.String,System.String,System.Int32,DanilovSoft.MikroApi.RouterOsVersion,System.Threading.CancellationToken)">
-            <summary>
-            Для api-ssl.
-            </summary>
+        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.ConnectAsync(System.String,System.String,System.String,System.Boolean,System.Int32,DanilovSoft.MikroApi.RouterOsVersion,System.Threading.CancellationToken)">
+            <param name="useSsl">Для <c>api-ssl</c>.</param>
             <exception cref="T:System.TimeoutException"/>
             <exception cref="T:System.OperationCanceledException"/>
         </member>
