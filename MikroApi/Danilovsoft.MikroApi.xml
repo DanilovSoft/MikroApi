@@ -545,11 +545,21 @@
             </summary>
             <param name="command">Начальный текст команды</param>
         </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Quit(System.Threading.CancellationToken)">
+            <summary>
+            Сообщает серверу что выполняется разъединение. Не бросает исключения.
+            </summary>
+        </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Quit(System.Int32,System.Threading.CancellationToken)">
             <summary>
             Сообщает серверу что выполняется разъединение. Не бросает исключения.
             </summary>
             <param name="millisecondsTimeout">Позволяет подождать подтверждение от сервера что-бы лишний раз не происходило исключение в потоке читающем из сокета.</param>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.QuitAsync(System.Threading.CancellationToken)">
+            <summary>
+            Сообщает серверу что выполняется разъединение. Не бросает исключения.
+            </summary>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikConnection.QuitAsync(System.Int32,System.Threading.CancellationToken)">
             <summary>
