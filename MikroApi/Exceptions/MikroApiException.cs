@@ -1,19 +1,18 @@
 ﻿using System;
 
-namespace DanilovSoft.MikroApi
+namespace DanilovSoft.MikroApi;
+
+public class MikroApiException : Exception
 {
-    public class MikroApiException : Exception
+    public MikroApiException()
     {
-        public MikroApiException()
-        {
-        }
+    }
 
-        public MikroApiException(string? message) : base(message)
-        {
-        }
+    public MikroApiException(string? message) : base(message)
+    {
+    }
 
-        public MikroApiException(string? message, Exception? innerException) : base(message, innerException)
-        {
-        }
+    public MikroApiException(string? message, Exception? innerException) : base(message, innerException)
+    {
     }
 }

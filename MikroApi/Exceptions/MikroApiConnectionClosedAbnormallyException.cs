@@ -1,19 +1,18 @@
 ﻿using System;
 
-namespace DanilovSoft.MikroApi
+namespace DanilovSoft.MikroApi;
+
+public class MikroApiConnectionClosedAbnormallyException : MikroApiException
 {
-    public class MikroApiConnectionClosedAbnormallyException : MikroApiException
+    public MikroApiConnectionClosedAbnormallyException()
     {
-        public MikroApiConnectionClosedAbnormallyException()
-        {
-        }
+    }
 
-        public MikroApiConnectionClosedAbnormallyException(string? message) : base(message)
-        {
-        }
+    public MikroApiConnectionClosedAbnormallyException(string? message) : base(message)
+    {
+    }
 
-        public MikroApiConnectionClosedAbnormallyException(string? message, Exception? innerException) : base(message, innerException)
-        {
-        }
+    public MikroApiConnectionClosedAbnormallyException(string? message, Exception? innerException) : base(message, innerException)
+    {
     }
 }

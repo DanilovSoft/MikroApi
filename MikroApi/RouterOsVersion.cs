@@ -1,8 +1,7 @@
-﻿namespace DanilovSoft.MikroApi
+﻿namespace DanilovSoft.MikroApi;
+
+public enum RouterOsVersion
 {
-    public enum RouterOsVersion
-    {
-        PreVersion6Dot43,
-        PostVersion6Dot43
-    }
+    PreVersion6Dot43,
+    PostVersion6Dot43
 }

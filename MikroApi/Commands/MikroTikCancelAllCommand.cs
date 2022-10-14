@@ -1,10 +1,9 @@
-﻿namespace DanilovSoft.MikroApi
+﻿namespace DanilovSoft.MikroApi;
+
+internal class MikroTikCancelAllCommand : MikroTikCommand
 {
-    internal class MikroTikCancelAllCommand : MikroTikCommand
+    internal MikroTikCancelAllCommand(string selfTag) : base("/cancel")
     {
-        internal MikroTikCancelAllCommand(string selfTag) : base("/cancel")
-        {
-            SetTag(selfTag);
-        }
+        SetTag(selfTag);
     }
 }

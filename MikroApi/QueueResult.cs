@@ -1,46 +1,55 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-namespace DanilovSoft.MikroApi
+namespace DanilovSoft.MikroApi;
+
+/// <summary>
+/// Агрегирует результат или исключение.
+/// </summary>
+internal struct QueueResult<T> where T : notnull
 {
-    /// <summary>
-    /// Агрегирует результат или исключение.
-    /// </summary>
-    internal struct QueueResult<T> where T : notnull
+    internal readonly Exception? _exception;
+    private readonly T? _resultValue;
+
+    // ctor
+    internal QueueResult(T result)
     {
-        internal readonly Exception? _exception;
-        private readonly T? _resultValue;
+        _resultValue = result;
+        _exception = null;
+    }
 
-        // ctor
-        internal QueueResult(T result)
+    // ctor
+    internal QueueResult(Exception exception)
+    {
+        _exception = exception;
+        _resultValue = default;
+    }
+
+    internal bool Error => _exception != null;
+
+    /// <summary>
+    /// Результат или исключение.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal T GetResult()
+    {
+        if (_exception == null)
         {
-            _resultValue = result;
-            _exception = null;
-        }
-
-        // ctor
-        internal QueueResult(Exception exception)
-        {
-            _exception = exception;
-            _resultValue = default;
-        }
-
-        internal bool Error => _exception != null;
-
-        /// <summary>
-        /// Результат или исключение.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal T GetResult()
-        {
-            if (_exception != null)
-            {
-                throw _exception;
-            }
-
             Debug.Assert(_resultValue != null);
             return _resultValue;
         }
+
+        return ThrowDelegatedError();
+    }
+
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private T ThrowDelegatedError()
+    {
+        Debug.Assert(_exception != null);
+
+        throw _exception;
     }
 }

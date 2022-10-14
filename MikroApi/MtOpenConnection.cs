@@ -10,557 +10,572 @@ using System.Threading.Tasks;
 using System.Diagnostics.CodeAnalysis;
 using DanilovSoft.MikroApi.Helpers;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
-namespace DanilovSoft.MikroApi
+namespace DanilovSoft.MikroApi;
+
+internal sealed class MtOpenConnection : IDisposable
 {
-    internal sealed class MtOpenConnection : IDisposable
+    /// <summary>
+    /// Потокобезопасный словарь подписчиков на ответы сервера с разными тегами.
+    /// </summary>
+    internal readonly ResponseListeners _listeners = new();
+    [SuppressMessage("Usage", "CA2213:Следует высвобождать высвобождаемые поля", Justification = "Мы не владеем этим объектом")]
+    private readonly MikroTikConnection _connection;
+    private readonly object _connectionSync = new();
+    /// <summary>
+    /// Основная очередь. В неё помещаются ответы сервера которые не маркированы тегом.
+    /// </summary>
+    private readonly ListenerQueue<MikroTikResponse> _mainQueue = new();
+    /// <summary>
+    /// Коллекцие тегов, фреймы которых нужно получить от сервера.
+    /// </summary>
+    private readonly Dictionary<string, int> _framesToRead = new();
+    /// <summary>
+    /// Очередь сообщений на отправку.
+    /// </summary>
+    private readonly Encoding _encoding;
+    private readonly Memory<byte> _readBuffer;
+    private readonly Memory<byte> _sendBuffer;
+    private readonly TcpClient _tcpClient;
+    private readonly Stream _stream;
+    private readonly SocketTimeout _receiveTimeout;
+    private readonly SocketTimeout _sendTimeout;
+    private Sender? _sender;
+    private Task _backgroundReceive = Task.CompletedTask; // TODO возможно стоит await'ить перед Dispose.
+    /// <summary>
+    /// Доступ только через блокировку <see cref="_framesToRead"/>.
+    /// </summary>
+    private bool _reading;
+    private bool _socketDisposed;
+    /// <summary>
+    /// Исключение произошедшее в результате чтения или записи в сокет.
+    /// Доступ только через блокировку <see cref="_framesToRead"/>.
+    /// </summary>
+    private Exception? _socketException;
+    private bool _disposed;
+
+    public MtOpenConnection(MikroTikConnection connection, TcpClient tcpClient, Stream stream)
     {
-        /// <summary>
-        /// Потокобезопасный словарь подписчиков на ответы сервера с разными тегами.
-        /// </summary>
-        internal readonly ResponseListeners _listeners = new();
-        /// <summary>
-        /// Основная очередь. В неё помещаются ответы сервера которые не маркированы тегом.
-        /// </summary>
-        private readonly ListenerQueue<MikroTikResponse> _mainQueue = new();
-        /// <summary>
-        /// Коллекцие тегов, фреймы которых нужно получить от сервера.
-        /// </summary>
-        private readonly Dictionary<string, int> _framesToRead = new();
-        /// <summary>
-        /// Очередь сообщений на отправку.
-        /// </summary>
-        private readonly Encoding _encoding;
-        private readonly Memory<byte> _readBuffer;
-        private readonly Memory<byte> _sendBuffer;
-        private readonly MikroTikConnection _connection;
-        private readonly TcpClient _tcpClient;
-        private readonly Stream _stream;
-        private Sender? _sender;
-        private SocketTimeout? _receiveTimeout;
-        private SocketTimeout? _sendTimeout;
-        /// <summary>
-        /// Доступ только через блокировку <see cref="_framesToRead"/>.
-        /// </summary>
-        private bool _reading;
-        private bool _socketDisposed;
-        /// <summary>
-        /// Исключение произошедшее в результате чтения или записи в сокет.
-        /// Доступ только через блокировку <see cref="_framesToRead"/>.
-        /// </summary>
-        private Exception? _socketException;
-        private bool _disposed;
+        _connection = connection;
+        _encoding = connection._encoding;
+        _tcpClient = tcpClient;
+        _stream = stream;
+        _receiveTimeout = new SocketTimeout(OnReceiveTimeout, connection.ReceiveTimeout);
+        _sendTimeout = new SocketTimeout(OnSendTimeout, connection.SendTimeout);
 
-        // ctor
-        public MtOpenConnection(MikroTikConnection connection, TcpClient tcpClient, Stream stream)
+        const int BufferSize = 4096;
+        var sendRecvBuffer = new byte[BufferSize * 2];
+        _readBuffer = new Memory<byte>(sendRecvBuffer, 0, BufferSize);
+        _sendBuffer = new Memory<byte>(sendRecvBuffer, BufferSize, BufferSize);
+        _sender = new(this);
+    }
+
+    public void Dispose()
+    {
+        if (!_disposed)
         {
-            _connection = connection;
-            _encoding = connection._encoding;
-            _tcpClient = tcpClient;
-
-            //Stream stream = tcpClient.GetStream();
-            _stream = stream;
-            _receiveTimeout = new SocketTimeout(OnReceiveTimeout, connection.ReceiveTimeout);
-            _sendTimeout = new SocketTimeout(OnSendTimeout, connection.SendTimeout);
-
-            const int BufferSize = 4096;
-            byte[] sendRecvBuffer = new byte[BufferSize * 2];
-            _readBuffer = new Memory<byte>(sendRecvBuffer, 0, BufferSize);
-            _sendBuffer = new Memory<byte>(sendRecvBuffer, BufferSize, BufferSize);
-
-            _sender = new(this);
+            _disposed = true;
+            NullableHelper.SetNull(ref _sender)?.Quit(CancellationToken.None);
+            CloseSocket();
+            _receiveTimeout.Dispose();
+            _sendTimeout.Dispose();
         }
+    }
 
-        public void Dispose()
+    /// <summary>
+    /// Создает новый Listener с уникальным тегом, добавляет в словарь но не отправляет запрос.
+    /// </summary>
+    /// <exception cref="ObjectDisposedException"/>
+    internal MikroTikResponseListener AddListener()
+    {
+        CheckDisposed();
+
+        var tag = CreateUniqueTag(); // Создать уникальный tag.
+        var listener = new MikroTikResponseListener(tag, this);
+        _listeners.Add(tag, listener); // Добавить в словарь.
+        return listener;
+    }
+
+    /// <summary>
+    /// Потокобезопасно создает уникальный тег.
+    /// </summary>
+    /// <exception cref="ObjectDisposedException"/>
+    internal string CreateUniqueTag()
+    {
+        CheckDisposed();
+
+        return _connection.CreateUniqueTag();
+    }
+
+    /// <summary>
+    /// Потокобезопасно добавляет в очередь задание — получить фрейм с указанным тегом.
+    /// </summary>
+    /// <param name="tagToReceive">Тег сообщения которое нужно прочитать из сокета.</param>
+    /// <exception cref="IOException">Обрыв соединения.</exception>
+    /// <exception cref="ObjectDisposedException"/>
+    internal bool AddTagToRead(string tagToReceive)
+    {
+        CheckDisposed();
+
+        lock (_framesToRead)
         {
-            if (!_disposed)
+            // Если был обрыв соединения то продолжать нельзя.
+            if (_socketException == null)
             {
-                _disposed = true;
-                _sender?.Quit();
-                _sender = null;
-                CloseSocket();
-                _receiveTimeout?.Dispose();
-                _receiveTimeout = null;
-                _sendTimeout?.Dispose();
-                _sendTimeout = null;
-            }
-        }
+                // Если в словаре уже есть такой тег то увеличить ему счетчик.
+                ref var countRef = ref CollectionsMarshal.GetValueRefOrAddDefault(_framesToRead, tagToReceive, out var exists);
+                countRef++; // Добавить работы потоку который сейчас читает из сокета.
 
-        /// <summary>
-        /// Создает новый Listener с уникальным тегом, добавляет в словарь но не отправляет запрос.
-        /// </summary>
-        /// <returns></returns>
-        public MikroTikResponseListener AddListener()
-        {
-            CheckDisposed();
-
-            // Создать уникальный tag.
-            string tag = CreateUniqueTag();
-
-            var listener = new MikroTikResponseListener(tag, this);
-
-            // Добавить в словарь.
-            _listeners.Add(tag, listener);
-
-            return listener;
-        }
-
-        /// <summary>
-        /// Потокобезопасно создает уникальный тег.
-        /// </summary>
-        public string CreateUniqueTag()
-        {
-            CheckDisposed();
-
-            return _connection.CreateUniqueTag();
-        }
-
-        /// <summary>
-        /// Потокобезопасно добавляет в очередь задание — получить фрейм с указанным тегом.
-        /// </summary>
-        /// <param name="tagToReceive">Тег сообщения которое нужно прочитать из сокета.</param>
-        /// <exception cref="IOException">Обрыв соединения.</exception>
-        /// <returns></returns>
-        public bool AddTagToRead(string tagToReceive)
-        {
-            CheckDisposed();
-
-            lock (_framesToRead)
-            {
-                // Если был обрыв соединения то продолжать нельзя.
-                if (_socketException == null)
+                if (!_reading)
                 {
-                    // Если в словаре уже есть такой тег то увеличить ему счетчик.
-                    if (!_framesToRead.TryGetValue(tagToReceive, out int count))
-                    {
-                        // Добавить работы потоку который сейчас читает из сокета.
-                        _framesToRead.Add(tagToReceive, 1);
-                    }
-                    else
-                    // Сюда чеще всего попадают пустые теги.
-                    {
-                        _framesToRead[tagToReceive] = count + 1;
-                    }
-
-                    if (!_reading)
-                    {
-                        _reading = true;
-                        return true;
-                    }
-                }
-                else
-                {
-                    throw _socketException;
+                    _reading = true;
+                    return true;
                 }
             }
-            return false;
-        }
-
-        public MikroTikResponseFrameDictionary Listen(MikroTikResponseListener listener, int millisecondsTimeout, CancellationToken cancellationToken)
-        {
-            CheckDisposed();
-
-            // Взять из кэша или ждать поступления.
-            if (!TryTakeBeforeListen(listener, out var frame))
-            {
-                return listener.Take(millisecondsTimeout, cancellationToken);
-            }
             else
             {
-                return frame;
+                throw _socketException;
             }
         }
 
-        public ValueTask<MikroTikResponseFrameDictionary> ListenAsync(MikroTikResponseListener listener, int millisecondsTimeout, CancellationToken cancellationToken)
-        {
-            CheckDisposed();
+        return false;
+    }
 
-            // Взять из кэша или ждать поступления.
-            if (!TryTakeBeforeListen(listener, out var frame))
-            {
-                return listener.TakeAsync(millisecondsTimeout, cancellationToken);
-            }
-            else
-            {
-                return new ValueTask<MikroTikResponseFrameDictionary>(frame);
-            }
+    /// <exception cref="ObjectDisposedException"/>
+    internal MikroTikResponseFrameDictionary Listen(MikroTikResponseListener listener, int millisecondsTimeout, CancellationToken cancellationToken)
+    {
+        CheckDisposed();
+
+        // Взять из кэша или ждать поступления.
+        if (!TryTakeBeforeListen(listener, out var frame))
+        {
+            return listener.Take(millisecondsTimeout, cancellationToken);
+        }
+        else
+        {
+            return frame;
+        }
+    }
+
+    /// <exception cref="ObjectDisposedException"/>
+    internal ValueTask<MikroTikResponseFrameDictionary> ListenAsync(MikroTikResponseListener listener, int millisecondsTimeout, CancellationToken cancellationToken)
+    {
+        CheckDisposed();
+
+        // Взять из кэша или ждать поступления.
+        if (TryTakeBeforeListen(listener, out var frames))
+        {
+            return ValueTask.FromResult(frames);
+        }
+        else
+        {
+            return listener.TakeAsync(millisecondsTimeout, cancellationToken);
+        }
+    }
+
+    /// <exception cref="ObjectDisposedException"/>
+    internal void StartBackgroundRead()
+    {
+        CheckDisposed();
+        _backgroundReceive = ReadAllFrames(); // Читаем из сокета.
+    }
+
+    internal Task CancelListenersAsync(bool waitACK, CancellationToken cancellationToken)
+    {
+        CheckDisposed();
+
+        if (waitACK)
+        {
+            // Отправляем команду и ждем ответ.
+            return ExecuteAsyncCore(new MikroTikCommand("/cancel"), cancellationToken);
+        }
+        else
+        {
+            // Что бы не происходило ожидание завершения команды 
+            // нужно сделать её тегированной и не добавлять в словарь.
+
+            var selfTag = CreateUniqueTag();
+            var cancelAllcommand = new MikroTikCancelAllCommand(selfTag);
+
+            // Отправка команды без ожидания ответа.
+            return SendAsync(cancelAllcommand, cancellationToken);
+        }
+    }
+
+    internal void CancelListeners(bool waitACK, CancellationToken cancellationToken)
+    {
+        CheckDisposed();
+
+        if (waitACK)
+        {
+            ExecuteCore(new MikroTikCommand("/cancel"), cancellationToken); // Отправляем команду и ждем ответ.
+        }
+        else
+        {
+            var selfTag = CreateUniqueTag();
+            var cancelAllcommand = new MikroTikCancelAllCommand(selfTag);
+            Send(cancelAllcommand, cancellationToken); // Отправка команды без ожидания ответа.
+        }
+    }
+
+    /// <summary>
+    /// Синхронная отправка запроса в сокет без получения ответа. Не проверяет переиспользование команды.
+    /// </summary>
+    internal void Send(MikroTikCommand command, CancellationToken cancellationToken)
+    {
+        CheckDisposed();
+
+        _sender.Invoke(static (mt, s) => mt.SendCommandInLooper(s), command, cancellationToken);
+    }
+
+    /// <summary>
+    /// Асинхронная отправка запроса в сокет без получения ответа. Не проверяет переиспользование команды.
+    /// </summary>
+    /// <exception cref="OperationCanceledException"/>
+    internal Task SendAsync(MikroTikCommand command, CancellationToken cancellationToken)
+    {
+        CheckDisposed();
+
+        return _sender.InvokeAsync(static (con, s) =>
+        {
+            return con.SendCommandInLooperAsync(s);
+        }, command, cancellationToken);
+    }
+
+    /// <summary>
+    /// Синхронная отправка запроса и получение ответа.
+    /// </summary>
+    internal MikroTikResponse ExecuteCore(MikroTikCommand command, CancellationToken cancellationToken)
+    {
+        CheckDisposed();
+
+        var readerIsStopped = AddTagToRead("");
+
+        // Отправка команды в сокет через очередь.
+        _sender.Invoke(static (mt, s) => mt.SendCommandInLooper(s), command, cancellationToken);
+
+        if (readerIsStopped)
+        {
+            // Запустить чтение из сокета.
+            StartBackgroundRead();
         }
 
-        public Task StartRead()
+        // Ожидает не тегированный ответ из сокета.
+        return _mainQueue.Take(Timeout.Infinite, cancellationToken);
+    }
+
+    /// <summary>
+    /// Асинхронная отправка запроса в сокет и получение результата.
+    /// </summary>
+    internal Task<MikroTikResponse> ExecuteAsync(MikroTikCommand command, CancellationToken cancellationToken)
+    {
+        CheckDisposed();
+
+        command.CheckAndMarkAsUsed();
+        return ExecuteAsyncCore(command, cancellationToken); // Отправка и получение ответа через очередь.
+    }
+
+    /// <summary>
+    /// Синхронная отправка запроса в сокет и получение результата.
+    /// </summary> 
+    internal MikroTikResponse Execute(MikroTikCommand command, CancellationToken cancellationToken)
+    {
+        CheckDisposed();
+
+        command.CheckAndMarkAsUsed();
+        var response = ExecuteCore(command, cancellationToken); // Отправка и получение ответа через очередь.
+        return response;
+    }
+
+    /// <summary>
+    /// Отправляет в сокет запрос на отмену не дожидаясь результата.
+    /// </summary>
+    /// <param name="tag">Тег связанной операции которую следует отменить.</param>
+    internal Task CancelListenerNoWaitAsync(string tag, CancellationToken cancellationToken)
+    {
+        CheckDisposed();
+
+        // Подписываемся на завершение отмены
+        var cancelCommand = CreateCancelCommand(tag);
+
+        // Отправить из другого потока.
+        return _sender.InvokeAsync(static (mt, s) => mt.SendCommandInLooperAsync(s), cancelCommand, cancellationToken);
+    }
+
+    /// <summary>
+    /// Создает команду для отмены и добавляет в словарь.
+    /// </summary>
+    internal MikroTikCancelCommand CreateCancelCommand(string tag)
+    {
+        CheckDisposed();
+
+        var selfTag = CreateUniqueTag();
+        var command = new MikroTikCancelCommand(tag, selfTag, this);
+
+        // Подписываемся на завершение отмены.
+        _listeners.Add(command.SelfTag, command);
+
+        return command;
+    }
+
+    /// <summary>
+    /// Сообщает серверу что выполняется разъединение.
+    /// </summary>
+    /// <param name="millisecondsTimeout">Позволяет подождать подтверждение от сервера что-бы лишний раз не происходило исключение в потоке читающем из сокета.</param>
+    /// <exception cref="IOException">Обрыв соединения.</exception>
+    internal bool Quit(int millisecondsTimeout, CancellationToken cancellationToken)
+    {
+        CheckDisposed();
+
+        // Подписываемся на завершение отмены.
+        var quitCommand = new MikroTikQuitCommand();
+
+        // Добавляем в словарь.
+        _listeners.AddQuit(quitCommand);
+
+        // Добавить задание.
+        var readerIsStopped = AddTagToRead("");
+
+        // Обязательно захватить блокировку перед отправкой.
+        lock (quitCommand)
         {
-            CheckDisposed();
-
-            // Читаем из сокета.
-            return ReadUntilHasTagsToReadAsync();
-        }
-
-        public Task CancelListenersAsync(bool wait)
-        {
-            CheckDisposed();
-
-            if (wait)
-            {
-                var cancelCommand = new MikroTikCommand("/cancel");
-
-                // Отправляем команду и ждем ответ.
-                return RequestAsync(cancelCommand);
-            }
-            else
-            {
-                // Что бы не происходило ожидание завершения команды 
-                // нужно сделать её тегированной и не добавлять в словарь.
-
-                string selfTag = CreateUniqueTag();
-                var cancelAllcommand = new MikroTikCancelAllCommand(selfTag);
-
-                // Отправка команды без ожидания ответа.
-                return SendAsync(cancelAllcommand);
-            }
-        }
-
-        public void CancelListeners(bool wait)
-        {
-            CheckDisposed();
-
-            if (wait)
-            {
-                var cancelCommand = new MikroTikCommand("/cancel");
-
-                // Отправляем команду и ждем ответ.
-                SendRequest(cancelCommand);
-            }
-            else
-            {
-                string selfTag = CreateUniqueTag();
-                var cancelAllcommand = new MikroTikCancelAllCommand(selfTag);
-
-                // Отправка команды без ожидания ответа.
-                Send(cancelAllcommand);
-            }
-        }
-
-        /// <summary>
-        /// Синхронная отправка запроса в сокет без получения ответа. Не проверяет переиспользование команды.
-        /// </summary>
-        public void Send(MikroTikCommand command)
-        {
-            CheckDisposed();
-
-            _sender.Send(static (mt, s) => mt.SendCommandInLooper(s), command);
-        }
-
-        /// <summary>
-        /// Асинхронная отправка запроса в сокет без получения ответа. Не проверяет переиспользование команды.
-        /// </summary>
-        public Task SendAsync(MikroTikCommand command)
-        {
-            CheckDisposed();
-
-            return _sender.SendAsync(static (con, s) => con.SendCommandInLooperAsync(s), command);
-        }
-
-        /// <summary>
-        /// Синхронная отправка запроса и получение ответа.
-        /// </summary>
-        public MikroTikResponse SendRequest(MikroTikCommand command)
-        {
-            CheckDisposed();
-
-            bool readerIsStopped = AddTagToRead("");
-
-            // Отправка команды в сокет через очередь.
-            _sender.Send(static (mt, s) => mt.SendCommandInLooper(s), command);
-
-            if (readerIsStopped)
-            {
-                // Запустить чтение из сокета.
-                StartRead();
-            }
-
-            // Ожидает не тегированный ответ из сокета.
-            return _mainQueue.Take();
-        }
-
-        /// <summary>
-        /// Асинхронная отправка запроса в сокет и получение результата.
-        /// </summary>
-        public async Task<MikroTikResponse> SendAndGetResponseAsync(MikroTikCommand command)
-        {
-            CheckDisposed();
-
-            command.CheckCompleted();
-
-            // Отправка и получение ответа через очередь.
-            MikroTikResponse result = await RequestAsync(command).ConfigureAwait(false);
-
-            command.Completed();
-
-            return result;
-        }
-
-        /// <summary>
-        /// Синхронная отправка запроса в сокет и получение результата.
-        /// </summary>
-        public MikroTikResponse SendAndGetResponse(MikroTikCommand command)
-        {
-            CheckDisposed();
-
-            command.CheckCompleted();
-
-            // Отправка и получение ответа через очередь.
-            var response = SendRequest(command);
-
-            // Команду повторно использовать нельзя.
-            command.Completed();
-
-            return response;
-        }
-
-        /// <summary>
-        /// Отправляет в сокет запрос на отмену не дожидаясь результата.
-        /// </summary>
-        /// <param name="tag">Тег связанной операции которую следует отменить.</param>
-        public Task CancelListenerNoWaitAsync(string tag)
-        {
-            CheckDisposed();
-
-            // Подписываемся на завершение отмены
-            MikroTikCancelCommand cancelCommand = CreateCancelCommand(tag);
-
-            // Отправить из другого потока.
-            return _sender.SendAsync(static (mt, s) => mt.SendCommandInLooperAsync(s), cancelCommand);
-        }
-
-        /// <summary>
-        /// Создает команду для отмены и добавляет в словарь.
-        /// </summary>
-        public MikroTikCancelCommand CreateCancelCommand(string tag)
-        {
-            CheckDisposed();
-
-            string selfTag = CreateUniqueTag();
-            var command = new MikroTikCancelCommand(tag, selfTag, this);
-
-            // Подписываемся на завершение отмены.
-            _listeners.Add(command.SelfTag, command);
-
-            return command;
-        }
-
-        /// <summary>
-        /// Сообщает серверу что выполняется разъединение.
-        /// </summary>
-        /// <param name="millisecondsTimeout">Позволяет подождать подтверждение от сервера что-бы лишний раз не происходило исключение в потоке читающем из сокета.</param>
-        /// <exception cref="IOException">Обрыв соединения.</exception>
-        public bool Quit(int millisecondsTimeout)
-        {
-            CheckDisposed();
-
-            // Подписываемся на завершение отмены.
-            var quitCommand = new MikroTikQuitCommand();
-
-            // Добавляем в словарь.
-            _listeners.AddQuit(quitCommand);
-
-            // Добавить задание.
-            bool readerIsStopped = AddTagToRead("");
-
-            // Обязательно захватить блокировку перед отправкой.
-            lock (quitCommand)
-            {
-                // Отправляем команду без ожидания ответа.
-                Send(quitCommand);
-
-                if (readerIsStopped)
-                {
-                    // Запустить чтение из сокета.
-                    StartRead();
-                }
-
-                // Ждем получение !trap.
-                return quitCommand.Wait(millisecondsTimeout);
-            }
-        }
-
-        /// <summary>
-        /// Сообщает серверу что выполняется разъединение.
-        /// </summary>
-        /// <param name="millisecondsTimeout">Позволяет подождать подтверждение от сервера что-бы лишний раз не происходило исключение в потоке читающем из сокета.</param>
-        public async Task<bool> QuitAsync(int millisecondsTimeout)
-        {
-            CheckDisposed();
-
-            var quitCommand = new MikroTikAsyncQuitCommand();
-
-            // Добавляем в словарь.
-            _listeners.AddQuit(quitCommand);
-
-            bool readerIsStopped = AddTagToRead("");
-
             // Отправляем команду без ожидания ответа.
-            await SendAsync(quitCommand).ConfigureAwait(false);
+            Send(quitCommand, cancellationToken);
 
             if (readerIsStopped)
             {
                 // Запустить чтение из сокета.
-                StartRead();
+                StartBackgroundRead();
             }
 
             // Ждем получение !trap.
-            return await quitCommand.WaitAsync(millisecondsTimeout).ConfigureAwait(false);
+            return quitCommand.Wait(millisecondsTimeout);
+        }
+    }
+
+    /// <summary>
+    /// Сообщает серверу что выполняется разъединение.
+    /// </summary>
+    /// <param name="millisecondsTimeout">Позволяет подождать подтверждение от сервера что-бы лишний раз не происходило исключение в потоке читающем из сокета.</param>
+    internal async Task<bool> QuitAsync(int millisecondsTimeout, CancellationToken cancellationToken)
+    {
+        CheckDisposed();
+
+        var quitCommand = new MikroTikAsyncQuitCommand();
+
+        // Добавляем в словарь.
+        _listeners.AddQuit(quitCommand);
+
+        var readerIsStopped = AddTagToRead("");
+
+        // Отправляем команду без ожидания ответа.
+        await SendAsync(quitCommand, cancellationToken).ConfigureAwait(false);
+
+        if (readerIsStopped)
+        {
+            // Запустить чтение из сокета.
+            StartBackgroundRead();
         }
 
-        /// <summary>
-        /// Создает команду для отмены и добавляет в словарь.
-        /// </summary>
-        public MikroTikAsyncCancelCommand CreateAsyncCancelCommand(string tag)
+        // Ждем получение !trap.
+        return await quitCommand.WaitAsync(millisecondsTimeout).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Создает команду для отмены и добавляет в словарь.
+    /// </summary>
+    internal MikroTikAsyncCancelCommand CreateAsyncCancelCommand(string tag)
+    {
+        CheckDisposed();
+
+        var selfTag = CreateUniqueTag();
+        var command = new MikroTikAsyncCancelCommand(tag, selfTag, this);
+
+        // Подписываемся на завершение отмены.
+        _listeners.Add(command.SelfTag, command);
+
+        return command;
+    }
+
+    /// <summary>
+    /// Удаляет подписчика из словаря. Потокобезопасно.
+    /// </summary>
+    internal void RemoveListener(string tag)
+    {
+        CheckDisposed();
+
+        _listeners.Remove(tag);
+    }
+
+    /// <summary>
+    /// Возвращает фрейм из кэша или запускает чтение из сокета.
+    /// </summary>
+    /// <param name="listener"></param>
+    /// <param name="frame"></param>
+    /// <exception cref="Exception"/>
+    /// <returns></returns>
+    private bool TryTakeBeforeListen(MikroTikResponseListener listener, [NotNullWhen(true)] out MikroTikResponseFrameDictionary? frame)
+    {
+        bool readerIsStopped;
+
+        // Перед тем как проверить есть ли в кэше сообщения нужно заблокировать listener
+        // что-бы читающий поток не мог добавить сообщение.
+        lock (listener.SyncObj)
         {
-            CheckDisposed();
-
-            string selfTag = CreateUniqueTag();
-            var command = new MikroTikAsyncCancelCommand(tag, selfTag, this);
-
-            // Подписываемся на завершение отмены.
-            _listeners.Add(command.SelfTag, command);
-
-            return command;
-        }
-
-        /// <summary>
-        /// Удаляет подписчика из словаря. Потокобезопасно.
-        /// </summary>
-        public void RemoveListener(string tag)
-        {
-            CheckDisposed();
-
-            _listeners.Remove(tag);
-        }
-
-        /// <summary>
-        /// Возвращает фрейм из кэша или запускает чтение из сокета.
-        /// </summary>
-        /// <param name="listener"></param>
-        /// <param name="frame"></param>
-        /// <exception cref="Exception"/>
-        /// <returns></returns>
-        private bool TryTakeBeforeListen(MikroTikResponseListener listener, [NotNullWhen(true)] out MikroTikResponseFrameDictionary? frame)
-        {
-            bool readerIsStopped;
-
-            // Перед тем как проверить есть ли в кэше сообщения нужно заблокировать listener
-            // что-бы читающий поток не мог добавить сообщение.
-            lock (listener.SyncObj)
+            // Проверить результат в кэше.
+            if (listener.TryTake(out frame))
             {
-                // Проверить результат в кэше.
-                if (listener.TryTake(out frame))
-                {
-                    return true;
-                }
-                else
-                // В кэше пусто, нужно ждать сообщение от сокета.
-                {
-                    // Добавить читающему потоку задачу на получение еще одного фрейма с таким тегом.
-                    readerIsStopped = AddTagToRead(listener._tag);
-                }
+                return true;
             }
-
-            if (readerIsStopped)
+            else
+            // В кэше пусто, нужно ждать сообщение от сокета.
             {
-                StartRead();
+                // Добавить читающему потоку задачу на получение еще одного фрейма с таким тегом.
+                readerIsStopped = AddTagToRead(listener._tag);
             }
-
-            return false;
         }
 
-        // Обрыв соединения. Происходит при получении !fatal — означает что сервер закрывает соединение,
-        // или при исключении в результате чтения из сокета.
-        private void ConnectionClosed(Exception exception, bool gotFatal)
+        if (readerIsStopped)
         {
-            lock (_framesToRead)
-            {
-                // Отправляющий поток уже мог установить исключение.
-                if (_socketException == null)
-                {
-                    _socketException = exception;
-                    _framesToRead.Clear();
-                }
-                else
-                {
-                    exception = _socketException;
-                }
-                _reading = false;
-            }
-
-            // Сообщить всем подписчикам что произошел обрыв сокета.
-            _listeners.AddCriticalException(exception, gotFatal);
-
-            // Сообщить основному подписчику что произошел обрыв сокета.
-            _mainQueue.AddCriticalException(exception);
+            StartBackgroundRead();
         }
 
-        /// <summary>
-        /// Эта функция не генерирует исключения.
-        /// </summary>
-        private async Task ReadUntilHasTagsToReadAsync()
-        {
-            Debug.Assert(_receiveTimeout != null);
+        return false;
+    }
 
+    // Обрыв соединения. Происходит при получении !fatal — означает что сервер закрывает соединение,
+    // или при исключении в результате чтения из сокета.
+    private void ConnectionClosed(Exception exception, bool gotFatal)
+    {
+        lock (_framesToRead)
+        {
+            // Отправляющий поток уже мог установить исключение.
+            if (_socketException == null)
+            {
+                _socketException = exception;
+                _framesToRead.Clear();
+            }
+            else
+            {
+                exception = _socketException;
+            }
+            _reading = false;
+        }
+
+        // Сообщить всем подписчикам что произошел обрыв сокета.
+        _listeners.AddCriticalException(exception, gotFatal);
+
+        // Сообщить основному подписчику что произошел обрыв сокета.
+        _mainQueue.AddCriticalException(exception);
+    }
+
+    /// <summary>
+    /// Эта функция не генерирует исключения.
+    /// </summary>
+    private async Task ReadAllFrames()
+    {
+        Debug.Assert(_backgroundReceive.IsCompleted);
+
+        try
+        {
+        ReadNextFrame:
+
+            // если получен !trap
+            var trap = false;
+            // если получен !done
+            var done = false;
+            // если получен !fatal
+            var fatal = false;
+            // если получен .tag=
+            string? tag = null;
+            string? fatalMessage = null;
+            var fullResponse = new MikroTikResponse();
+            var frame = new MikroTikResponseFrameDictionary();
+            int count;
+
+            _receiveTimeout.Start();
             try
             {
-            ReadNextFrame:
-
-                // если получен !trap
-                bool trap = false;
-                // если получен !done
-                bool done = false;
-                // если получен !fatal
-                bool fatal = false;
-                // если получен .tag=
-                string? tag = null;
-                string? fatalMessage = null;
-                var fullResponse = new MikroTikResponse();
-                var frame = new MikroTikResponseFrameDictionary();
-                int count;
-
-                _receiveTimeout.Start();
-                try
+                while (true)
+                // Читаем фреймы.
                 {
-                    while (true)
-                    // Читаем фреймы.
-                    {
-                        // Чтение заголовка строки.
-                        await _stream.ReadBlockAsync(_readBuffer.Slice(0, 1)).ConfigureAwait(false);
+                    // Чтение заголовка строки.
+                    await _stream.ReadBlockAsync(_readBuffer.Slice(0, 1)).ConfigureAwait(false);
 
-                        if (_readBuffer.Span[0] == 0)
-                        // Конец сообщения.
+                    if (_readBuffer.Span[0] == 0)
+                    // Конец сообщения.
+                    {
+                        if (tag != null)
+                        // Получен фрейм сообщения маркированный тегом.
                         {
-                            if (tag != null)
-                            // Получен фрейм сообщения маркированный тегом.
+                            if (_listeners.TryGetValue(tag, out var listener))
                             {
-                                if (_listeners.TryGetValue(tag, out var listener))
+                                lock (listener.SyncObj)
                                 {
-                                    lock (listener.SyncObj)
+                                    if (done)
                                     {
-                                        if (done)
+                                        // Работа с этим подписчиком завершена.
+                                        listener.Done();
+                                    }
+                                    else
+                                    {
+                                        if (!trap)
                                         {
-                                            // Работа с этим подписчиком завершена.
-                                            listener.Done();
+                                            listener.AddResult(frame);
                                         }
                                         else
                                         {
-                                            if (!trap)
-                                            {
-                                                listener.AddResult(frame);
-                                            }
-                                            else
-                                            {
-                                                listener.AddTrap(new MikroApiTrapException(frame));
-                                            }
+                                            listener.AddTrap(new MikroApiTrapException(frame));
                                         }
                                     }
                                 }
+                            }
 
-                                if (TryExit(tag))
+                            if (TryExit(tag))
+                            {
+                                // Завершение потока.
+                                return;
+                            }
+                            else
+                            {
+                                goto ReadNextFrame;
+                            }
+                        }
+                        else
+                        // Получен фрейм сообщения, он не маркирован тегом.
+                        {
+                            // fatal can be received only in cases when API is closing connection.
+                            // fatal может быть только не тегированным.
+                            if (fatal)
+                            // Сервер закрывает соединение.
+                            {
+                                var exception = new MikroApiFatalException(fatalMessage!);
+
+                                ConnectionClosed(exception, gotFatal: true);
+
+                                // Завершение потока. Текущий экземпляр MikroTikSocket больше использовать нельзя.
+                                return;
+                            }
+
+                            if (frame.Count > 0)
+                            {
+                                fullResponse.Add(frame);
+                            }
+
+                            if (trap)
+                            {
+                                var trapException = new MikroApiTrapException(fullResponse[0]);
+                                _mainQueue.AddTrap(trapException);
+                            }
+
+                            if (done)
+                            // Сообщение получено полностью.
+                            {
+                                // Положить в основную очередь.
+                                _mainQueue.AddResult(fullResponse);
+
+                                if (TryExit(""))
                                 {
                                     // Завершение потока.
                                     return;
@@ -570,545 +585,474 @@ namespace DanilovSoft.MikroApi
                                     goto ReadNextFrame;
                                 }
                             }
-                            else
-                            // Получен фрейм сообщения, он не маркирован тегом.
-                            {
-                                // fatal can be received only in cases when API is closing connection.
-                                // fatal может быть только не тегированным.
-                                if (fatal)
-                                // Сервер закрывает соединение.
-                                {
-                                    var exception = new MikroApiFatalException(fatalMessage!);
-
-                                    ConnectionClosed(exception, gotFatal: true);
-
-                                    // Завершение потока. Текущий экземпляр MikroTikSocket больше использовать нельзя.
-                                    return;
-                                }
-
-                                if (frame.Count > 0)
-                                {
-                                    fullResponse.Add(frame);
-                                }
-
-                                if (trap)
-                                {
-                                    var trapException = new MikroApiTrapException(fullResponse[0]);
-                                    _mainQueue.AddTrap(trapException);
-                                }
-
-                                if (done)
-                                // Сообщение получено полностью.
-                                {
-                                    // Положить в основную очередь.
-                                    _mainQueue.AddResult(fullResponse);
-
-                                    if (TryExit(""))
-                                    {
-                                        // Завершение потока.
-                                        return;
-                                    }
-                                    else
-                                    {
-                                        goto ReadNextFrame;
-                                    }
-                                }
-                            }
-
-                            // Нельзя делать Clear потому что fullResponse.Add(frame).
-                            frame = new MikroTikResponseFrameDictionary();
-
-                            // Возвращаемся к чтению заголовка.
-                            continue;
-                        }
-                        else
-                        {
-                            // Длина строки в байтах.
-                            count = await GetSizeAsync(_readBuffer).ConfigureAwait(false);
                         }
 
-                        Memory<byte> buf = _readBuffer;
-                        if (count > _readBuffer.Length)
-                        {
-                            buf = new byte[count];
-                        }
+                        // Нельзя делать Clear потому что fullResponse.Add(frame).
+                        frame = new MikroTikResponseFrameDictionary();
 
-                        // Чтение строки.
-                        await _stream.ReadBlockAsync(buf.Slice(0, count)).ConfigureAwait(false);
-
-#if NETSTANDARD2_0
-                        string word = _encoding.GetString(buf.Slice(0, count));
-
-#else
-                        string word = _encoding.GetString(buf.Slice(0, count).Span);
-#endif
-
-                        Debug.WriteLine(word);
-
-                        if (word == "!re")
-                        {
-                            continue;
-                        }
-
-                        if (!done && word == "!done")
-                        {
-                            done = true;
-                            continue;
-                        }
-
-                        if (!fatal && word == "!fatal")
-                        {
-                            fatal = true;
-                            continue;
-                        }
-
-                        if (!trap && word == "!trap")
-                        {
-                            trap = true;
-                            continue;
-                        }
-
-                        int pos = word.IndexOf('=', 1);
-                        if (pos >= 0)
-                        {
-                            string key = word.Substring(1, pos - 1);
-                            string value = word.Substring(pos + 1);
-
-                            if (key == "tag")
-                            // Этот ответ тегирован.
-                            {
-                                tag = value;
-                            }
-                            else
-                            {
-                                if (!frame.ContainsKey(key))
-                                {
-                                    frame.Add(key, value);
-                                }
-                            }
-                        }
-                        else if (fatal)
-                        {
-                            fatalMessage = word;
-                        }
+                        // Возвращаемся к чтению заголовка.
+                        continue;
                     }
-                }
-                finally
-                {
-                    // Может бросить исключение.
-                    _receiveTimeout.Stop();
-                }
-            }
-            catch (Exception ex)
-            // Произошел обрыв сокета.
-            {
-                ConnectionClosed(ex, gotFatal: false);
-
-                // Завершение потока. Текущий экземпляр MikroTikSocket больше использовать нельзя.
-                return;
-            }
-
-            bool TryExit(string receivedTag)
-            // Считано сообщение или фрейм.
-            {
-                lock (_framesToRead)
-                {
-                    if (_framesToRead.TryGetValue(receivedTag, out int tagCount))
+                    else
                     {
-                        if (tagCount == 1)
-                        {
-                            // Прочитаны все фреймы с таким тегом.
-                            _framesToRead.Remove(receivedTag);
+                        // Длина строки в байтах.
+                        count = await GetSizeAsync(_readBuffer).ConfigureAwait(false);
+                    }
 
-                            if (_framesToRead.Count == 0)
-                            // Все сообщения были прочитаны.
-                            {
-                                // Завершаем поток чтения.
-                                _reading = false;
-                                return true;
-                            }
+                    var buf = _readBuffer;
+                    if (count > _readBuffer.Length)
+                    {
+                        buf = new byte[count];
+                    }
+
+                    // Чтение строки.
+                    await _stream.ReadBlockAsync(buf.Slice(0, count)).ConfigureAwait(false);
+                    var word = _encoding.GetString(buf.Slice(0, count).Span);
+
+                    Debug.WriteLine(word);
+
+                    if (word == "!re")
+                    {
+                        continue;
+                    }
+
+                    if (!done && word == "!done")
+                    {
+                        done = true;
+                        continue;
+                    }
+
+                    if (!fatal && word == "!fatal")
+                    {
+                        fatal = true;
+                        continue;
+                    }
+
+                    if (!trap && word == "!trap")
+                    {
+                        trap = true;
+                        continue;
+                    }
+
+                    var pos = word.IndexOf('=', 1);
+                    if (pos >= 0)
+                    {
+                        var key = word.Substring(1, pos - 1);
+                        var value = word.Substring(pos + 1);
+
+                        if (key == "tag")
+                        // Этот ответ тегирован.
+                        {
+                            tag = value;
                         }
                         else
                         {
-                            // Требуется продолжить читать фреймы для этого тега.
-                            _framesToRead[receivedTag] = (tagCount - 1);
+                            frame.TryAdd(key, value);
                         }
                     }
-                    // Продолжить чтение сообщений.
-                    return false;
+                    else if (fatal)
+                    {
+                        fatalMessage = word;
+                    }
                 }
+            }
+            finally
+            {
+                // Может бросить исключение.
+                _receiveTimeout.Stop();
             }
         }
-
-        /// <summary>
-        /// Асинхронно отправляет запрос и получает ответ через основную очередь.
-        /// </summary>
-        private async Task<MikroTikResponse> RequestAsync(MikroTikCommand command)
+        catch (Exception ex)
+        // Произошел обрыв сокета.
         {
-            Debug.Assert(_sender != null);
+            ConnectionClosed(ex, gotFatal: false);
 
-            bool readerIsStopped = AddTagToRead("");
-
-            // Отправка команды в сокет.
-            await _sender.SendAsync(static (mt, s) => mt.SendCommandInLooperAsync(s), command).ConfigureAwait(false);
-
-            if (readerIsStopped)
-            {
-                // Запустить чтение из сокета.
-                StartRead();
-            }
-
-            // Ожидает не тегированный ответ из сокета.
-            return await _mainQueue.TakeAsync().ConfigureAwait(false);
+            // Завершение потока. Текущий экземпляр MikroTikSocket больше использовать нельзя.
+            return;
         }
 
-        private Memory<byte> Encode(MikroTikCommand command)
+        bool TryExit(string receivedTag)
+        // Считано сообщение или фрейм.
         {
-            int offset = 0;
-
-            // Учитываем Null-терминатор.
-            int totalLength = 1;
-
-            bool useSendBuffer = true;
-
-            for (int i = 0; i < command._lines.Count; i++)
+            lock (_framesToRead)
             {
-                // Строка.
-                string line = command._lines[i];
-
-                // Длина строки.
-                int lineBytesCount = _encoding.GetByteCount(line);
-
-                totalLength += lineBytesCount;
-
-                // Размер длины строки.
-                int encodedLength = EncodeLengthCount((uint)lineBytesCount);
-
-                totalLength += encodedLength;
-
-                // Если влезет в буффер.
-                if (totalLength <= _sendBuffer.Length)
+                if (_framesToRead.TryGetValue(receivedTag, out var tagCount))
                 {
-                    // Записать в буффер длину строки.
-                    EncodeLength((uint)lineBytesCount, _sendBuffer.Slice(offset).Span);
+                    if (tagCount == 1)
+                    {
+                        // Прочитаны все фреймы с таким тегом.
+                        _framesToRead.Remove(receivedTag);
 
-                    offset += encodedLength;
-
-#if NETSTANDARD2_0
-                    // Записать в буффер строку.
-                    _encoding.GetBytes(line, _sendBuffer.Slice(offset));
-#else
-                    // Записать в буффер строку.
-                    _encoding.GetBytes(line, _sendBuffer.Slice(offset).Span);
-#endif
-
-                    offset += lineBytesCount;
+                        if (_framesToRead.Count == 0)
+                        // Все сообщения были прочитаны.
+                        {
+                            // Завершаем поток чтения.
+                            _reading = false;
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        // Требуется продолжить читать фреймы для этого тега.
+                        _framesToRead[receivedTag] = (tagCount - 1);
+                    }
                 }
-                else
-                {
-                    useSendBuffer = false;
-                }
+                // Продолжить чтение сообщений.
+                return false;
             }
+        }
+    }
 
-            if (useSendBuffer)
+    /// <summary>
+    /// Асинхронно отправляет запрос и получает ответ через основную очередь.
+    /// </summary>
+    private async Task<MikroTikResponse> ExecuteAsyncCore(MikroTikCommand command, CancellationToken cancellationToken)
+    {
+        Debug.Assert(_sender != null);
+
+        var readerIsStopped = AddTagToRead("");
+
+        // Отправка команды в сокет.
+        await _sender.InvokeAsync(static (mt, s) => mt.SendCommandInLooperAsync(s), command, cancellationToken).ConfigureAwait(false);
+
+        if (readerIsStopped)
+        {
+            // Запустить чтение из сокета.
+            StartBackgroundRead();
+        }
+
+        // Ожидает не тегированный ответ из сокета.
+        return await _mainQueue.TakeAsync(Timeout.Infinite, cancellationToken).ConfigureAwait(false);
+    }
+
+    private Memory<byte> Encode(MikroTikCommand command)
+    {
+        var offset = 0;
+
+        // Учитываем Null-терминатор.
+        var totalLength = 1;
+
+        var useSendBuffer = true;
+
+        foreach (var line in CollectionsMarshal.AsSpan(command._lines))
+        {
+            var lineBytesCount = _encoding.GetByteCount(line); // Длина строки.
+            totalLength += lineBytesCount;
+            var encodedLength = EncodeLengthCount((uint)lineBytesCount); // Размер длины строки.
+            totalLength += encodedLength;
+
+            // Если влезет в буффер.
+            if (totalLength <= _sendBuffer.Length)
             {
-                _sendBuffer.Span[offset] = 0;
-                return _sendBuffer.Slice(0, totalLength);
+                // Записать в буффер длину строки.
+                GetPayloadLengthBytesCount((uint)lineBytesCount, _sendBuffer.Slice(offset).Span);
+
+                offset += encodedLength;
+
+                // Записать в буффер строку.
+                _encoding.GetBytes(line, _sendBuffer.Slice(offset).Span);
+
+                offset += lineBytesCount;
             }
             else
             {
-                offset = 0;
-                byte[] buffer = new byte[totalLength];
-                for (int i = 0; i < command._lines.Count; i++)
-                {
-                    string line = command._lines[i];
-                    int lineBytesCount = _encoding.GetByteCount(line);
-                    offset += EncodeLength((uint)lineBytesCount, buffer);
-                    offset += _encoding.GetBytes(line, 0, line.Length, buffer, offset);
-                }
-                return buffer;
+                useSendBuffer = false;
             }
         }
 
-        private static int EncodeLengthCount(uint len)
+        if (useSendBuffer)
         {
-            if (len < 128)
+            _sendBuffer.Span[offset] = 0;
+            return _sendBuffer.Slice(0, totalLength);
+        }
+        else
+        {
+            offset = 0;
+            var buffer = new byte[totalLength];
+            foreach (var line in CollectionsMarshal.AsSpan(command._lines))
             {
-                return 1;
+                var lineBytesCount = _encoding.GetByteCount(line);
+                offset += GetPayloadLengthBytesCount((uint)lineBytesCount, buffer);
+                offset += _encoding.GetBytes(line, 0, line.Length, buffer, offset);
             }
+            return buffer;
+        }
+    }
 
-            if (len < 16384)
-            {
-                return 2;
-            }
+    private static int EncodeLengthCount(uint len)
+    {
+        if (len < 128)
+        {
+            return 1;
+        }
 
-            if (len < 0x200000)
-            {
-                return 3;
-            }
+        if (len < 16384)
+        {
+            return 2;
+        }
 
-            if (len < 0x10000000)
-            {
-                return 4;
-            }
+        if (len < 0x200000)
+        {
+            return 3;
+        }
 
+        if (len < 0x10000000)
+        {
+            return 4;
+        }
+
+        return 5;
+    }
+
+    /// <param name="len">Размер блока в байтах.</param>
+    /// <returns>Число байт записанных в <paramref name="dest"/>.</returns>
+    private static int GetPayloadLengthBytesCount(uint len, Span<byte> dest)
+    {
+        if (len < 128)
+        {
+            dest[0] = (byte)len;
+            return 1;
+        }
+        if (len < 16384)
+        {
+            var value = (len | 0x8000);
+            dest[0] = (byte)(value >> 8);
+            dest[1] = (byte)(value >> 16);
+            return 2;
+        }
+        if (len < 0x200000)
+        {
+            var value = (len | 0xC00000);
+            dest[0] = (byte)(value >> 16);
+            dest[1] = (byte)(value >> 8);
+            dest[2] = (byte)(value);
+            return 3;
+        }
+        if (len < 0x10000000)
+        {
+            var value = (len | 0xE0000000);
+            dest[0] = (byte)(value >> 24);
+            dest[1] = (byte)(value >> 16);
+            dest[2] = (byte)(value >> 8);
+            dest[3] = (byte)(value);
+            return 4;
+        }
+        else
+        {
+            dest[0] = 0xF0;
+            dest[1] = (byte)(len >> 24);
+            dest[2] = (byte)(len >> 16);
+            dest[3] = (byte)(len >> 8);
+            dest[4] = (byte)(len);
             return 5;
         }
+    }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="len">Размер блока в байтах.</param>
-        /// <param name="buffer"></param>
-        /// <returns></returns>
-        private static int EncodeLength(uint len, Span<byte> buffer)
+    #region Inside SendLooper
+
+    /// <summary>
+    /// Эта процедура должна вызываться только через отправляющую очередь <see cref="_sender"/>.
+    /// Эту процедуру нужно вызывать через Send так как в ней не обрабатываются исключения
+    /// </summary>
+    private void SendCommandInLooper(MikroTikCommand command)
+    {
+        Debug.WriteLine(Environment.NewLine + command + Environment.NewLine);
+        var buffer = Encode(command);
+        try
         {
-            if (len < 128)
+            var timeout = _sendTimeout.Start();
+            try
             {
-                buffer[0] = (byte)len;
-                return 1;
+                _stream.Write(buffer.Span);
             }
-            if (len < 16384)
+            finally
             {
-                uint value = (len | 0x8000);
-                buffer[0] = (byte)(value >> 8);
-                buffer[1] = (byte)(value >> 16);
-                return 2;
+                timeout.StopTimer();
             }
-            if (len < 0x200000)
+        }
+        catch (Exception ex)
+        {
+            OnSendExceptionInLooper(ex);
+        }
+    }
+
+    /// <summary>
+    /// Эта процедура должна вызываться только через отправляющую очередь <see cref="_sender"/>.
+    /// Эту Процедура нужно вызывать через Send так как в ней не обрабатываются исключения.
+    /// </summary>
+    private async Task SendCommandInLooperAsync(MikroTikCommand command)
+    {
+        Debug.WriteLine(Environment.NewLine + command + Environment.NewLine);
+        var buffer = Encode(command);
+
+        try
+        {
+            var timeout = _sendTimeout.Start();
+            try
             {
-                uint value = (len | 0xC00000);
-                buffer[0] = (byte)(value >> 16);
-                buffer[1] = (byte)(value >> 8);
-                buffer[2] = (byte)(value);
-                return 3;
+                await _stream.WriteAsync(buffer).ConfigureAwait(false);
             }
-            if (len < 0x10000000)
+            finally
             {
-                uint value = (len | 0xE0000000);
-                buffer[0] = (byte)(value >> 24);
-                buffer[1] = (byte)(value >> 16);
-                buffer[2] = (byte)(value >> 8);
-                buffer[3] = (byte)(value);
-                return 4;
+                timeout.StopTimer();
+            }
+        }
+        catch (Exception ex)
+        {
+            OnSendExceptionInLooper(ex);
+        }
+    }
+
+    private void OnSendExceptionInLooper(Exception sendError)
+    {
+        lock (_framesToRead)
+        {
+            // Поток читающий из сокета уже мог установить исключение.
+            if (_socketException == null)
+            {
+                _socketException = sendError;
+                _framesToRead.Clear();
             }
             else
             {
-                buffer[0] = 0xF0;
-                buffer[1] = (byte)(len >> 24);
-                buffer[2] = (byte)(len >> 16);
-                buffer[3] = (byte)(len >> 8);
-                buffer[4] = (byte)(len);
-                return 5;
+                // Взять более ранее исключение.
+                sendError = _socketException;
             }
         }
 
-        #region Inside SendLooper
+        // Удалить всех подписчиков из словаря и запретить дальнейшее добавление.
+        _listeners.AddCriticalException(sendError, gotFatal: false);
 
-        /// <summary>
-        /// Эта процедура должна вызываться только через отправляющую очередь <see cref="_sender"/>.
-        /// Эту процедуру нужно вызывать через Send так как в ней не обрабатываются исключения
-        /// </summary>
-        private void SendCommandInLooper(MikroTikCommand command)
+        // Сообщить основному подписчику что произошел обрыв сокета.
+        _mainQueue.AddCriticalException(sendError);
+
+        throw sendError;
+    }
+
+    #endregion
+
+    private async ValueTask<int> GetSizeAsync(Memory<byte> buffer)
+    {
+        if (buffer.Span[0] < 128)
         {
-            Debug.Assert(_sendTimeout != null);
-
-            Debug.WriteLine(Environment.NewLine + command + Environment.NewLine);
-            var buffer = Encode(command);
-
-            try
-            {
-                using (_sendTimeout.Start())
-                {
-#if NETSTANDARD2_0
-                    _stream.Write(buffer);
-#else
-                    _stream.Write(buffer.Span);
-#endif
-                }
-            }
-            catch (Exception ex)
-            {
-                OnSendExceptionInLooper(ex);
-            }
+            return buffer.Span[0];
         }
-
-        /// <summary>
-        /// Эта процедура должна вызываться только через отправляющую очередь <see cref="_sender"/>.
-        /// Эту Процедура нужно вызывать через Send так как в ней не обрабатываются исключения.
-        /// </summary>
-        private async Task SendCommandInLooperAsync(object state)
+        else if (buffer.Span[0] < 192)
         {
-            Debug.Assert(_sendTimeout != null, "Проверили в public методе");
+            await _stream.ReadBlockAsync(buffer.Slice(1, 1)).ConfigureAwait(false);
 
-            var command = (MikroTikCommand)state;
-            Debug.WriteLine(Environment.NewLine + command + Environment.NewLine);
-            Memory<byte> buffer = Encode(command);
+            var v = 0;
+            for (var i = 0; i < 2; i++)
+            {
+                v = (v << 8) + buffer.Span[i];
+            }
 
-            try
-            {
-                using (_sendTimeout.Start())
-                {
-                    await _stream.WriteAsync(buffer).ConfigureAwait(false);
-                }
-            }
-            catch (Exception ex)
-            {
-                OnSendExceptionInLooper(ex);
-            }
+            return v ^ 0x8000;
         }
-
-        private void OnSendExceptionInLooper(Exception exception)
+        else if (buffer.Span[0] < 224)
         {
-            lock (_framesToRead)
+            await _stream.ReadBlockAsync(buffer.Slice(1, 2)).ConfigureAwait(false);
+
+            var v = 0;
+            for (var i = 0; i < 3; i++)
             {
-                // Поток читающий из сокета уже мог установить исключение.
-                if (_socketException == null)
-                {
-                    _socketException = exception;
-                    _framesToRead.Clear();
-                }
-                else
-                {
-                    // Взять более ранее исключение.
-                    exception = _socketException;
-                }
+                v = (v << 8) + buffer.Span[i];
             }
 
-            // Удалить всех подписчиков из словаря и запретить дальнейшее добавление.
-            _listeners.AddCriticalException(exception, gotFatal: false);
-
-            // Сообщить основному подписчику что произошел обрыв сокета.
-            _mainQueue.AddCriticalException(exception);
-
-            throw exception;
+            return v ^ 0xC00000;
         }
-
-        #endregion
-
-        private async ValueTask<int> GetSizeAsync(Memory<byte> buffer)
+        else if (buffer.Span[0] < 240)
         {
-            if (buffer.Span[0] < 128)
+            await _stream.ReadBlockAsync(buffer.Slice(1, 3)).ConfigureAwait(false);
+
+            var v = 0;
+            for (var i = 0; i < 4; i++)
             {
-                return buffer.Span[0];
+                v = (v << 8) + buffer.Span[i];
             }
-            else if (buffer.Span[0] < 192)
+
+            return (int)(v ^ 0xE0000000);
+        }
+        else if (buffer.Span[0] == 240)
+        {
+            await _stream.ReadBlockAsync(buffer.Slice(0, 4)).ConfigureAwait(false);
+
+            var v = 0;
+            for (var i = 0; i < 4; i++)
             {
-                await _stream.ReadBlockAsync(buffer.Slice(1, 1)).ConfigureAwait(false);
-
-                int v = 0;
-                for (int i = 0; i < 2; i++)
-                {
-                    v = (v << 8) + buffer.Span[i];
-                }
-
-                return v ^ 0x8000;
+                v = (v << 8) + buffer.Span[i];
             }
-            else if (buffer.Span[0] < 224)
-            {
-                await _stream.ReadBlockAsync(buffer.Slice(1, 2)).ConfigureAwait(false);
 
-                int v = 0;
-                for (int i = 0; i < 3; i++)
-                {
-                    v = (v << 8) + buffer.Span[i];
-                }
-
-                return v ^ 0xC00000;
-            }
-            else if (buffer.Span[0] < 240)
-            {
-                await _stream.ReadBlockAsync(buffer.Slice(1, 3)).ConfigureAwait(false);
-
-                int v = 0;
-                for (int i = 0; i < 4; i++)
-                {
-                    v = (v << 8) + buffer.Span[i];
-                }
-
-                return (int)(v ^ 0xE0000000);
-            }
-            else if (buffer.Span[0] == 240)
-            {
-                await _stream.ReadBlockAsync(buffer.Slice(0, 4)).ConfigureAwait(false);
-
-                int v = 0;
-                for (int i = 0; i < 4; i++)
-                {
-                    v = (v << 8) + buffer.Span[i];
-                }
-
-                return v;
-            }
-            else
-            {
+            return v;
+        }
+        else
+        {
 #if DEBUG
-                if (Debugger.IsAttached)
-                {
-                    Debugger.Break();
-                }
+            if (Debugger.IsAttached)
+            {
+                Debugger.Break();
+            }
 
 #endif
-                // Не должно быть такого.
-                throw new MikroTikUnknownLengthException();
+            // Не должно быть такого.
+            throw new MikroTikUnknownLengthException();
+        }
+    }
+
+    private void OnReceiveTimeout(object? _)
+    {
+        lock (_framesToRead)
+        {
+            if (_socketException == null)
+            {
+                _socketException = new MikroApiDisconnectException("Сокет был закрыт в связи с таймаутом чтения.");
             }
         }
 
-        private void OnReceiveTimeout(object? _)
-        {
-            lock (_framesToRead)
-            {
-                if (_socketException == null)
-                {
-                    _socketException = new MikroApiDisconnectException("Сокет был закрыт в связи с таймаутом чтения.");
-                }
-            }
-            CloseSocket();
-        }
+        CloseSocket();
+    }
 
-        private void OnSendTimeout(object? _)
+    private void OnSendTimeout(object? _)
+    {
+        lock (_framesToRead)
         {
-            lock (_framesToRead)
+            if (_socketException == null)
             {
-                if (_socketException == null)
-                {
-                    _socketException = new MikroApiDisconnectException("Сокет был закрыт в связи с таймаутом отправки.");
-                }
-            }
-            CloseSocket();
-        }
-
-        /// <summary>
-        /// Потокобезопасно закрывает сокет.
-        /// </summary>
-        private void CloseSocket()
-        {
-            lock (_stream)
-            {
-                // Этот stream мог уже быть уничтожен.
-                if (!_socketDisposed)
-                {
-                    _stream.Dispose();
-                    _tcpClient.Dispose();
-                    _socketDisposed = true;
-                }
+                _socketException = new MikroApiDisconnectException("Сокет был закрыт в связи с таймаутом отправки.");
             }
         }
 
-        [MemberNotNull(nameof(_sender))]
-        [MemberNotNull(nameof(_receiveTimeout))]
-        [MemberNotNull(nameof(_sendTimeout))]
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CheckDisposed()
+        CloseSocket();
+    }
+
+    /// <summary>
+    /// Потокобезопасно закрывает сокет.
+    /// </summary>
+    private void CloseSocket()
+    {
+        lock (_connectionSync)
         {
-            if (!_disposed)
+            // Этот stream мог уже быть уничтожен ватчдогом.
+            if (!_socketDisposed)
             {
-                Debug.Assert(_sender != null);
-                Debug.Assert(_receiveTimeout != null);
-                Debug.Assert(_sendTimeout != null);
-                return;
+                _socketDisposed = true;
+                _stream.Dispose();
+                _tcpClient.Dispose();
             }
-            ThrowHelper.ThrowConnectionDisposed();
         }
+    }
+
+    /// <exception cref="ObjectDisposedException"/>
+    [MemberNotNull(nameof(_sender))]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void CheckDisposed()
+    {
+        if (!_disposed)
+        {
+            Debug.Assert(_sender != null);
+            return;
+        }
+
+        ThrowHelper.ThrowConnectionDisposed();
     }
 }

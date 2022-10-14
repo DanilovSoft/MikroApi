@@ -1,119 +1,127 @@
 ﻿using System;
-using System.Data;
 using System.Diagnostics;
-using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using DanilovSoft.MikroApi.Helpers;
 
-namespace DanilovSoft.MikroApi
+namespace DanilovSoft.MikroApi;
+
+internal sealed class Sender
 {
-    internal sealed class Sender
+    private readonly object _sendObj = new();
+    private readonly MtOpenConnection _connection;
+    private Task _sendTask = Task.CompletedTask;
+    private bool _finished;
+
+    public Sender(MtOpenConnection mikroTikSocket)
     {
-        private readonly object _sendObj = new();
-        private readonly MtOpenConnection _connection;
-        private Task _sendTask = Task.CompletedTask;
-        private bool _finished;
+        _connection = mikroTikSocket;
+    }
 
-        public Sender(MtOpenConnection mikroTikSocket)
+    /// <exception cref="OperationCanceledException"/>
+    public void Invoke(Action<MtOpenConnection, MikroTikCommand> callback, MikroTikCommand state, CancellationToken cancellationToken)
+    {
+        lock (_sendObj)
         {
-            _connection = mikroTikSocket;
+            CheckNotFinished();
+            WaitSendTask(cancellationToken);
+            callback(_connection, state);
+        }
+    }
+
+    /// <exception cref="OperationCanceledException"/>
+    /// <exception cref="ObjectDisposedException"/>
+    public Task InvokeAsync(Func<MtOpenConnection, MikroTikCommand, Task> callback, MikroTikCommand state, CancellationToken cancellationToken)
+    {
+        lock (_sendObj)
+        {
+            CheckNotFinished();
+            _sendTask = WaitTaskAndSend(callback, state, cancellationToken);
+            return _sendTask;
+        }
+    }
+
+    public void Quit(CancellationToken cancellationToken = default)
+    {
+        lock (_sendObj)
+        {
+            WaitSendTask(cancellationToken);
+            _finished = true;
+        }
+    }
+
+    /// <exception cref="ObjectDisposedException"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void CheckNotFinished()
+    {
+        Debug.Assert(Monitor.IsEntered(_sendObj));
+
+        if (!_finished)
+        {
+            return;
         }
 
-        public void Send<TState>(Action<MtOpenConnection, TState> callback, TState state)
+        ThrowHelper.ThrowConnectionDisposed();
+    }
+
+    /// <summary>
+    /// Ожидает чужой таск не провоцируя исключения.
+    /// </summary>
+    /// <exception cref="OperationCanceledException"/>
+    private void WaitSendTask(CancellationToken cancellationToken)
+    {
+        var task = _sendTask;
+
+        if (!task.IsCompleted)
         {
-            lock (_sendObj)
-            {
-                CheckNotFinished();
-                WaitForeignTask(_sendTask);
-                callback(_connection, state);
-            }
+            task.ContinueWith(_ => { },
+                        cancellationToken,
+                        TaskContinuationOptions.None,
+                        TaskScheduler.Default)
+                        .GetAwaiter()
+                        .GetResult();
         }
+    }
 
-        public Task SendAsync<TState>(Func<MtOpenConnection, TState, Task> callback, TState state)
+    /// <summary>
+    /// Ожидает чужой таск не провоцируя исключения.
+    /// </summary>
+    /// <exception cref="OperationCanceledException"/>
+    private Task WaitForeignTaskAsync(CancellationToken cancellationToken)
+    {
+        var task = _sendTask;
+
+        if (!task.IsCompleted)
         {
-            lock (_sendObj)
-            {
-                CheckNotFinished();
-                _sendTask = WaitForeignTaskAndSend(callback, state);
-                return _sendTask;
-            }
+            return task.ContinueWith(_ => { },
+                        cancellationToken,
+                        TaskContinuationOptions.None,
+                        TaskScheduler.Default);
         }
-
-        public void Quit()
+        else
         {
-            lock (_sendObj)
-            {
-                WaitForeignTask(_sendTask);
-                _finished = true;
-            }
+            return Task.CompletedTask;
         }
+    }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void CheckNotFinished()
+    private Task WaitTaskAndSend(Func<MtOpenConnection, MikroTikCommand, Task> callback, MikroTikCommand state, CancellationToken cancellationToken)
+    {
+        Debug.Assert(Monitor.IsEntered(_sendObj));
+
+        if (_sendTask.IsCompleted)
         {
-            Debug.Assert(Monitor.IsEntered(_sendObj));
-
-            if (!_finished)
-            {
-                return;
-            }
-            ThrowHelper.ThrowConnectionDisposed();
+            return callback(_connection, state);
         }
-
-        /// <summary>
-        /// Ожидает чужой таск не провоцируя исключения.
-        /// </summary>
-        private static void WaitForeignTask(Task task)
+        else
         {
-            if (!task.IsCompleted)
-            {
-                task.ContinueWith(_ => { },
-                            CancellationToken.None,
-                            TaskContinuationOptions.None,
-                            TaskScheduler.Default)
-                            .GetAwaiter()
-                            .GetResult();
-            }
+            return WaitTaskAndSendAsync(callback, state, _connection, cancellationToken);
         }
+    }
 
-        /// <summary>
-        /// Ожидает чужой таск не провоцируя исключения.
-        /// </summary>
-        private static Task WaitForeignTaskAsync(Task task)
-        {
-            if (!task.IsCompleted)
-            {
-                return task.ContinueWith(_ => { },
-                            CancellationToken.None,
-                            TaskContinuationOptions.None,
-                            TaskScheduler.Default);
-            }
-            else
-            {
-                return Task.CompletedTask;
-            }
-        }
-
-        private Task WaitForeignTaskAndSend<TState>(Func<MtOpenConnection, TState, Task> callback, TState state)
-        {
-            Debug.Assert(Monitor.IsEntered(_sendObj));
-
-            if (_sendTask.IsCompleted)
-            {
-                return callback(_connection, state);
-            }
-            else
-            {
-                return Wait(_sendTask, callback, state, _connection);
-            }
-
-            static async Task Wait(Task sendTask, Func<MtOpenConnection, TState, Task> callback, TState state, MtOpenConnection connection)
-            {
-                await WaitForeignTaskAsync(sendTask).ConfigureAwait(false);
-                await callback(connection, state).ConfigureAwait(false);
-            }
-        }
+    private async Task WaitTaskAndSendAsync(Func<MtOpenConnection, MikroTikCommand, Task> callback, MikroTikCommand state, MtOpenConnection connection, CancellationToken ct)
+    {
+        await WaitForeignTaskAsync(ct).ConfigureAwait(false);
+        await callback(connection, state).ConfigureAwait(false);
     }
 }

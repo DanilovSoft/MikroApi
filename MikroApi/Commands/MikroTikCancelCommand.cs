@@ -1,130 +1,129 @@
 ﻿using System;
 using System.Threading;
 
-namespace DanilovSoft.MikroApi
+namespace DanilovSoft.MikroApi;
+
+/*
+
+/cancel
+=tag=22
+.tag=1
+
+!trap
+=category=2
+=message=interrupted
+.tag=22
+
+!done
+.tag=1
+
+!done
+.tag=22
+
+    */
+
+/// <summary>
+/// Команда "/cancel" служащая для отмены подписки.
+/// </summary>
+internal class MikroTikCancelCommand : MikroTikCommand, IMikroTikResponseListener
 {
-    /*
-
-    /cancel
-    =tag=22
-    .tag=1
-
-    !trap
-    =category=2
-    =message=interrupted
-    .tag=22
-
-    !done
-    .tag=1
-
-    !done
-    .tag=22
-    
-        */
+    // Это свойство требуется интерфейсом но не участвует в синхронизации потоков.
+    private readonly object _syncObj = new();
+    object IMikroTikResponseListener.SyncObj => _syncObj;
+    /// <summary>
+    /// Тег операции которую нужно отменить.
+    /// </summary>
+    public readonly string Tag;
+    /// <summary>
+    /// Собственный тег.
+    /// </summary>
+    public readonly string SelfTag;
+    private readonly MtOpenConnection _socket;
+    private volatile Exception? _exception;
 
     /// <summary>
-    /// Команда "/cancel" служащая для отмены подписки.
+    /// 
     /// </summary>
-    internal class MikroTikCancelCommand : MikroTikCommand, IMikroTikResponseListener
+    /// <param name="tag">Тег операции которую нужно отменить.</param>
+    /// <param name="selfTag">Собственный тег команды.</param>
+    /// <param name="socket"></param>
+    internal MikroTikCancelCommand(string tag, string selfTag, MtOpenConnection socket) : base("/cancel")
     {
-        // Это свойство требуется интерфейсом но не участвует в синхронизации потоков.
-        private readonly object _syncObj = new();
-        object IMikroTikResponseListener.SyncObj => _syncObj;
-        /// <summary>
-        /// Тег операции которую нужно отменить.
-        /// </summary>
-        public readonly string Tag;
-        /// <summary>
-        /// Собственный тег.
-        /// </summary>
-        public readonly string SelfTag;
-        private readonly MtOpenConnection _socket;
-        private volatile Exception? _exception;
+        Tag = tag;
+        SelfTag = selfTag;
+        _socket = socket;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="tag">Тег операции которую нужно отменить.</param>
-        /// <param name="selfTag">Собственный тег команды.</param>
-        /// <param name="socket"></param>
-        internal MikroTikCancelCommand(string tag, string selfTag, MtOpenConnection socket) : base("/cancel")
-        {
-            Tag = tag;
-            SelfTag = selfTag;
-            _socket = socket;
-
-            Attribute("tag", tag).SetTag(selfTag);
-        }
-
-        /// <summary>
-        /// Ожидает подтверждения отмены от сервера с тегом <see cref="SelfTag"/>.
-        /// </summary>
-        internal void Wait()
-        {
-            // Разрешаем вход другому потоку и ждем пока он сообщит о завершении.
-            Monitor.Wait(this);
-
-            // Исключение устанавливается до выхода из блокировки другим потоком.
-            var ex = _exception;
-
-            if (ex != null)
-            {
-                throw ex;
-            }
-        }
-
-        // Эту функцию вызывает поток читающий сокет.
-        void IMikroTikResponseListener.Done()
-        {
-            // Нужно обязательно сменить поток.
-            ThreadPool.UnsafeQueueUserWorkItem(state =>
-            {
-                lock (state)
-                {
-                    // Сообщаем родителю что работа завершена.
-                    Monitor.Pulse(state);
-                }
-            }, this, preferLocal: true);
-
-            // Удалить себя из словаря.
-            _socket.RemoveListener(SelfTag);
-        }
-
-        // В процессе ожидания подтверждения отмены может произойти обрыв соединения.
-        private void OnFatalOrCriticalException(Exception exception)
-        {
-            // Агрегируем исключение что-бы передать его ожидающему потоку.
-            _exception = exception;
-
-            // Нужно обязательно сменить поток.
-            ThreadPool.UnsafeQueueUserWorkItem(state =>
-            {
-                lock (state)
-                {
-                    // Сообщаем родителю что работа завершена.
-                    Monitor.Pulse(state);
-                }
-            }, this, preferLocal: true);
-
-            // Удалить себя из словаря.
-            _socket.RemoveListener(SelfTag);
-        }
-
-        void IMikroTikResponseListener.AddCriticalException(Exception exception)
-        {
-            OnFatalOrCriticalException(exception);
-        }
-
-        void IMikroTikResponseListener.AddFatal(Exception exception)
-        {
-            OnFatalOrCriticalException(exception);
-        }
-
-        #region Не используемые члены интерфейса
-        // Не может произойти.
-        void IMikroTikResponseListener.AddResult(MikroTikResponseFrameDictionary message) { }
-        // Не может произойти.
-        void IMikroTikResponseListener.AddTrap(MikroApiTrapException trapException) { }
-        #endregion
+        Attribute("tag", tag).SetTag(selfTag);
     }
+
+    /// <summary>
+    /// Ожидает подтверждения отмены от сервера с тегом <see cref="SelfTag"/>.
+    /// </summary>
+    internal void Wait()
+    {
+        // Разрешаем вход другому потоку и ждем пока он сообщит о завершении.
+        Monitor.Wait(this);
+
+        // Исключение устанавливается до выхода из блокировки другим потоком.
+        var ex = _exception;
+
+        if (ex != null)
+        {
+            throw ex;
+        }
+    }
+
+    // Эту функцию вызывает поток читающий сокет.
+    void IMikroTikResponseListener.Done()
+    {
+        // Нужно обязательно сменить поток.
+        ThreadPool.UnsafeQueueUserWorkItem(state =>
+        {
+            lock (state)
+            {
+                // Сообщаем родителю что работа завершена.
+                Monitor.Pulse(state);
+            }
+        }, this, preferLocal: true);
+
+        // Удалить себя из словаря.
+        _socket.RemoveListener(SelfTag);
+    }
+
+    // В процессе ожидания подтверждения отмены может произойти обрыв соединения.
+    private void OnFatalOrCriticalException(Exception exception)
+    {
+        // Агрегируем исключение что-бы передать его ожидающему потоку.
+        _exception = exception;
+
+        // Нужно обязательно сменить поток.
+        ThreadPool.UnsafeQueueUserWorkItem(state =>
+        {
+            lock (state)
+            {
+                // Сообщаем родителю что работа завершена.
+                Monitor.Pulse(state);
+            }
+        }, this, preferLocal: true);
+
+        // Удалить себя из словаря.
+        _socket.RemoveListener(SelfTag);
+    }
+
+    void IMikroTikResponseListener.AddCriticalException(Exception exception)
+    {
+        OnFatalOrCriticalException(exception);
+    }
+
+    void IMikroTikResponseListener.AddFatal(Exception exception)
+    {
+        OnFatalOrCriticalException(exception);
+    }
+
+    #region Не используемые члены интерфейса
+    // Не может произойти.
+    void IMikroTikResponseListener.AddResult(MikroTikResponseFrameDictionary message) { }
+    // Не может произойти.
+    void IMikroTikResponseListener.AddTrap(MikroApiTrapException trapException) { }
+    #endregion
 }

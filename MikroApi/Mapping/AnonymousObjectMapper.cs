@@ -1,42 +1,49 @@
 ﻿using System;
 using System.Linq;
 
-namespace DanilovSoft.MikroApi.Mapping
+namespace DanilovSoft.MikroApi.Mapping;
+
+internal sealed class AnonymousObjectMapper
 {
-    internal class AnonymousObjectMapper
+    private readonly Func<object?[], object> _activator;
+    private readonly AnonProperty[] _properties;
+
+    public AnonymousObjectMapper(Type type)
     {
-        private readonly Func<object[], object> _activator;
-        private readonly AnonProperty[] _properties;
+        _activator = DynamicReflectionDelegateFactory.CreateAnonimousConstructor(type);
+        _properties = type.GetProperties().Select(x => new AnonProperty(x.Name, x.PropertyType)).ToArray();
+    }
 
-        public AnonymousObjectMapper(Type type)
+    public object ReadObject(MikroTikResponseFrameDictionary values)
+    {
+        var propValues = new object?[_properties.Length];
+        var len = _properties.Length;
+
+        for (var i = 0; i < len; i++)
         {
-            _activator = DynamicReflectionDelegateFactory.CreateAnonimousConstructor(type);
-            _properties = type.GetProperties().Select(x => new AnonProperty
-            {
-                Name = x.Name,
-                PropertyType = x.PropertyType,
-            }).ToArray();
+            var (propName, propType) = _properties[i];
+            var value = values[propName];
+            propValues[i] = MikroTikTypeConverter.ConvertValue(value, propType);
         }
 
-        public object ReadObject(MikroTikResponseFrameDictionary values)
-        {
-            object[] propValues = new object[_properties.Length];
-            for (int i = 0; i < _properties.Length; i++)
-            {
-                string propName = _properties[i].Name;
-                string value = values[propName];
+        return _activator(propValues);
+    }
 
-                Type propType = _properties[i].PropertyType;
-                propValues[i] = MikroTikTypeConverter.ConvertValue(value, propType);
-            }
-            return _activator(propValues);
-            //return Activator.CreateInstance(_type, propValues);
+    private readonly struct AnonProperty
+    {
+        public readonly string Name;
+        public readonly Type PropertyType;
+
+        public AnonProperty(string name, Type propertyType)
+        {
+            Name = name;
+            PropertyType = propertyType;
         }
 
-        private struct AnonProperty
+        public void Deconstruct(out string name, out Type propertyType)
         {
-            public string Name;
-            public Type PropertyType;
+            name = Name;
+            propertyType = PropertyType;
         }
     }
 }

@@ -4,854 +4,802 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 using System.Text;
 
-namespace DanilovSoft.MikroApi
+namespace DanilovSoft.MikroApi;
+
+/// <summary>
+/// Результат выполнение команды микротиком.
+/// </summary>
+[DebuggerDisplay("{DebugDisplay,nq}")]
+[DebuggerTypeProxy(typeof(TypeProxy))]
+public sealed class MikroTikResponse : IReadOnlyList<MikroTikResponseFrameDictionary>
 {
-    /// <summary>
-    /// Результат выполнение команды микротиком.
-    /// </summary>
-    [DebuggerDisplay("{DebugDisplay,nq}")]
-    [DebuggerTypeProxy(typeof(TypeProxy))]
-    public class MikroTikResponse : IReadOnlyList<MikroTikResponseFrameDictionary>
+    private const string MoreThanOneColumn = "There is more than one column.";
+    private const string MoreThanOneRow = "There is more than one row.";
+    private const string CollectionIsEmpty = "Collection is empty.";
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private string DebugDisplay => $"Count = {_receivedFrames.Count}";
+    private readonly List<MikroTikResponseFrameDictionary> _receivedFrames = new();
+
+    public MikroTikResponseFrameDictionary this[int index] 
+    { 
+        get => _receivedFrames[index]; 
+        set => _receivedFrames[index] = value; 
+    }
+
+    public int Count => _receivedFrames.Count;
+
+    internal void Add(MikroTikResponseFrameDictionary frame)
     {
-        private const string MoreThanOneColumn = "There is more than one column.";
-        private const string MoreThanOneRow = "There is more than one row.";
-        private const string CollectionIsEmpty = "Collection is empty.";
+        _receivedFrames.Add(frame);
+    }
 
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private string DebugDisplay => $"Count = {_list.Count}";
-        private readonly List<MikroTikResponseFrameDictionary> _list;
+    #region Scalar
 
-        public MikroTikResponse()
+    /// <exception cref="InvalidOperationException"/>
+    public string Scalar()
+    {
+        // Должна быть только одна строка.
+        if (Count == 1)
         {
-            _list = new List<MikroTikResponseFrameDictionary>();
-        }
+            var dict = this[0];
 
-        public MikroTikResponseFrameDictionary this[int index] { get => _list[index]; set => _list[index] = value; }
-
-        public int Count => _list.Count;
-
-        //public bool IsReadOnly => false;
-
-        internal void Add(MikroTikResponseFrameDictionary item)
-        {
-            _list.Add(item);
-        }
-
-        internal void Clear()
-        {
-            _list.Clear();
-        }
-
-        public bool Contains(MikroTikResponseFrameDictionary item)
-        {
-            return _list.Contains(item);
-        }
-
-        public void CopyTo(MikroTikResponseFrameDictionary[] array, int arrayIndex)
-        {
-            _list.CopyTo(array, arrayIndex);
-        }
-
-        public IEnumerator<MikroTikResponseFrameDictionary> GetEnumerator()
-        {
-            return _list.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        public int IndexOf(MikroTikResponseFrameDictionary item)
-        {
-            return _list.IndexOf(item);
-        }
-
-        internal void Insert(int index, MikroTikResponseFrameDictionary item)
-        {
-            _list.Insert(index, item);
-        }
-
-        internal bool Remove(MikroTikResponseFrameDictionary item)
-        {
-            return _list.Remove(item);
-        }
-
-        internal void RemoveAt(int index)
-        {
-            _list.RemoveAt(index);
-        }
-
-        #region Scalar
-
-        /// <exception cref="InvalidOperationException"/>
-        public string Scalar()
-        {
-            // Должна быть только одна строка.
-            if (Count == 1)
+            // Должна быть только одна колонка.
+            if (dict.Count == 1)
             {
-                MikroTikResponseFrameDictionary dict = this[0];
-
-                // Должна быть только одна колонка.
-                if (dict.Count == 1)
+                using (var enumerator = dict.GetEnumerator())
                 {
-                    using (var enumerator = dict.GetEnumerator())
-                    {
-                        enumerator.MoveNext();
-                        return enumerator.Current.Value;
-                    }
-                }
-                else
-                {
-                    if (dict.Count > 1)
-                    {
-                        throw new InvalidOperationException(MoreThanOneColumn);
-                    }
-                    else
-                    {
-                        // Пустого словаря вероятно не может быть. МТ пропускает пустые словари.
-                        throw new InvalidOperationException(CollectionIsEmpty);
-                    }
+                    enumerator.MoveNext();
+                    return enumerator.Current.Value;
                 }
             }
             else
             {
-                if (Count == 0)
+                if (dict.Count > 1)
                 {
-                    throw new InvalidOperationException(CollectionIsEmpty);
+                    throw new InvalidOperationException(MoreThanOneColumn);
                 }
                 else
                 {
-                    throw new InvalidOperationException(MoreThanOneRow);
+                    // Пустого словаря вероятно не может быть. МТ пропускает пустые словари.
+                    throw new InvalidOperationException(CollectionIsEmpty);
                 }
             }
         }
-
-        /// <exception cref="InvalidOperationException"/>
-        public T Scalar<T>()
+        else
         {
-            string rawValue = Scalar();
-            return MikroTikTypeConverter.ConvertValue<T>(rawValue);
-        }
-
-        /// <exception cref="InvalidOperationException"/>
-        public string Scalar(string columnName)
-        {
-            // Должна быть только одна строка.
-            if (Count == 1)
+            if (Count == 0)
             {
-                return this[0][columnName];
+                throw new InvalidOperationException(CollectionIsEmpty);
             }
             else
             {
-                if (Count == 0)
-                {
-                    throw new InvalidOperationException(CollectionIsEmpty);
-                }
-                else
-                {
-                    throw new InvalidOperationException(MoreThanOneRow);
-                }
+                throw new InvalidOperationException(MoreThanOneRow);
             }
         }
+    }
 
-        /// <exception cref="InvalidOperationException"/>
-        public T Scalar<T>(string columnName)
+    /// <exception cref="InvalidOperationException"/>
+    public T? Scalar<T>()
+    {
+        var rawValue = Scalar();
+        return MikroTikTypeConverter.ConvertValue<T>(rawValue);
+    }
+
+    /// <exception cref="InvalidOperationException"/>
+    public string Scalar(string columnName)
+    {
+        // Должна быть только одна строка.
+        if (Count == 1)
         {
-            string rawValue = Scalar(columnName);
-            return MikroTikTypeConverter.ConvertValue<T>(rawValue);
+            return this[0][columnName];
         }
-
-        #endregion
-
-        #region ScalarArray
-
-        public string[] ScalarArray(string columnName)
+        else
         {
-            // Если есть строки.
-            if (Count > 0)
+            if (Count == 0)
             {
-                string[] array = new string[Count];
-                for (int i = 0; i < Count; i++)
+                throw new InvalidOperationException(CollectionIsEmpty);
+            }
+            else
+            {
+                throw new InvalidOperationException(MoreThanOneRow);
+            }
+        }
+    }
+
+    /// <exception cref="InvalidOperationException"/>
+    public T? Scalar<T>(string columnName)
+    {
+        var rawValue = Scalar(columnName);
+        return MikroTikTypeConverter.ConvertValue<T>(rawValue);
+    }
+
+    #endregion
+
+    #region ScalarArray
+
+    public string[] ScalarArray(string columnName)
+    {
+        // Если есть строки.
+        if (Count > 0)
+        {
+            var array = new string[Count];
+            for (var i = 0; i < Count; i++)
+            {
+                array[i] = this[i][columnName];
+            }
+            return array;
+        }
+        else
+        {
+            return Array.Empty<string>();
+        }
+    }
+
+    public T?[] ScalarArray<T>(string columnName)
+    {
+        // Если есть строки.
+        if (Count > 0)
+        {
+            var array = new T?[Count];
+            for (var i = 0; i < Count; i++)
+            {
+                var rawValue = this[i][columnName];
+                array[i] = MikroTikTypeConverter.ConvertValue<T>(rawValue);
+            }
+            return array;
+        }
+        else
+        {
+            return Array.Empty<T>();
+        }
+    }
+
+    /// <exception cref="InvalidOperationException"/>
+    public string[] ScalarArray()
+    {
+        // Если есть строки.
+        if (Count > 0)
+        {
+            var dict = this[0];
+
+            // Должна быть только одна колонка.
+            if (dict.Count == 1)
+            {
+                string key;
+                using (var enumerator = dict.GetEnumerator())
                 {
-                    array[i] = this[i][columnName];
+                    enumerator.MoveNext();
+                    key = enumerator.Current.Key;
+                }
+
+                var array = new string[Count];
+                for (var i = 0; i < Count; i++)
+                {
+                    array[i] = this[i][key];
                 }
                 return array;
             }
             else
             {
-                return Array.Empty<string>();
+                if (dict.Count > 0)
+                {
+                    throw new InvalidOperationException(MoreThanOneColumn);
+                }
+                else
+                {
+                    throw new InvalidOperationException(CollectionIsEmpty);
+                }
             }
         }
-
-        public T[] ScalarArray<T>(string columnName)
+        else
         {
-            // Если есть строки.
-            if (Count > 0)
+            return Array.Empty<string>();
+        }
+    }
+
+    /// <exception cref="InvalidOperationException"/>
+    public T?[] ScalarArray<T>()
+    {
+        // Если есть строки.
+        if (Count > 0)
+        {
+            var dict = this[0];
+
+            // Должна быть только одна колонка.
+            if (dict.Count == 1)
             {
-                T[] array = new T[Count];
-                for (int i = 0; i < Count; i++)
+                string key;
+                using (var enumerator = dict.GetEnumerator())
                 {
-                    string rawValue = this[i][columnName];
-                    array[i] = MikroTikTypeConverter.ConvertValue<T>(rawValue);
+                    enumerator.MoveNext();
+                    key = enumerator.Current.Key;
+                }
+
+                var array = new T?[Count];
+                for (var i = 0; i < Count; i++)
+                {
+                    array[i] = MikroTikTypeConverter.ConvertValue<T>(this[i][key]);
                 }
                 return array;
             }
             else
             {
-                return Array.Empty<T>();
-            }
-        }
-
-        /// <exception cref="InvalidOperationException"/>
-        public string[] ScalarArray()
-        {
-            // Если есть строки.
-            if (Count > 0)
-            {
-                MikroTikResponseFrameDictionary dict = this[0];
-
-                // Должна быть только одна колонка.
-                if (dict.Count == 1)
+                if (dict.Count > 0)
                 {
-                    string key;
-                    using (var enumerator = dict.GetEnumerator())
-                    {
-                        enumerator.MoveNext();
-                        key = enumerator.Current.Key;
-                    }
-
-                    string[] array = new string[Count];
-                    for (int i = 0; i < Count; i++)
-                    {
-                        array[i] = this[i][key];
-                    }
-                    return array;
+                    throw new InvalidOperationException(MoreThanOneColumn);
                 }
                 else
                 {
-                    if (dict.Count > 0)
-                    {
-                        throw new InvalidOperationException(MoreThanOneColumn);
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException(CollectionIsEmpty);
-                    }
+                    throw new InvalidOperationException(CollectionIsEmpty);
                 }
-            }
-            else
-            {
-                return Array.Empty<string>();
             }
         }
-
-        /// <exception cref="InvalidOperationException"/>
-        public T[] ScalarArray<T>()
+        else
         {
-            // Если есть строки.
-            if (Count > 0)
-            {
-                MikroTikResponseFrameDictionary dict = this[0];
-
-                // Должна быть только одна колонка.
-                if (dict.Count == 1)
-                {
-                    string key;
-                    using (var enumerator = dict.GetEnumerator())
-                    {
-                        enumerator.MoveNext();
-                        key = enumerator.Current.Key;
-                    }
-
-                    var array = new T[Count];
-                    for (int i = 0; i < Count; i++)
-                    {
-                        array[i] = MikroTikTypeConverter.ConvertValue<T>(this[i][key]);
-                    }
-                    return array;
-                }
-                else
-                {
-                    if (dict.Count > 0)
-                    {
-                        throw new InvalidOperationException(MoreThanOneColumn);
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException(CollectionIsEmpty);
-                    }
-                }
-            }
-            else
-            {
-                return Array.Empty<T>();
-            }
+            return Array.Empty<T>();
         }
+    }
 
-        #endregion
+    #endregion
 
-        #region ScalarList
+    #region ScalarList
 
-        /// <exception cref="InvalidOperationException"/>
-        public List<string> ScalarList()
+    /// <exception cref="InvalidOperationException"/>
+    public List<string> ScalarList()
+    {
+        // Если есть строки.
+        if (Count > 0)
         {
-            // Если есть строки.
-            if (Count > 0)
-            {
-                MikroTikResponseFrameDictionary dict = this[0];
+            var dict = this[0];
 
-                // Должна быть только одна колонка.
-                if (dict.Count == 1)
+            // Должна быть только одна колонка.
+            if (dict.Count == 1)
+            {
+                string key;
+                using (var enumerator = dict.GetEnumerator())
                 {
-                    string key;
-                    using (var enumerator = dict.GetEnumerator())
-                    {
-                        enumerator.MoveNext();
-                        key = enumerator.Current.Key;
-                    }
-
-                    var list = new List<string>(Count);
-                    for (int i = 0; i < Count; i++)
-                    {
-                        list.Add(this[i][key]);
-                    }
-                    return list;
+                    enumerator.MoveNext();
+                    key = enumerator.Current.Key;
                 }
-                else
-                {
-                    if (dict.Count > 0)
-                    {
-                        throw new InvalidOperationException(MoreThanOneColumn);
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException(CollectionIsEmpty);
-                    }
-                }
-            }
-            else
-            {
-                return new List<string>();
-            }
-        }
 
-        /// <exception cref="InvalidOperationException"/>
-        public List<T> ScalarList<T>()
-        {
-            // Если есть строки.
-            if (Count > 0)
-            {
-                MikroTikResponseFrameDictionary dict = this[0];
-
-                // Должна быть только одна колонка.
-                if (dict.Count == 1)
-                {
-                    string key;
-                    using (var enumerator = dict.GetEnumerator())
-                    {
-                        enumerator.MoveNext();
-                        key = enumerator.Current.Key;
-                    }
-
-                    var list = new List<T>(Count);
-                    for (int i = 0; i < Count; i++)
-                    {
-                        string rawValue = this[i][key];
-                        list.Add(MikroTikTypeConverter.ConvertValue<T>(rawValue));
-                    }
-                    return list;
-                }
-                else
-                {
-                    if (dict.Count > 0)
-                    {
-                        throw new InvalidOperationException(MoreThanOneColumn);
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException(CollectionIsEmpty);
-                    }
-                }
-            }
-            else
-            {
-                return new List<T>();
-            }
-        }
-
-        public List<string> ScalarList(string columnName)
-        {
-            // Если есть строки.
-            if (Count > 0)
-            {
                 var list = new List<string>(Count);
-                for (int i = 0; i < Count; i++)
+                for (var i = 0; i < Count; i++)
                 {
-                    list.Add(this[i][columnName]);
+                    list.Add(this[i][key]);
                 }
                 return list;
             }
             else
             {
-                return new List<string>();
+                if (dict.Count > 0)
+                {
+                    throw new InvalidOperationException(MoreThanOneColumn);
+                }
+                else
+                {
+                    throw new InvalidOperationException(CollectionIsEmpty);
+                }
             }
         }
-
-        public List<T> ScalarList<T>(string columnName)
+        else
         {
-            // Если есть строки.
-            if (Count > 0)
+            return new List<string>();
+        }
+    }
+
+    /// <exception cref="InvalidOperationException"/>
+    public List<T?> ScalarList<T>()
+    {
+        // Если есть строки.
+        if (Count > 0)
+        {
+            var dict = this[0];
+
+            // Должна быть только одна колонка.
+            if (dict.Count == 1)
             {
-                var list = new List<T>(Count);
-                for (int i = 0; i < Count; i++)
+                string key;
+                using (var enumerator = dict.GetEnumerator())
                 {
-                    string rawValue = this[i][columnName];
+                    enumerator.MoveNext();
+                    key = enumerator.Current.Key;
+                }
+
+                var list = new List<T?>(Count);
+                for (var i = 0; i < Count; i++)
+                {
+                    var rawValue = this[i][key];
                     list.Add(MikroTikTypeConverter.ConvertValue<T>(rawValue));
                 }
                 return list;
             }
             else
             {
-                return new List<T>();
-            }
-        }
-
-        #endregion
-
-        #region ScalarOrDefault
-
-        /// <summary>
-        /// Возвращает <see langword="null"/> если нет ни одной строки.
-        /// </summary>
-        /// <exception cref="InvalidOperationException"/>
-        /// <returns></returns>
-        public string? ScalarOrDefault(string columnName)
-        {
-            // Должна быть только одна строка.
-            if (Count == 1)
-            {
-                return this[0][columnName];
-            }
-            else
-            {
-                if (Count == 0)
+                if (dict.Count > 0)
                 {
-                    return null;
+                    throw new InvalidOperationException(MoreThanOneColumn);
                 }
                 else
                 {
-                    throw new InvalidOperationException(MoreThanOneRow);
+                    throw new InvalidOperationException(CollectionIsEmpty);
                 }
             }
         }
-
-        /// <summary>
-        /// Возвращает <see langword="default"/> если нет ни одной строки.
-        /// </summary>
-        /// <exception cref="InvalidOperationException"/>
-        public T? ScalarOrDefault<T>(string columnName)
+        else
         {
-            var rawValue = ScalarOrDefault(columnName);
+            return new List<T?>();
+        }
+    }
 
-            if (rawValue != null)
+    public List<string> ScalarList(string columnName)
+    {
+        // Если есть строки.
+        if (Count > 0)
+        {
+            var list = new List<string>(Count);
+            for (var i = 0; i < Count; i++)
             {
-                return MikroTikTypeConverter.ConvertValue<T>(rawValue);
+                list.Add(this[i][columnName]);
+            }
+            return list;
+        }
+        else
+        {
+            return new List<string>();
+        }
+    }
+
+    public List<T?> ScalarList<T>(string columnName)
+    {
+        // Если есть строки.
+        if (Count > 0)
+        {
+            var list = new List<T?>(Count);
+            for (var i = 0; i < Count; i++)
+            {
+                var rawValue = this[i][columnName];
+                list.Add(MikroTikTypeConverter.ConvertValue<T>(rawValue));
+            }
+            return list;
+        }
+        else
+        {
+            return new List<T?>();
+        }
+    }
+
+    #endregion
+
+    #region ScalarOrDefault
+
+    /// <summary>
+    /// Возвращает <see langword="null"/> если нет ни одной строки.
+    /// </summary>
+    /// <exception cref="InvalidOperationException"/>
+    /// <returns></returns>
+    public string? ScalarOrDefault(string columnName)
+    {
+        // Должна быть только одна строка.
+        if (Count == 1)
+        {
+            return this[0][columnName];
+        }
+        else
+        {
+            if (Count == 0)
+            {
+                return null;
             }
             else
+            {
+                throw new InvalidOperationException(MoreThanOneRow);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Возвращает <see langword="default"/> если нет ни одной строки.
+    /// </summary>
+    /// <exception cref="InvalidOperationException"/>
+    public T? ScalarOrDefault<T>(string columnName)
+    {
+        var rawValue = ScalarOrDefault(columnName);
+
+        if (rawValue != null)
+        {
+            return MikroTikTypeConverter.ConvertValue<T>(rawValue);
+        }
+        else
+        {
+            return default;
+        }
+    }
+
+    /// <summary>
+    /// Возвращает <see langword="null"/> если нет ни одной строки.
+    /// </summary>
+    /// <exception cref="InvalidOperationException"/>
+    /// <returns></returns>
+    public string? ScalarOrDefault()
+    {
+        // Должна быть только одна строка.
+        if (Count == 1)
+        {
+            var dict = this[0];
+
+            // Должна быть только одна колонка.
+            if (dict.Count == 1)
+            {
+                using (var enumerator = dict.GetEnumerator())
+                {
+                    enumerator.MoveNext();
+                    return enumerator.Current.Value;
+                }
+            }
+            else
+            {
+                if (dict.Count > 1)
+                {
+                    throw new InvalidOperationException(MoreThanOneColumn);
+                }
+                else
+                {
+                    // Пустого словаря вероятно не может быть. МТ пропускает пустые словари.
+                    throw new InvalidOperationException(CollectionIsEmpty);
+                }
+            }
+        }
+        else
+        {
+            if (Count == 0)
+            {
+                return null;
+            }
+            else
+            {
+                throw new InvalidOperationException(MoreThanOneRow);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Возвращает <see langword="default"/> если нет ни одной строки.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <exception cref="InvalidOperationException"/>
+    /// <returns></returns>
+    public T? ScalarOrDefault<T>()
+    {
+        var rawValue = ScalarOrDefault();
+
+        if (rawValue != null)
+        {
+            return MikroTikTypeConverter.ConvertValue<T>(rawValue);
+        }
+
+        return default;
+    }
+
+    #endregion
+
+    #region Single
+
+    /// <summary>
+    /// Когда результатом является одна строка.
+    /// </summary>
+    public MikroTikResponseFrameDictionary Single()
+    {
+        // Должна быть только одна строка.
+        if (Count == 1)
+        {
+            return this[0];
+        }
+        else
+        {
+            if (Count == 0)
+            {
+                throw new InvalidOperationException(CollectionIsEmpty);
+            }
+            else
+            {
+                throw new InvalidOperationException(MoreThanOneRow);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Когда результатом является одна строка.
+    /// </summary>
+    public T Single<T>(Func<MikroTikResponseFrameDictionary, T> selector)
+    {
+        if (selector is null)
+        {
+            throw new ArgumentNullException(nameof(selector));
+        }
+        // Должна быть только одна строка.
+        if (Count == 1)
+        {
+            var frame = this[0];
+            return selector(frame);
+        }
+        else
+        {
+            if (Count == 0)
+            {
+                throw new InvalidOperationException(CollectionIsEmpty);
+            }
+            else
+            {
+                throw new InvalidOperationException(MoreThanOneRow);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Когда результатом является одна строка.
+    /// </summary>
+    public T Single<T>()
+    {
+        // Должна быть только одна строка.
+        if (Count == 1)
+        {
+            var dict = this[0];
+            var mapper = DynamicActivator.GetMapper<T>();
+            return (T)mapper.ReadObject(dict);
+        }
+        else
+        {
+            if (Count == 0)
+            {
+                throw new InvalidOperationException(CollectionIsEmpty);
+            }
+            else
+            {
+                throw new InvalidOperationException(MoreThanOneRow);
+            }
+        }
+    }
+
+    #endregion
+
+    #region SingleOrDefault
+
+    /// <summary>
+    /// Когда результатом является одна строка.
+    /// </summary>
+    public MikroTikResponseFrameDictionary? SingleOrDefault()
+    {
+        // Должна быть только одна строка.
+        if (Count == 1)
+        {
+            var dict = this[0];
+            return dict;
+        }
+        else
+        {
+            if (Count == 0)
+            {
+                return null;
+            }
+            else
+            {
+                throw new InvalidOperationException(MoreThanOneRow);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Когда результатом является одна строка.
+    /// </summary>
+    public T? SingleOrDefault<T>(Func<MikroTikResponseFrameDictionary, T> selector)
+    {
+        if (selector is null)
+        {
+            throw new ArgumentNullException(nameof(selector));
+        }
+        // Должна быть только одна строка.
+        if (Count == 1)
+        {
+            var frame = this[0];
+            return selector(frame);
+        }
+        else
+        {
+            if (Count == 0)
             {
                 return default;
             }
-        }
-
-        /// <summary>
-        /// Возвращает <see langword="null"/> если нет ни одной строки.
-        /// </summary>
-        /// <exception cref="InvalidOperationException"/>
-        /// <returns></returns>
-        public string? ScalarOrDefault()
-        {
-            // Должна быть только одна строка.
-            if (Count == 1)
+            else
             {
-                MikroTikResponseFrameDictionary dict = this[0];
+                throw new InvalidOperationException(MoreThanOneRow);
+            }
+        }
+    }
 
-                // Должна быть только одна колонка.
-                if (dict.Count == 1)
-                {
-                    using (var enumerator = dict.GetEnumerator())
-                    {
-                        enumerator.MoveNext();
-                        return enumerator.Current.Value;
-                    }
-                }
-                else
-                {
-                    if (dict.Count > 1)
-                    {
-                        throw new InvalidOperationException(MoreThanOneColumn);
-                    }
-                    else
-                    {
-                        // Пустого словаря вероятно не может быть. МТ пропускает пустые словари.
-                        throw new InvalidOperationException(CollectionIsEmpty);
-                    }
-                }
+    /// <summary>
+    /// Когда результатом является одна строка.
+    /// </summary>
+    public T? SingleOrDefault<T>()
+    {
+        // Должна быть только одна строка.
+        if (Count == 1)
+        {
+            var dict = this[0];
+            var mapper = DynamicActivator.GetMapper<T>();
+            return (T)mapper.ReadObject(dict);
+        }
+        else
+        {
+            if (Count == 0)
+            {
+                return default;
             }
             else
             {
-                if (Count == 0)
-                {
-                    return null;
-                }
-                else
-                {
-                    throw new InvalidOperationException(MoreThanOneRow);
-                }
+                throw new InvalidOperationException(MoreThanOneRow);
             }
         }
+    }
 
-        /// <summary>
-        /// Возвращает <see langword="default"/> если нет ни одной строки.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <exception cref="InvalidOperationException"/>
-        /// <returns></returns>
-        public T? ScalarOrDefault<T>()
+    #endregion
+
+    #region ToArray
+
+    /// <summary>
+    /// Создает список объектов
+    /// члены которого должны использовать атрибут <see cref="MikroTikPropertyAttribute"/> для привязки данных.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public T[] ToArray<T>()
+    {
+        if (Count > 0)
         {
-            var rawValue = ScalarOrDefault();
-
-            if (rawValue != null)
+            var array = new T[Count];
+            var mapper = DynamicActivator.GetMapper<T>();
+            for (var i = 0; i < Count; i++)
             {
-                return MikroTikTypeConverter.ConvertValue<T>(rawValue);
+                array[i] = (T)mapper.ReadObject(this[i]);
             }
-
-            return default;
+            return array;
         }
+        return Array.Empty<T>();
+    }
 
-        #endregion
-
-        #region Single
-
-        /// <summary>
-        /// Когда результатом является одна строка.
-        /// </summary>
-        public MikroTikResponseFrameDictionary Single()
+    public T[] ToArray<T>(Func<MikroTikResponseFrameDictionary, T> selector)
+    {
+        if (selector is null)
         {
-            // Должна быть только одна строка.
-            if (Count == 1)
-            {
-                MikroTikResponseFrameDictionary dict = this[0];
-                return dict;
-            }
-            else
-            {
-                if (Count == 0)
-                {
-                    throw new InvalidOperationException(CollectionIsEmpty);
-                }
-                else
-                {
-                    throw new InvalidOperationException(MoreThanOneRow);
-                }
-            }
+            throw new ArgumentNullException(nameof(selector));
         }
 
-        /// <summary>
-        /// Когда результатом является одна строка.
-        /// </summary>
-        public T Single<T>(Func<MikroTikResponseFrameDictionary, T> selector)
+        if (Count > 0)
         {
-            if (selector is null)
+            var array = new T[Count];
+            for (var i = 0; i < Count; i++)
             {
-                throw new ArgumentNullException(nameof(selector));
+                array[i] = selector(this[i]);
             }
-            // Должна быть только одна строка.
-            if (Count == 1)
-            {
-                MikroTikResponseFrameDictionary frame = this[0];
-                return selector(frame);
-            }
-            else
-            {
-                if (Count == 0)
-                {
-                    throw new InvalidOperationException(CollectionIsEmpty);
-                }
-                else
-                {
-                    throw new InvalidOperationException(MoreThanOneRow);
-                }
-            }
+            return array;
         }
+        return Array.Empty<T>();
+    }
 
-        /// <summary>
-        /// Когда результатом является одна строка.
-        /// </summary>
-        public T Single<T>()
+
+    /// <param name="anonymousObject">Анонимный объект тип которого используется для создания результата функции.</param>
+    public T[] ToArray<T>(T anonymousObject)
+    {
+        if (Count > 0)
         {
-            // Должна быть только одна строка.
-            if (Count == 1)
+            var mapper = DynamicActivator.GetAnonymousMappger<T>();
+            var array = new T[Count];
+            for (var i = 0; i < Count; i++)
             {
-                MikroTikResponseFrameDictionary dict = this[0];
-                ObjectMapper mapper = DynamicActivator.GetMapper<T>();
-                return (T)mapper.ReadObject(dict);
+                array[i] = (T)mapper.ReadObject(this[i]);
             }
-            else
-            {
-                if (Count == 0)
-                {
-                    throw new InvalidOperationException(CollectionIsEmpty);
-                }
-                else
-                {
-                    throw new InvalidOperationException(MoreThanOneRow);
-                }
-            }
+            return array;
         }
+        return Array.Empty<T>();
+    }
 
-        #endregion
+    #endregion
 
-        #region SingleOrDefault
+    #region ToList
 
-        /// <summary>
-        /// Когда результатом является одна строка.
-        /// </summary>
-        public MikroTikResponseFrameDictionary? SingleOrDefault()
+    /// <summary>
+    /// Создает список объектов
+    /// члены которого должны использовать атрибут <see cref="MikroTikPropertyAttribute"/> для привязки данных.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public List<T> ToList<T>()
+    {
+        var list = new List<T>(Count);
+        if (Count > 0)
         {
-            // Должна быть только одна строка.
-            if (Count == 1)
+            var mapper = DynamicActivator.GetMapper<T>();
+            for (var i = 0; i < Count; i++)
             {
-                var dict = this[0];
-                return dict;
-            }
-            else
-            {
-                if (Count == 0)
-                {
-                    return null;
-                }
-                else
-                {
-                    throw new InvalidOperationException(MoreThanOneRow);
-                }
+                list.Add((T)mapper.ReadObject(this[i]));
             }
         }
 
-        /// <summary>
-        /// Когда результатом является одна строка.
-        /// </summary>
-        public T? SingleOrDefault<T>(Func<MikroTikResponseFrameDictionary, T> selector)
+        return list;
+    }
+
+    public List<T> ToList<T>(Func<MikroTikResponseFrameDictionary, T> selector)
+    {
+        ArgumentNullException.ThrowIfNull(selector);
+        
+        var list = new List<T>(Count);
+        for (var i = 0; i < Count; i++)
         {
-            if (selector is null)
-            {
-                throw new ArgumentNullException(nameof(selector));
-            }
-            // Должна быть только одна строка.
-            if (Count == 1)
-            {
-                MikroTikResponseFrameDictionary frame = this[0];
-                return selector(frame);
-            }
-            else
-            {
-                if (Count == 0)
-                {
-                    return default;
-                }
-                else
-                {
-                    throw new InvalidOperationException(MoreThanOneRow);
-                }
-            }
+            var selected = selector(this[i]);
+            list.Add(selected);
         }
+        return list;
+    }
 
-        /// <summary>
-        /// Когда результатом является одна строка.
-        /// </summary>
-        public T? SingleOrDefault<T>()
+    /// <param name="anonymousObject">Анонимный объект тип которого используется для создания результата функции.</param>
+    public List<T> ToList<T>(T anonymousObject)
+    {
+        var list = new List<T>(Count);
+        if (Count > 0)
         {
-            // Должна быть только одна строка.
-            if (Count == 1)
+            var mapper = DynamicActivator.GetAnonymousMappger<T>();
+            for (var i = 0; i < Count; i++)
             {
-                MikroTikResponseFrameDictionary dict = this[0];
-                ObjectMapper mapper = DynamicActivator.GetMapper<T>();
-                return (T)mapper.ReadObject(dict);
-            }
-            else
-            {
-                if (Count == 0)
-                {
-                    return default;
-                }
-                else
-                {
-                    throw new InvalidOperationException(MoreThanOneRow);
-                }
+                list.Add((T)mapper.ReadObject(this[i]));
             }
         }
+        return list;
+    }
 
-        #endregion
+    #endregion
 
-        #region ToArray
-
-        /// <summary>
-        /// Создает список объектов
-        /// члены которого должны использовать атрибут <see cref="MikroTikPropertyAttribute"/> для привязки данных.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public T[] ToArray<T>()
+    public override string ToString()
+    {
+        if (Count == 1)
         {
-            if (Count > 0)
-            {
-                var array = new T[Count];
-                var mapper = DynamicActivator.GetMapper<T>();
-                for (int i = 0; i < Count; i++)
-                {
-                    array[i] = (T)mapper.ReadObject(this[i]);
-                }
-                return array;
-            }
-            return Array.Empty<T>();
+            return this[0].ToString();
         }
 
-        public T[] ToArray<T>(Func<MikroTikResponseFrameDictionary, T> selector)
+        var sb = new StringBuilder();
+        var n = 0;
+        foreach (var frame in CollectionsMarshal.AsSpan(_receivedFrames))
         {
-            if (selector is null)
+            if (n > 0)
             {
-                throw new ArgumentNullException(nameof(selector));
+                sb.AppendLine();
             }
 
-            if (Count > 0)
-            {
-                var array = new T[Count];
-                for (int i = 0; i < Count; i++)
-                {
-                    array[i] = selector(this[i]);
-                }
-                return array;
-            }
-            return Array.Empty<T>();
+            n++;
+            sb.Append(frame.ToString());
         }
+        return sb.ToString();
+    }
 
+    public IEnumerator<MikroTikResponseFrameDictionary> GetEnumerator() => _receivedFrames.GetEnumerator();
 
-        /// <param name="anonymousObject">Анонимный объект тип которого используется для создания результата функции.</param>
-        [SuppressMessage("Usage", "CA1801:Проверьте неиспользуемые параметры", Justification = "<Ожидание>")]
-        public T[] ToArray<T>(T anonymousObject)
+    public ReadOnlySpan<MikroTikResponseFrameDictionary> Span => CollectionsMarshal.AsSpan(_receivedFrames);
+
+    IEnumerator IEnumerable.GetEnumerator() => _receivedFrames.GetEnumerator();
+
+    [DebuggerNonUserCode]
+    private sealed class TypeProxy
+    {
+        private readonly MikroTikResponse _self;
+        public TypeProxy(MikroTikResponse self)
         {
-            if (Count > 0)
-            {
-                AnonymousObjectMapper mapper = DynamicActivator.GetAnonymousMappger<T>();
-                var array = new T[Count];
-                for (int i = 0; i < Count; i++)
-                {
-                    array[i] = (T)mapper.ReadObject(this[i]);
-                }
-                return array;
-            }
-            return Array.Empty<T>();
+            _self = self;
         }
 
-        #endregion
-
-        #region ToList
-
-        /// <summary>
-        /// Создает список объектов
-        /// члены которого должны использовать атрибут <see cref="MikroTikPropertyAttribute"/> для привязки данных.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public List<T> ToList<T>()
-        {
-            var list = new List<T>(Count);
-            if (Count > 0)
-            {
-                ObjectMapper mapper = DynamicActivator.GetMapper<T>();
-                for (int i = 0; i < Count; i++)
-                {
-                    list.Add((T)mapper.ReadObject(this[i]));
-                }
-            }
-            return list;
-        }
-
-        public List<T> ToList<T>(Func<MikroTikResponseFrameDictionary, T> selector)
-        {
-            if (selector is null)
-            {
-                throw new ArgumentNullException(nameof(selector));
-            }
-
-            var list = new List<T>(Count);
-            for (int i = 0; i < Count; i++)
-            {
-                T selected = selector(this[i]);
-                list.Add(selected);
-            }
-            return list;
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="anonymousObject">Анонимный объект тип которого используется для создания результата функции.</param>
-        /// <returns></returns>
-        [SuppressMessage("Usage", "CA1801:Проверьте неиспользуемые параметры", Justification = "<Ожидание>")]
-        public List<T> ToList<T>(T anonymousObject)
-        {
-            var list = new List<T>(Count);
-            if (Count > 0)
-            {
-                AnonymousObjectMapper mapper = DynamicActivator.GetAnonymousMappger<T>();
-                for (int i = 0; i < Count; i++)
-                {
-                    list.Add((T)mapper.ReadObject(this[i]));
-                }
-            }
-            return list;
-        }
-
-        #endregion
-
-        public override string ToString()
-        {
-            if (Count == 1)
-            {
-                return this[0].ToString();
-            }
-
-            var sb = new StringBuilder();
-            int n = 0;
-            foreach (var item in this)
-            {
-                if (n > 0)
-                {
-                    sb.AppendLine();
-                }
-
-                n++;
-                sb.Append(item.ToString());
-            }
-            return sb.ToString();
-        }
-
-        [DebuggerNonUserCode]
-        private class TypeProxy
-        {
-            private readonly MikroTikResponse _self;
-            public TypeProxy(MikroTikResponse self)
-            {
-                _self = self;
-            }
-
-            [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-            private List<MikroTikResponseFrameDictionary> Items => _self._list;
-        }
+        [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+        [SuppressMessage("CodeQuality", "IDE0051:Удалите неиспользуемые закрытые члены", Justification = "Debug Display")]
+        private Span<MikroTikResponseFrameDictionary> Items => CollectionsMarshal.AsSpan(_self._receivedFrames);
     }
 }

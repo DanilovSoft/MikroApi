@@ -1,60 +1,56 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.Serialization;
 
-namespace DanilovSoft.MikroApi.Mapping
+namespace DanilovSoft.MikroApi.Mapping;
+
+internal class ObjectMapper
 {
-    internal class ObjectMapper
+    private readonly Dictionary<string, MikroTikProperty> _properties;
+    private readonly ContractActivator _activator;
+
+    public ObjectMapper(Type type)
     {
-        private readonly static StreamingContext _defaultStreamingContext = new();
-        private readonly Dictionary<string, MikroTikProperty> _properties;
-        private readonly ContractActivator _activator;
+        _activator = new ContractActivator(type);
+        _properties = GetProperties(type);
+    }
 
-        public ObjectMapper(Type type)
+    private static Dictionary<string, MikroTikProperty> GetProperties(Type type)
+    {
+        var props = type.GetTypeInfo().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+        var dict = new Dictionary<string, MikroTikProperty>();
+
+        for (var i = 0; i < props.Length; i++)
         {
-            _activator = new ContractActivator(type);
-            _properties = GetProperties(type);
+            var propertyInfo = props[i];
+            var attrib = propertyInfo.GetCustomAttribute<MikroTikPropertyAttribute>();
+            if (attrib != null)
+            {
+                dict.Add(attrib.Name, new MikroTikProperty(propertyInfo));
+            }
         }
 
-        private static Dictionary<string, MikroTikProperty> GetProperties(Type type)
+        return dict;
+    }
+
+    public object ReadObject(MikroTikResponseFrameDictionary frame)
+    {
+        var obj = _activator.CreateInstance();
+
+        _activator.OnDeserializingHandle?.Invoke(obj, default);
+
+        if (frame.Count > 0)
         {
-            PropertyInfo[] props = type.GetTypeInfo().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-            var dict = new Dictionary<string, MikroTikProperty>();
-            for (int i = 0; i < props.Length; i++)
+            foreach (var (key, value) in frame)
             {
-                PropertyInfo propertyInfo = props[i];
-                var attrib = propertyInfo.GetCustomAttribute<MikroTikPropertyAttribute>();
-                if (attrib != null)
+                if (_properties.TryGetValue(key, out var mikroTikProperty))
                 {
-                    dict.Add(attrib.Name, new MikroTikProperty(propertyInfo));
+                    var compatibleValue = MikroTikTypeConverter.ConvertValue(value, mikroTikProperty.MemberType);
+                    mikroTikProperty.SetValueHandler(obj, compatibleValue);
                 }
             }
-            return dict;
         }
-
-        public object ReadObject(MikroTikResponseFrameDictionary frame)
-        {
-            object obj = _activator.CreateInstance();
-
-            _activator.OnDeserializingHandle?.Invoke(obj, _defaultStreamingContext);
-
-            if (frame.Count > 0)
-            {
-                foreach (KeyValuePair<string, string> keyValue in frame)
-                {
-                    string key = keyValue.Key;
-                    string value = keyValue.Value;
-
-                    if (_properties.TryGetValue(key, out MikroTikProperty mikroTikProperty))
-                    {
-                        object compatibleValue = MikroTikTypeConverter.ConvertValue(value, mikroTikProperty.MemberType);
-                        mikroTikProperty.SetValueHandler(obj, compatibleValue);
-                    }
-                }
-            }
-            _activator.OnDeserializedHandle?.Invoke(obj, _defaultStreamingContext);
-            return obj;
-        }
+        _activator.OnDeserializedHandle?.Invoke(obj, default);
+        return obj;
     }
 }

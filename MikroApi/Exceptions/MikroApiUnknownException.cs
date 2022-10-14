@@ -1,19 +1,18 @@
 ﻿using System;
 
-namespace DanilovSoft.MikroApi
+namespace DanilovSoft.MikroApi;
+
+public class MikroTikUnknownLengthException : MikroApiException
 {
-    public class MikroTikUnknownLengthException : MikroApiException
+    public MikroTikUnknownLengthException()
     {
-        public MikroTikUnknownLengthException()
-        {
-        }
+    }
 
-        public MikroTikUnknownLengthException(string? message) : base(message)
-        {
-        }
+    public MikroTikUnknownLengthException(string? message) : base(message)
+    {
+    }
 
-        public MikroTikUnknownLengthException(string? message, Exception? innerException) : base(message, innerException)
-        {
-        }
+    public MikroTikUnknownLengthException(string? message, Exception? innerException) : base(message, innerException)
+    {
     }
 }

@@ -67,7 +67,7 @@
             Ожидает подтверждения отмены от сервера с тегом <see cref="F:DanilovSoft.MikroApi.MikroTikCancelCommand.SelfTag"/>.
             </summary>
         </member>
-        <member name="P:DanilovSoft.MikroApi.MikroTikCommand.IsCompleted">
+        <member name="F:DanilovSoft.MikroApi.MikroTikCommand._isUsedOnce">
             <summary>
             True если команда была успешно отправлена. Отправленные команды нельзя отправлять повторно.
             </summary>
@@ -132,12 +132,12 @@
             Добавляет атрибут вида "=.proplist=value1,value2,..."
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikCommand.Completed">
+        <member name="M:DanilovSoft.MikroApi.MikroTikCommand.CheckAndMarkAsUsed">
             <summary>
             Запрещает использовать эту команду повторно.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikCommand.CheckCompleted">
+        <member name="M:DanilovSoft.MikroApi.MikroTikCommand.CheckNotUsed">
             <summary>
             Генерирует исключение если текущий экземпляр команды уже был однажды отправлен в сокет.
             </summary>
@@ -188,57 +188,57 @@
             Добавляет атрибут вида "=.proplist=value1,value2,...".
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Send">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Send(System.Threading.CancellationToken)">
             <summary>
             Отправляет команду и возвращает ответ сервера.
             </summary>
             <exception cref="T:DanilovSoft.MikroApi.MikroApiTrapException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Listen">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Listen(System.Threading.CancellationToken)">
             <summary>
             Отправляет команду помечая её тегом.
             Команда будет выполняться пока не будет прервана с помощью Cancel.
             </summary>
             <exception cref="T:DanilovSoft.MikroApi.MikroApiTrapException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ListenAsync">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ListenAsync(System.Threading.CancellationToken)">
             <summary>
             Отправляет команду помечая её тегом.
             Команда будет выполняться пока не будет прервана с помощью Cancel.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Scalar">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Scalar(System.Threading.CancellationToken)">
             <exception cref="T:System.InvalidOperationException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Scalar``1">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Scalar``1(System.Threading.CancellationToken)">
             <exception cref="T:System.InvalidOperationException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Scalar(System.String)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Scalar(System.String,System.Threading.CancellationToken)">
             <exception cref="T:System.InvalidOperationException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Scalar``1(System.String)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Scalar``1(System.String,System.Threading.CancellationToken)">
             <exception cref="T:System.InvalidOperationException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarArray">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarArray(System.Threading.CancellationToken)">
             <exception cref="T:System.InvalidOperationException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarArray``1">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarArray``1(System.Threading.CancellationToken)">
             <exception cref="T:System.InvalidOperationException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarList">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarList(System.Threading.CancellationToken)">
             <exception cref="T:System.InvalidOperationException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarList``1">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarList``1(System.Threading.CancellationToken)">
             <exception cref="T:System.InvalidOperationException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarOrDefault">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarOrDefault(System.Threading.CancellationToken)">
             <summary>
             Возвращает <see langword="null"/> если нет ни одной строки.
             </summary>
             <exception cref="T:System.InvalidOperationException"/>
             <returns></returns>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarOrDefault``1">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarOrDefault``1(System.Threading.CancellationToken)">
             <summary>
             Возвращает <see langword="default"/> если нет ни одной строки.
             </summary>
@@ -246,51 +246,51 @@
             <exception cref="T:System.InvalidOperationException"/>
             <returns></returns>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarOrDefault(System.String)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarOrDefault(System.String,System.Threading.CancellationToken)">
             <summary>
             Возвращает <see langword="null"/> если нет ни одной строки.
             </summary>
             <exception cref="T:System.InvalidOperationException"/>
             <returns></returns>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarOrDefault``1(System.String)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ScalarOrDefault``1(System.String,System.Threading.CancellationToken)">
             <summary>
             Возвращает <see langword="default"/> если нет ни одной строки.
             </summary>
             <exception cref="T:System.InvalidOperationException"/>
             <returns></returns>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Single">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Single(System.Threading.CancellationToken)">
             <summary>
             Когда результатом является одна строка.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Single``1(System.Func{DanilovSoft.MikroApi.MikroTikResponseFrameDictionary,``0})">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Single``1(System.Func{DanilovSoft.MikroApi.MikroTikResponseFrameDictionary,``0},System.Threading.CancellationToken)">
             <summary>
             Когда результатом является одна строка.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Single``1">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.Single``1(System.Threading.CancellationToken)">
             <summary>
             Когда результатом является одна строка.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.SingleOrDefault">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.SingleOrDefault(System.Threading.CancellationToken)">
             <summary>
             Когда результатом является одна строка.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.SingleOrDefault``1(System.Func{DanilovSoft.MikroApi.MikroTikResponseFrameDictionary,``0})">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.SingleOrDefault``1(System.Func{DanilovSoft.MikroApi.MikroTikResponseFrameDictionary,``0},System.Threading.CancellationToken)">
             <summary>
             Когда результатом является одна строка.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.SingleOrDefault``1">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.SingleOrDefault``1(System.Threading.CancellationToken)">
             <summary>
             Когда результатом является одна строка.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ToArray``1">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ToArray``1(System.Threading.CancellationToken)">
             <summary>
             Создает список объектов
             члены которого должны использовать атрибут <see cref="T:DanilovSoft.MikroApi.MikroTikPropertyAttribute"/> для привязки данных.
@@ -298,10 +298,10 @@
             <typeparam name="T"></typeparam>
             <returns></returns>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ToArray``1(``0)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ToArray``1(``0,System.Threading.CancellationToken)">
             <param name="anonymousObject">Анонимный объект тип которого используется для создания результата функции.</param>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ToList``1">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ToList``1(System.Threading.CancellationToken)">
             <summary>
             Создает список объектов
             члены которого должны использовать атрибут <see cref="T:DanilovSoft.MikroApi.MikroTikPropertyAttribute"/> для привязки данных.
@@ -309,7 +309,7 @@
             <typeparam name="T"></typeparam>
             <returns></returns>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ToList``1(``0)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.ToList``1(``0,System.Threading.CancellationToken)">
             <summary>
             
             </summary>
@@ -317,7 +317,7 @@
             <param name="anonymousObject">Анонимный объект тип которого используется для создания результата функции.</param>
             <returns></returns>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.SendAsync">
+        <member name="M:DanilovSoft.MikroApi.MikroTikFlowCommand.SendAsync(System.Threading.CancellationToken)">
             <summary>
             Отправляет команду и возвращает ответ сервера.
             </summary>
@@ -387,6 +387,12 @@
             Value generated with :return command
             </summary>
         </member>
+        <member name="M:DanilovSoft.MikroApi.Helpers.ThrowHelper.ThrowConnectionDisposed">
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.Helpers.ThrowHelper.ThrowDisposed``1">
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
         <member name="M:DanilovSoft.MikroApi.Helpers.ThrowHelper.ThrowNotConnected">
             <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
         </member>
@@ -396,25 +402,11 @@
         <member name="M:DanilovSoft.MikroApi.Helpers.ThrowHelper.ThrowCommandAlreadySent">
             <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.Connect(System.String,System.String,System.String,System.Boolean,System.Int32)">
-            <param name="useSsl">Для <c>api-ssl</c>.</param>
-            <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
-            <exception cref="T:System.ObjectDisposedException"/>
+        <member name="M:DanilovSoft.MikroApi.Helpers.ThrowHelper.ThrowMaxListeners">
+            <exception cref="T:System.InvalidOperationException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.Connect(System.String,System.String,System.String,System.Boolean,System.Int32,DanilovSoft.MikroApi.RouterOsVersion)">
-            <param name="useSsl">Для <c>api-ssl</c>.</param>
-            <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
-            <exception cref="T:System.ObjectDisposedException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.ConnectAsync(System.String,System.String,System.String,System.Boolean,System.Int32,System.Threading.CancellationToken)">
-            <param name="useSsl">Для <c>api-ssl</c>.</param>
-            <exception cref="T:System.TimeoutException"/>
-            <exception cref="T:System.OperationCanceledException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.IMikroTikConnection.ConnectAsync(System.String,System.String,System.String,System.Boolean,System.Int32,DanilovSoft.MikroApi.RouterOsVersion,System.Threading.CancellationToken)">
-            <param name="useSsl">Для <c>api-ssl</c>.</param>
-            <exception cref="T:System.TimeoutException"/>
-            <exception cref="T:System.OperationCanceledException"/>
+        <member name="M:DanilovSoft.MikroApi.Helpers.ThrowHelper.QuitAlreadyInProcess">
+            <exception cref="T:System.InvalidOperationException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.IMikroTikResponseListener.AddResult(DanilovSoft.MikroApi.MikroTikResponseFrameDictionary)">
             <summary>
@@ -453,21 +445,11 @@
             <see langword="true"/> если был получен "!done" или "CriticalException".
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.Threading.ListenerQueue`1.Take">
-            <summary>
-            Ожидает получения ответа от сервера.
-            </summary>
-        </member>
         <member name="M:DanilovSoft.MikroApi.Threading.ListenerQueue`1.Take(System.Int32,System.Threading.CancellationToken)">
             <summary>
             Ожидает получения ответа от сервера.
             </summary>
             <exception cref="T:System.TimeoutException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.Threading.ListenerQueue`1.TakeAsync">
-            <summary>
-            Ожидает получения ответа от сервера.
-            </summary>
         </member>
         <member name="M:DanilovSoft.MikroApi.Threading.ListenerQueue`1.TakeAsync(System.Int32,System.Threading.CancellationToken)">
             <summary>
@@ -511,51 +493,51 @@
             Вызывается потоком читающим из сокета или отправляющим в сокет.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Send(DanilovSoft.MikroApi.MikroTikCommand)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Execute(DanilovSoft.MikroApi.MikroTikCommand,System.Threading.CancellationToken)">
             <summary>
             Отправляет команду и возвращает ответ сервера.
             </summary>
             <exception cref="T:DanilovSoft.MikroApi.MikroApiTrapException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.SendAsync(DanilovSoft.MikroApi.MikroTikCommand)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ExecuteAsync(DanilovSoft.MikroApi.MikroTikCommand,System.Threading.CancellationToken)">
             <summary>
             Отправляет команду и возвращает ответ сервера.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Listen(DanilovSoft.MikroApi.MikroTikCommand)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Listen(DanilovSoft.MikroApi.MikroTikCommand,System.Threading.CancellationToken)">
             <summary>
             Отправляет команду помечая её тегом.
             Команда будет выполняться пока не будет прервана с помощью Cancel.
             </summary>
             <exception cref="T:DanilovSoft.MikroApi.MikroApiTrapException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ListenAsync(DanilovSoft.MikroApi.MikroTikCommand)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.ListenAsync(DanilovSoft.MikroApi.MikroTikCommand,System.Threading.CancellationToken)">
             <summary>
             Отправляет команду помечая её тегом.
             Команда будет выполняться пока не будет прервана с помощью Cancel.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CancelListeners">
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CancelListeners(System.Threading.CancellationToken)">
             <summary>
             Отправляет запрос на отмену всех выполняющихся задач и ожидает подтверждения об упешной отмене.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CancelListenersAsync">
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CancelListenersAsync(System.Threading.CancellationToken)">
             <summary>
             Отправляет запрос на отмену всех выполняющихся задач и ожидает подтверждения об упешной отмене.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CancelListeners(System.Boolean)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CancelListeners(System.Boolean,System.Threading.CancellationToken)">
             <summary>
             Отправляет запрос на отмену всех выполняющихся задач.
             </summary>
-            <param name="wait">True если нужно дождаться подтверждения об успешной отмене. Значение по умолчанию True</param>
+            <param name="waitACK">True если нужно дождаться подтверждения об успешной отмене.</param>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CancelListenersAsync(System.Boolean)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CancelListenersAsync(System.Boolean,System.Threading.CancellationToken)">
             <summary>
             Отправляет запрос на отмену всех выполняющихся задач.
             </summary>
-            <param name="wait">True если нужно дождаться подтверждения об успешной отмене. Значение по умолчанию True</param>
+            <param name="waitACK">True если нужно дождаться подтверждения об успешной отмене. Значение по умолчанию True</param>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Command(System.String)">
             <summary>
@@ -563,13 +545,13 @@
             </summary>
             <param name="command">Начальный текст команды</param>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Quit(System.Int32)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Quit(System.Int32,System.Threading.CancellationToken)">
             <summary>
             Сообщает серверу что выполняется разъединение. Не бросает исключения.
             </summary>
             <param name="millisecondsTimeout">Позволяет подождать подтверждение от сервера что-бы лишний раз не происходило исключение в потоке читающем из сокета.</param>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.QuitAsync(System.Int32)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.QuitAsync(System.Int32,System.Threading.CancellationToken)">
             <summary>
             Сообщает серверу что выполняется разъединение. Не бросает исключения.
             </summary>
@@ -592,18 +574,19 @@
             <exception cref="T:System.TimeoutException"/>
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CheckAuthorized">
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.GetOpenConnection">
+            <summary>Проверят что существует открытое соединение и возвращает его.</summary>
             <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikConnection.CheckNotAuthorized">
             <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Login(DanilovSoft.MikroApi.MtOpenConnection,System.String,System.String)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.Login(DanilovSoft.MikroApi.MtOpenConnection,System.String,System.String,System.Threading.CancellationToken)">
             <summary>
             Использует MD5.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.LoginAsync(DanilovSoft.MikroApi.MtOpenConnection,System.String,System.String)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikConnection.LoginAsync(DanilovSoft.MikroApi.MtOpenConnection,System.String,System.String,System.Threading.CancellationToken)">
             <summary>
             Использует MD5.
             </summary>
@@ -715,12 +698,7 @@
             <returns></returns>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikResponse.ToList``1(``0)">
-            <summary>
-            
-            </summary>
-            <typeparam name="T"></typeparam>
             <param name="anonymousObject">Анонимный объект тип которого используется для создания результата функции.</param>
-            <returns></returns>
         </member>
         <member name="T:DanilovSoft.MikroApi.MikroTikResponseFrameDictionary">
             <summary>
@@ -759,27 +737,27 @@
             <param name="tag">Тег связанный с текущим подписчиком.</param>
             <param name="socket"></param>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.Cancel">
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.Cancel(System.Threading.CancellationToken)">
             <summary>
             Отправляет запрос на отмену и дожидается подтверждения об упешной отмене.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.Cancel(System.Boolean)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.Cancel(System.Boolean,System.Threading.CancellationToken)">
             <summary>
             Отправляет запрос на отмену и дожидается подтверждения об упешной отмене.
             </summary>
-            <param name="wait">True если нужно дождаться подтверждения об успешной отмене. Значение по умолчанию True</param>
+            <param name="waitACK">True если нужно дождаться подтверждения об успешной отмене.</param>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.CancelAsync">
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.CancelAsync(System.Threading.CancellationToken)">
             <summary>
             Отправляет запрос на отмену и дожидается подтверждения об упешной отмене.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.CancelAsync(System.Boolean)">
+        <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.CancelAsync(System.Boolean,System.Threading.CancellationToken)">
             <summary>
             Отправляет запрос на отмену.
             </summary>
-            <param name="wait">True если нужно дождаться подтверждения об успешной отмене. Значение по умолчанию True</param>
+            <param name="waitACK">True если нужно дождаться подтверждения об успешной отмене. Значение по умолчанию True</param>
         </member>
         <member name="M:DanilovSoft.MikroApi.MikroTikResponseListener.TryTake(DanilovSoft.MikroApi.MikroTikResponseFrameDictionary@)">
             <summary>
@@ -938,12 +916,13 @@
             <summary>
             Создает новый Listener с уникальным тегом, добавляет в словарь но не отправляет запрос.
             </summary>
-            <returns></returns>
+            <exception cref="T:System.ObjectDisposedException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MtOpenConnection.CreateUniqueTag">
             <summary>
             Потокобезопасно создает уникальный тег.
             </summary>
+            <exception cref="T:System.ObjectDisposedException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.MtOpenConnection.AddTagToRead(System.String)">
             <summary>
@@ -951,34 +930,44 @@
             </summary>
             <param name="tagToReceive">Тег сообщения которое нужно прочитать из сокета.</param>
             <exception cref="T:System.IO.IOException">Обрыв соединения.</exception>
-            <returns></returns>
+            <exception cref="T:System.ObjectDisposedException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.Send(DanilovSoft.MikroApi.MikroTikCommand)">
+        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.Listen(DanilovSoft.MikroApi.MikroTikResponseListener,System.Int32,System.Threading.CancellationToken)">
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.ListenAsync(DanilovSoft.MikroApi.MikroTikResponseListener,System.Int32,System.Threading.CancellationToken)">
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.StartBackgroundRead">
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.Send(DanilovSoft.MikroApi.MikroTikCommand,System.Threading.CancellationToken)">
             <summary>
             Синхронная отправка запроса в сокет без получения ответа. Не проверяет переиспользование команды.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.SendAsync(DanilovSoft.MikroApi.MikroTikCommand)">
+        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.SendAsync(DanilovSoft.MikroApi.MikroTikCommand,System.Threading.CancellationToken)">
             <summary>
             Асинхронная отправка запроса в сокет без получения ответа. Не проверяет переиспользование команды.
             </summary>
+            <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.SendRequest(DanilovSoft.MikroApi.MikroTikCommand)">
+        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.ExecuteCore(DanilovSoft.MikroApi.MikroTikCommand,System.Threading.CancellationToken)">
             <summary>
             Синхронная отправка запроса и получение ответа.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.SendAndGetResponseAsync(DanilovSoft.MikroApi.MikroTikCommand)">
+        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.ExecuteAsync(DanilovSoft.MikroApi.MikroTikCommand,System.Threading.CancellationToken)">
             <summary>
             Асинхронная отправка запроса в сокет и получение результата.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.SendAndGetResponse(DanilovSoft.MikroApi.MikroTikCommand)">
+        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.Execute(DanilovSoft.MikroApi.MikroTikCommand,System.Threading.CancellationToken)">
             <summary>
             Синхронная отправка запроса в сокет и получение результата.
-            </summary>
+            </summary> 
         </member>
-        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.CancelListenerNoWaitAsync(System.String)">
+        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.CancelListenerNoWaitAsync(System.String,System.Threading.CancellationToken)">
             <summary>
             Отправляет в сокет запрос на отмену не дожидаясь результата.
             </summary>
@@ -989,14 +978,14 @@
             Создает команду для отмены и добавляет в словарь.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.Quit(System.Int32)">
+        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.Quit(System.Int32,System.Threading.CancellationToken)">
             <summary>
             Сообщает серверу что выполняется разъединение.
             </summary>
             <param name="millisecondsTimeout">Позволяет подождать подтверждение от сервера что-бы лишний раз не происходило исключение в потоке читающем из сокета.</param>
             <exception cref="T:System.IO.IOException">Обрыв соединения.</exception>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.QuitAsync(System.Int32)">
+        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.QuitAsync(System.Int32,System.Threading.CancellationToken)">
             <summary>
             Сообщает серверу что выполняется разъединение.
             </summary>
@@ -1021,23 +1010,19 @@
             <exception cref="T:System.Exception"/>
             <returns></returns>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.ReadUntilHasTagsToReadAsync">
+        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.ReadAllFrames">
             <summary>
             Эта функция не генерирует исключения.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.RequestAsync(DanilovSoft.MikroApi.MikroTikCommand)">
+        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.ExecuteAsyncCore(DanilovSoft.MikroApi.MikroTikCommand,System.Threading.CancellationToken)">
             <summary>
             Асинхронно отправляет запрос и получает ответ через основную очередь.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.EncodeLength(System.UInt32,System.Span{System.Byte})">
-            <summary>
-            
-            </summary>
+        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.GetPayloadLengthBytesCount(System.UInt32,System.Span{System.Byte})">
             <param name="len">Размер блока в байтах.</param>
-            <param name="buffer"></param>
-            <returns></returns>
+            <returns>Число байт записанных в <paramref name="dest"/>.</returns>
         </member>
         <member name="M:DanilovSoft.MikroApi.MtOpenConnection.SendCommandInLooper(DanilovSoft.MikroApi.MikroTikCommand)">
             <summary>
@@ -1045,7 +1030,7 @@
             Эту процедуру нужно вызывать через Send так как в ней не обрабатываются исключения
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.SendCommandInLooperAsync(System.Object)">
+        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.SendCommandInLooperAsync(DanilovSoft.MikroApi.MikroTikCommand)">
             <summary>
             Эта процедура должна вызываться только через отправляющую очередь <see cref="F:DanilovSoft.MikroApi.MtOpenConnection._sender"/>.
             Эту Процедура нужно вызывать через Send так как в ней не обрабатываются исключения.
@@ -1055,6 +1040,9 @@
             <summary>
             Потокобезопасно закрывает сокет.
             </summary>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.MtOpenConnection.CheckDisposed">
+            <exception cref="T:System.ObjectDisposedException"/>
         </member>
         <member name="T:DanilovSoft.MikroApi.QueueResult`1">
             <summary>
@@ -1082,12 +1070,16 @@
             Добавляет подписчика в словарь с определенным тегом.
             </summary>
             <param name="listener">Подписчик</param>
+            <exception cref="T:System.InvalidOperationException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.ResponseListeners.Add(System.String,DanilovSoft.MikroApi.IMikroTikResponseListener)">
             <summary>
             Добавляет подписчика в словарь.
             </summary>
             <exception cref="T:System.Exception"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.ResponseListeners.ThrowIfMaxCount">
+            <exception cref="T:System.InvalidOperationException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.ResponseListeners.ThrowIfFatal">
             <summary>
@@ -1106,21 +1098,37 @@
             Удаляет подписчика из словаря. Потокобезопасно.
             </summary>
         </member>
-        <member name="M:DanilovSoft.MikroApi.Sender.WaitForeignTask(System.Threading.Tasks.Task)">
-            <summary>
-            Ожидает чужой таск не провоцируя исключения.
-            </summary>
+        <member name="M:DanilovSoft.MikroApi.Sender.Invoke(System.Action{DanilovSoft.MikroApi.MtOpenConnection,DanilovSoft.MikroApi.MikroTikCommand},DanilovSoft.MikroApi.MikroTikCommand,System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.Sender.WaitForeignTaskAsync(System.Threading.Tasks.Task)">
+        <member name="M:DanilovSoft.MikroApi.Sender.InvokeAsync(System.Func{DanilovSoft.MikroApi.MtOpenConnection,DanilovSoft.MikroApi.MikroTikCommand,System.Threading.Tasks.Task},DanilovSoft.MikroApi.MikroTikCommand,System.Threading.CancellationToken)">
+            <exception cref="T:System.OperationCanceledException"/>
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.Sender.CheckNotFinished">
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.Sender.WaitSendTask(System.Threading.CancellationToken)">
             <summary>
             Ожидает чужой таск не провоцируя исключения.
             </summary>
+            <exception cref="T:System.OperationCanceledException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.Sender.WaitForeignTaskAsync(System.Threading.CancellationToken)">
+            <summary>
+            Ожидает чужой таск не провоцируя исключения.
+            </summary>
+            <exception cref="T:System.OperationCanceledException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.SocketTimeout.Stop">
             <summary>
-            Попытка остановить таймер.
+            Останавливает таймер или бросает исключение.
             </summary>
+            <remarks>Потокобезопасный метод.</remarks>
             <exception cref="T:DanilovSoft.MikroApi.MikroApiConnectionClosedAbnormallyException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.SocketTimeout.CheckDisposed">
+            <exception cref="T:System.ObjectDisposedException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.StreamExtensions.ReadBlock(System.IO.Stream,System.Byte[],System.Int32,System.Int32)">
             <summary>
