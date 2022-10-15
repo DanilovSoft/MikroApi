@@ -41,15 +41,13 @@ internal struct QueueResult<T> where T : notnull
             return _resultValue;
         }
 
-        return ThrowDelegatedError();
+        return ThrowDelegatedError(_exception);
     }
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private T ThrowDelegatedError()
+    private static T ThrowDelegatedError(Exception exception)
     {
-        Debug.Assert(_exception != null);
-
-        throw _exception;
+        throw exception;
     }
 }

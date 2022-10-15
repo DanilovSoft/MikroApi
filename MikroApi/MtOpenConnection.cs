@@ -480,62 +480,51 @@ internal sealed class MtOpenConnection : IDisposable
         try
         {
         ReadNextFrame:
-
-            // если получен !trap
-            var trap = false;
-            // если получен !done
-            var done = false;
-            // если получен !fatal
-            var fatal = false;
-            // если получен .tag=
-            string? tag = null;
+            var receivedTrap = false; // если получен !trap
+            var receivedDone = false; // если получен !done
+            var receivedFatal = false; // если получен !fatal
+            string? receivedTagId = null; // если получен .tag=
             string? fatalMessage = null;
             var fullResponse = new MikroTikResponse();
-            var frame = new MikroTikResponseFrameDictionary();
+            var frames = new MikroTikResponseFrameDictionary();
             int count;
 
-            _receiveTimeout.Start();
+            _receiveTimeout.StartWatchdog();
             try
             {
-                while (true)
-                // Читаем фреймы.
+                while (true) // Читаем фреймы пока они не закончатся.
                 {
-                    // Чтение заголовка строки.
-                    await _stream.ReadBlockAsync(_readBuffer.Slice(0, 1)).ConfigureAwait(false);
+                    await _stream.ReadBlockAsync(_readBuffer.Slice(0, 1)).ConfigureAwait(false); // Чтение заголовка строки.
 
-                    if (_readBuffer.Span[0] == 0)
-                    // Конец сообщения.
+                    if (_readBuffer.Span[0] == 0) // Конец сообщения.
                     {
-                        if (tag != null)
-                        // Получен фрейм сообщения маркированный тегом.
+                        if (receivedTagId != null) // Получен фрейм сообщения маркированный тегом.
                         {
-                            if (_listeners.TryGetValue(tag, out var listener))
+                            if (_listeners.TryGetValue(receivedTagId, out var listener))
                             {
                                 lock (listener.SyncObj)
                                 {
-                                    if (done)
+                                    if (receivedDone)
                                     {
-                                        // Работа с этим подписчиком завершена.
-                                        listener.Done();
+                                        listener.Done(); // Работа с этим подписчиком завершена.
                                     }
                                     else
                                     {
-                                        if (!trap)
+                                        if (!receivedTrap)
                                         {
-                                            listener.AddResult(frame);
+                                            listener.AddResult(frames);
                                         }
                                         else
                                         {
-                                            listener.AddTrap(new MikroApiTrapException(frame));
+                                            listener.AddTrap(new MikroApiTrapException(frames));
                                         }
                                     }
                                 }
                             }
 
-                            if (TryExit(tag))
+                            if (TryExit(receivedTagId))
                             {
-                                // Завершение потока.
-                                return;
+                                return; // Завершение потока.
                             }
                             else
                             {
@@ -547,38 +536,30 @@ internal sealed class MtOpenConnection : IDisposable
                         {
                             // fatal can be received only in cases when API is closing connection.
                             // fatal может быть только не тегированным.
-                            if (fatal)
-                            // Сервер закрывает соединение.
+                            if (receivedFatal) // Сервер закрывает соединение.
                             {
-                                var exception = new MikroApiFatalException(fatalMessage!);
-
-                                ConnectionClosed(exception, gotFatal: true);
-
-                                // Завершение потока. Текущий экземпляр MikroTikSocket больше использовать нельзя.
-                                return;
+                                ConnectionClosed(new MikroApiFatalException(fatalMessage!), gotFatal: true);
+                                return; // Завершение потока. Текущий экземпляр MikroTikSocket больше использовать нельзя.
                             }
 
-                            if (frame.Count > 0)
+                            if (frames.Count > 0)
                             {
-                                fullResponse.Add(frame);
+                                fullResponse.Add(frames);
                             }
 
-                            if (trap)
+                            if (receivedTrap)
                             {
                                 var trapException = new MikroApiTrapException(fullResponse[0]);
                                 _mainQueue.AddTrap(trapException);
                             }
 
-                            if (done)
-                            // Сообщение получено полностью.
+                            if (receivedDone) // Сообщение получено полностью.
                             {
-                                // Положить в основную очередь.
-                                _mainQueue.AddResult(fullResponse);
+                                _mainQueue.AddResult(fullResponse); // Положить в основную очередь.
 
                                 if (TryExit(""))
                                 {
-                                    // Завершение потока.
-                                    return;
+                                    return; // Завершение потока.
                                 }
                                 else
                                 {
@@ -587,11 +568,8 @@ internal sealed class MtOpenConnection : IDisposable
                             }
                         }
 
-                        // Нельзя делать Clear потому что fullResponse.Add(frame).
-                        frame = new MikroTikResponseFrameDictionary();
-
-                        // Возвращаемся к чтению заголовка.
-                        continue;
+                        frames = new MikroTikResponseFrameDictionary(); // Нельзя делать Clear потому что fullResponse.Add(frame).
+                        continue; // Возвращаемся к чтению заголовка.
                     }
                     else
                     {
@@ -613,94 +591,83 @@ internal sealed class MtOpenConnection : IDisposable
 
                     if (word == "!re")
                     {
-                        continue;
                     }
-
-                    if (!done && word == "!done")
+                    else if (!receivedDone && word == "!done")
                     {
-                        done = true;
-                        continue;
+                        receivedDone = true;
                     }
-
-                    if (!fatal && word == "!fatal")
+                    else if (!receivedFatal && word == "!fatal")
                     {
-                        fatal = true;
-                        continue;
+                        receivedFatal = true;
                     }
-
-                    if (!trap && word == "!trap")
+                    else if (!receivedTrap && word == "!trap")
                     {
-                        trap = true;
-                        continue;
+                        receivedTrap = true;
                     }
-
-                    var pos = word.IndexOf('=', 1);
-                    if (pos >= 0)
+                    else
                     {
-                        var key = word.Substring(1, pos - 1);
-                        var value = word.Substring(pos + 1);
-
-                        if (key == "tag")
-                        // Этот ответ тегирован.
+                        var pos = word.IndexOf('=', 1);
+                        if (pos >= 0)
                         {
-                            tag = value;
+                            var key = word.Substring(1, pos - 1);
+                            var value = word.Substring(pos + 1);
+
+                            if (key == "tag") // Этот ответ тегирован.
+                            {
+                                receivedTagId = value;
+                            }
+                            else
+                            {
+                                frames.TryAdd(key, value);
+                            }
                         }
-                        else
+                        else if (receivedFatal)
                         {
-                            frame.TryAdd(key, value);
+                            fatalMessage = word;
                         }
-                    }
-                    else if (fatal)
-                    {
-                        fatalMessage = word;
                     }
                 }
             }
             finally
             {
-                // Может бросить исключение.
-                _receiveTimeout.Stop();
+                _receiveTimeout.StopWatchdog(); // Может бросить исключение.
             }
         }
-        catch (Exception ex)
-        // Произошел обрыв сокета.
+        catch (Exception rcvError) // Произошел обрыв сокета.
         {
-            ConnectionClosed(ex, gotFatal: false);
-
-            // Завершение потока. Текущий экземпляр MikroTikSocket больше использовать нельзя.
-            return;
+            ConnectionClosed(rcvError, gotFatal: false);
+            return; // Завершение потока. Текущий экземпляр MikroTikSocket больше использовать нельзя.
         }
 
-        bool TryExit(string receivedTag)
-        // Считано сообщение или фрейм.
+        #region TryExit
+        
+        bool TryExit(string receivedTag) // Считано сообщение или фрейм.
         {
             lock (_framesToRead)
             {
-                if (_framesToRead.TryGetValue(receivedTag, out var tagCount))
+                ref var tagCountRef = ref CollectionsMarshal.GetValueRefOrNullRef(_framesToRead, receivedTag);
+                if (!Unsafe.IsNullRef(ref tagCountRef))
                 {
-                    if (tagCount == 1)
+                    if (tagCountRef == 1)
                     {
-                        // Прочитаны все фреймы с таким тегом.
-                        _framesToRead.Remove(receivedTag);
-
-                        if (_framesToRead.Count == 0)
-                        // Все сообщения были прочитаны.
+                        _framesToRead.Remove(receivedTag); // Прочитаны все фреймы с таким тегом.
+                        if (_framesToRead.Count == 0) // Все сообщения были прочитаны.
                         {
-                            // Завершаем поток чтения.
-                            _reading = false;
+                            _reading = false; // Завершаем поток чтения.
                             return true;
                         }
                     }
                     else
                     {
-                        // Требуется продолжить читать фреймы для этого тега.
-                        _framesToRead[receivedTag] = (tagCount - 1);
+                        tagCountRef--; // Требуется продолжить читать фреймы для этого тега.
                     }
                 }
-                // Продолжить чтение сообщений.
-                return false;
+                
+                return false; // Продолжить чтение сообщений.
             }
         }
+
+        #endregion
     }
 
     /// <summary>
@@ -856,11 +823,10 @@ internal sealed class MtOpenConnection : IDisposable
     /// </summary>
     private void SendCommandInLooper(MikroTikCommand command)
     {
-        Debug.WriteLine(Environment.NewLine + command + Environment.NewLine);
         var buffer = Encode(command);
         try
         {
-            var timeout = _sendTimeout.Start();
+            var timeout = _sendTimeout.StartWatchdog();
             try
             {
                 _stream.Write(buffer.Span);
@@ -887,7 +853,7 @@ internal sealed class MtOpenConnection : IDisposable
 
         try
         {
-            var timeout = _sendTimeout.Start();
+            var timeout = _sendTimeout.StartWatchdog();
             try
             {
                 await _stream.WriteAsync(buffer).ConfigureAwait(false);

@@ -51,18 +51,20 @@ public sealed class MikroTikConnection : IDisposable, IAsyncDisposable
         if (!_disposed)
         {
             _disposed = true;
-            _openConnection?.Dispose();
-            _openConnection = null;
+            NullableHelper.SetNull(ref _openConnection)?.Dispose();
         }
     }
 
     public async ValueTask DisposeAsync()
     {
-        try
+        if (Connected)
         {
-            await QuitAsync(DefaultQuitDelay, CancellationToken.None).ConfigureAwait(false);
+            try
+            {
+                await QuitAsync(DefaultQuitDelay, CancellationToken.None).ConfigureAwait(false);
+            }
+            catch { }
         }
-        catch { }
 
         Dispose();
     }
@@ -102,6 +104,8 @@ public sealed class MikroTikConnection : IDisposable, IAsyncDisposable
     public void Connect(string login, string password, string host, bool useSsl, int port, RouterOsVersion version, 
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(login);
+        ArgumentNullException.ThrowIfNull(password);
         ArgumentNullException.ThrowIfNull(host);
         CheckDisposed();
         CheckNotAuthorized();
@@ -126,21 +130,19 @@ public sealed class MikroTikConnection : IDisposable, IAsyncDisposable
     public async Task ConnectAsync(
         string login,
         string password,
-        string hostname,
+        string host,
         bool useSsl,
         int port,
         RouterOsVersion version,
         CancellationToken cancellationToken = default)
     {
-        if (hostname is null)
-        {
-            throw new ArgumentNullException(nameof(hostname));
-        }
-
+        ArgumentNullException.ThrowIfNull(login);
+        ArgumentNullException.ThrowIfNull(password);
+        ArgumentNullException.ThrowIfNull(host);
         CheckDisposed();
         CheckNotAuthorized();
 
-        var socket = await ConnectAsyncCore(hostname, port, useSsl, cancellationToken).ConfigureAwait(false);
+        var socket = await ConnectAsyncCore(host, port, useSsl, cancellationToken).ConfigureAwait(false);
         try
         {
             await LoginAsync(socket, login, password, version, cancellationToken).ConfigureAwait(false);
@@ -327,12 +329,12 @@ public sealed class MikroTikConnection : IDisposable, IAsyncDisposable
         return intTag.ToString(CultureInfo.InvariantCulture);
     }
 
-    private static TcpClient ConnectTcp(string hostname, int port)
+    private static TcpClient ConnectTcp(string host, int port)
     {
         var tcp = new TcpClient();
         try
         {
-            tcp.Connect(hostname, port);
+            tcp.Connect(host, port);
             return NullableHelper.SetNull(ref tcp);
         }
         finally
@@ -443,14 +445,14 @@ public sealed class MikroTikConnection : IDisposable, IAsyncDisposable
         return EncodePassword(password, hash, _encoding);
     }
 
-    private MtOpenConnection ConnectCore(string hostname, int port, bool useSsl)
+    private MtOpenConnection ConnectCore(string host, int port, bool useSsl)
     {
-        var tcp = ConnectTcp(hostname, port);
+        var tcp = ConnectTcp(host, port);
         var tcpStream = tcp.GetStream();
         try
         {
             var finalStream = useSsl
-                ? AuthenticateSsl(tcpStream, hostname)
+                ? AuthenticateSsl(tcpStream, host)
                 : tcpStream;
 
             NullableHelper.SetNull(ref tcpStream);

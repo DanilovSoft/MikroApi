@@ -25,7 +25,7 @@ internal sealed class Sender
         lock (_sendObj)
         {
             CheckNotFinished();
-            WaitSendTask(cancellationToken);
+            WaitSend(cancellationToken);
             callback(_connection, state);
         }
     }
@@ -42,11 +42,11 @@ internal sealed class Sender
         }
     }
 
-    public void Quit(CancellationToken cancellationToken = default)
+    public void Quit(CancellationToken cancellationToken)
     {
         lock (_sendObj)
         {
-            WaitSendTask(cancellationToken);
+            WaitSend(cancellationToken);
             _finished = true;
         }
     }
@@ -69,7 +69,7 @@ internal sealed class Sender
     /// Ожидает чужой таск не провоцируя исключения.
     /// </summary>
     /// <exception cref="OperationCanceledException"/>
-    private void WaitSendTask(CancellationToken cancellationToken)
+    private void WaitSend(CancellationToken cancellationToken)
     {
         var task = _sendTask;
 
@@ -77,7 +77,7 @@ internal sealed class Sender
         {
             task.ContinueWith(_ => { },
                         cancellationToken,
-                        TaskContinuationOptions.None,
+                        TaskContinuationOptions.ExecuteSynchronously,
                         TaskScheduler.Default)
                         .GetAwaiter()
                         .GetResult();
@@ -88,7 +88,7 @@ internal sealed class Sender
     /// Ожидает чужой таск не провоцируя исключения.
     /// </summary>
     /// <exception cref="OperationCanceledException"/>
-    private Task WaitForeignTaskAsync(CancellationToken cancellationToken)
+    private Task WaitSendAsync(CancellationToken cancellationToken)
     {
         var task = _sendTask;
 
@@ -96,7 +96,7 @@ internal sealed class Sender
         {
             return task.ContinueWith(_ => { },
                         cancellationToken,
-                        TaskContinuationOptions.None,
+                        TaskContinuationOptions.ExecuteSynchronously,
                         TaskScheduler.Default);
         }
         else
@@ -121,7 +121,7 @@ internal sealed class Sender
 
     private async Task WaitTaskAndSendAsync(Func<MtOpenConnection, MikroTikCommand, Task> callback, MikroTikCommand state, MtOpenConnection connection, CancellationToken ct)
     {
-        await WaitForeignTaskAsync(ct).ConfigureAwait(false);
+        await WaitSendAsync(ct).ConfigureAwait(false);
         await callback(connection, state).ConfigureAwait(false);
     }
 }

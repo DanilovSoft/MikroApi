@@ -408,6 +408,9 @@
         <member name="M:DanilovSoft.MikroApi.Helpers.ThrowHelper.QuitAlreadyInProcess">
             <exception cref="T:System.InvalidOperationException"/>
         </member>
+        <member name="M:DanilovSoft.MikroApi.Helpers.ThrowHelper.ThrowDisconnected">
+            <exception cref="T:DanilovSoft.MikroApi.MikroApiDisconnectException"/>
+        </member>
         <member name="M:DanilovSoft.MikroApi.IMikroTikResponseListener.AddResult(DanilovSoft.MikroApi.MikroTikResponseFrameDictionary)">
             <summary>
             Добавляет результат в коллекцию. Вызывается если получен тегированный фрейм сообщения.
@@ -1118,19 +1121,22 @@
         <member name="M:DanilovSoft.MikroApi.Sender.CheckNotFinished">
             <exception cref="T:System.ObjectDisposedException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.Sender.WaitSendTask(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MikroApi.Sender.WaitSend(System.Threading.CancellationToken)">
             <summary>
             Ожидает чужой таск не провоцируя исключения.
             </summary>
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.Sender.WaitForeignTaskAsync(System.Threading.CancellationToken)">
+        <member name="M:DanilovSoft.MikroApi.Sender.WaitSendAsync(System.Threading.CancellationToken)">
             <summary>
             Ожидает чужой таск не провоцируя исключения.
             </summary>
             <exception cref="T:System.OperationCanceledException"/>
         </member>
-        <member name="M:DanilovSoft.MikroApi.SocketTimeout.Stop">
+        <member name="M:DanilovSoft.MikroApi.SocketTimeout.StartWatchdog">
+            <exception cref="T:System.ObjectDisposedException"/>
+        </member>
+        <member name="M:DanilovSoft.MikroApi.SocketTimeout.StopWatchdog">
             <summary>
             Останавливает таймер или бросает исключение.
             </summary>
@@ -1139,12 +1145,6 @@
         </member>
         <member name="M:DanilovSoft.MikroApi.SocketTimeout.CheckDisposed">
             <exception cref="T:System.ObjectDisposedException"/>
-        </member>
-        <member name="M:DanilovSoft.MikroApi.StreamExtensions.ReadBlock(System.IO.Stream,System.Byte[],System.Int32,System.Int32)">
-            <summary>
-            Считывает строго заданное количество данных.
-            </summary>
-            <exception cref="T:DanilovSoft.MikroApi.MikroApiDisconnectException"/>
         </member>
         <member name="M:DanilovSoft.MikroApi.StreamExtensions.ReadBlockAsync(System.IO.Stream,System.Memory{System.Byte})">
             <summary>

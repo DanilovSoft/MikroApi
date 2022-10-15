@@ -70,4 +70,12 @@ internal static class ThrowHelper
     {
         throw new InvalidOperationException("Quit command already in process");
     }
+
+    /// <exception cref="MikroApiDisconnectException"/>
+    [DoesNotReturn]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    internal static void ThrowDisconnected()
+    {
+        throw new MikroApiDisconnectException();
+    }
 }

@@ -35,7 +35,8 @@ internal sealed class SocketTimeout : IDisposable
     }
 
     // 1) Поток сначала вызывает Start.
-    internal ReusableWatchdog Start()
+    /// <exception cref="ObjectDisposedException"/>
+    internal ReusableWatchdog StartWatchdog()
     {
         CheckDisposed();
 
@@ -57,7 +58,7 @@ internal sealed class SocketTimeout : IDisposable
     /// </summary>
     /// <remarks>Потокобезопасный метод.</remarks>
     /// <exception cref="MikroApiConnectionClosedAbnormallyException"/>
-    internal void Stop()
+    internal void StopWatchdog()
     {
         // Остановить таймер если он запланирован.
         var state = Interlocked.CompareExchange(ref _state, 0, 1);
@@ -123,7 +124,7 @@ internal sealed class SocketTimeout : IDisposable
 
         public void StopTimer()
         {
-            _self.Stop();
+            _self.StopWatchdog();
         }
     }
 }

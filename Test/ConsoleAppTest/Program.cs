@@ -17,12 +17,12 @@ class Program
         await using (var con = new MikroTikConnection())
         {
             con.Connect("api", "KLEZM00D", "10.0.0.1", useSsl: false);
+            
+            //var command = con.Command("/ip dhcp-server lease print")
+            //    .Query("disabled", "false") // filter
+            //    .Proplist("address", "mac-address", "host-name", "status");
 
-            var command = con.Command("/ip dhcp-server lease print")
-                .Query("disabled", "false") // filter
-                .Proplist("address", "mac-address", "host-name", "status");
-
-            var response = command.Send();
+            //var response = command.Send();
         }
 
         //// Отправляет запрос без получения результата.
